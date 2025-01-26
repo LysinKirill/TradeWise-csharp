@@ -9,9 +9,19 @@
     </PropertyGroup>
 
     <ItemGroup>
-      <Content Include="..\.dockerignore">
-        <Link>.dockerignore</Link>
-      </Content>
+        <Content Include="..\.dockerignore">
+            <Link>.dockerignore</Link>
+        </Content>
+    </ItemGroup>
+
+    <ItemGroup>
+        <PackageReference Include="Mapster" Version="7.4.2-pre02"/>
+        <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="9.0.1"/>
+    </ItemGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\TradeWiseBackend.Bll\TradeWiseBackend.Bll.csproj"/>
+        <ProjectReference Include="..\TradeWiseBackend.Domain\TradeWiseBackend.Domain.csproj"/>
     </ItemGroup>
 
 </Project>
