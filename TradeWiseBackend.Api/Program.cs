@@ -1,3 +1,26 @@
-﻿// See https://aka.ms/new-console-template for more information
+﻿using Microsoft.AspNetCore.Builder;
+using Microsoft.Extensions.DependencyInjection;
+using TradeWiseBackend.Api.Extensions;
+using TradeWiseBackend.Bll.Extensions;
 
-Console.WriteLine("Hello, World!");
+var builder = WebApplication.CreateBuilder(args);
+
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwagger();
+builder.Services.AddControllers();
+builder.Services.AddBllServices();
+
+var app = builder.Build();
+
+{
+    app.UseSwagger();
+    app.UseSwaggerUI(options =>
+    {
+        options.SwaggerEndpoint("/swagger/v1/swagger.json", "TradeWise API V1");
+        options.RoutePrefix = string.Empty;
+    });
+}
+
+app.MapControllers();
+
+app.Run();
