@@ -1,0 +1,15 @@
+using Microsoft.Extensions.DependencyInjection;
+using TradeWiseBackend.Bll.Services;
+using TradeWiseBackend.Domain.Interfaces.Interfaces.Services;
+
+namespace TradeWiseBackend.Bll.Extensions;
+
+public static class ServiceCollectionExtensions
+{
+    public static IServiceCollection AddBllServices(this IServiceCollection services)
+    {
+        services.AddScoped<IUserService, UserService>();
+
+        return services;
+    }
+}

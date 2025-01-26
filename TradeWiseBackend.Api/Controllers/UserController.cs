@@ -6,14 +6,13 @@ using TradeWiseBackend.Domain.Interfaces.Interfaces.Services;
 using TradeWiseBackend.Domain.ServiceModels;
 
 [ApiController]
-[Route(RoutesV1.Auth)]
+[Route(RoutesV1.User)]
 public class UserController(IUserService userService) : ControllerBase
 {
-    [HttpPost("user/register")]
+    [HttpPost("register")]
     [ProducesResponseType(StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType<ValidationProblemDetails>(StatusCodes.Status400BadRequest)]
-    public async Task<IActionResult> RegisterCustomer(RegisterUserRequest request)
+    public async Task<IActionResult> RegisterUser(RegisterUserRequest request)
     {
         await userService.RegisterUser(
             request.Adapt<UserRegistrationPayload>());
