@@ -1,4 +1,4 @@
 public static class RoutesV1
 {
-    public const string User = "api/v1/user";
+    public const string Accounts = "api/v1/accounts";
 }
