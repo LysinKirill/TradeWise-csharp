@@ -10,7 +10,7 @@ public record DbSettings
 
     public string ConnectionString =>
         $"""
-         User ID={UserId};
+         User={UserId};
          Password={Password};
          Host={Host};
          DataBase={Database};
