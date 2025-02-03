@@ -6,9 +6,13 @@
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
         <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
+        <UserSecretsId>d3738121-edc0-4b8b-a675-101f6f2d58e7</UserSecretsId>
     </PropertyGroup>
 
     <ItemGroup>
+        <Content Update="appsettings.*.json">
+            <DependentUpon>appsettings.json</DependentUpon>
+        </Content>
         <Content Include="..\.dockerignore">
             <Link>.dockerignore</Link>
         </Content>
@@ -24,6 +28,7 @@
 
     <ItemGroup>
         <ProjectReference Include="..\TradeWiseBackend.Bll\TradeWiseBackend.Bll.csproj"/>
+        <ProjectReference Include="..\TradeWiseBackend.Dal\TradeWiseBackend.Dal.csproj" />
         <ProjectReference Include="..\TradeWiseBackend.Domain\TradeWiseBackend.Domain.csproj"/>
     </ItemGroup>
 
