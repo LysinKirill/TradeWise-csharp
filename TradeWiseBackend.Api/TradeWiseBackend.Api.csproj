@@ -21,6 +21,14 @@
     <ItemGroup>
         <PackageReference Include="Mapster" Version="7.4.2-pre02"/>
         <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="9.0.1"/>
+        <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="9.0.1">
+          <PrivateAssets>all</PrivateAssets>
+          <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+        </PackageReference>
+        <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="9.0.1">
+          <PrivateAssets>all</PrivateAssets>
+          <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+        </PackageReference>
         <PackageReference Include="Swashbuckle.AspNetCore.Swagger" Version="7.2.0"/>
         <PackageReference Include="Swashbuckle.AspNetCore.SwaggerGen" Version="7.2.0"/>
         <PackageReference Include="Swashbuckle.AspNetCore.SwaggerUI" Version="7.2.0"/>
@@ -30,6 +38,12 @@
         <ProjectReference Include="..\TradeWiseBackend.Bll\TradeWiseBackend.Bll.csproj"/>
         <ProjectReference Include="..\TradeWiseBackend.Dal\TradeWiseBackend.Dal.csproj" />
         <ProjectReference Include="..\TradeWiseBackend.Domain\TradeWiseBackend.Domain.csproj"/>
+    </ItemGroup>
+
+    <ItemGroup>
+      <None Update="appsettings.json">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </None>
     </ItemGroup>
 
 </Project>

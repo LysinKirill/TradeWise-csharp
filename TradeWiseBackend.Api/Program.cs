@@ -30,7 +30,5 @@ app.UseSwaggerUI(options =>
 app.MapControllers();
 
 using var scope = app.Services.CreateScope();
-var dbContext = scope.ServiceProvider.GetRequiredService<DbContext>();
-await dbContext.Database.EnsureDeletedAsync();
 
 app.Run();

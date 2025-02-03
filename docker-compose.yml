@@ -2,8 +2,8 @@
   database:
     image: postgres
     environment:
-      POSTGRES_USER: tradewiseUser
-      POSTGRES_PASSWORD: tradewisePassword
-      POSTGRES_DB: tradewise_database
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: 123456
+      POSTGRES_DB: tradewise
     ports:
-      - "15432:5432"
+      - "5432:5432"
