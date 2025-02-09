@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("TradeWiseBackend.Dal")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+de95678be5e85e1f996a262a7771ccdc13ad134c")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+781fd5f7386079dbd2bfdb0ae363ca06fd19d630")]
 [assembly: System.Reflection.AssemblyProductAttribute("TradeWiseBackend.Dal")]
 [assembly: System.Reflection.AssemblyTitleAttribute("TradeWiseBackend.Dal")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

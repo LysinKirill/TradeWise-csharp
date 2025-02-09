@@ -2,8 +2,10 @@ using Mapster;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using TradeWiseBackend.Api.Requests.v1;
-using TradeWiseBackend.Domain.Interfaces.Interfaces.Services;
+using TradeWiseBackend.Domain.Interfaces.Services;
 using TradeWiseBackend.Domain.ServiceModels;
+
+namespace TradeWiseBackend.Api.Controllers;
 
 [ApiController]
 [Route(RoutesV1.Accounts)]

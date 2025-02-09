@@ -1,6 +1,6 @@
 using Microsoft.Extensions.DependencyInjection;
 using TradeWiseBackend.Bll.Services;
-using TradeWiseBackend.Domain.Interfaces.Interfaces.Services;
+using TradeWiseBackend.Domain.Interfaces.Services;
 
 namespace TradeWiseBackend.Bll.Extensions;
 

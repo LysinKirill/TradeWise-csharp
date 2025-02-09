@@ -1,7 +1,6 @@
 ﻿using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
 using TradeWiseBackend.Api.Extensions;
 using TradeWiseBackend.Bll.Extensions;
 using TradeWiseBackend.Dal.DatabaseSettings;
@@ -21,7 +20,6 @@ builder.Services.AddDalRepositories().AddDalInfrastructure(config);
 
 var app = builder.Build();
 
-// Middleware configuration
 app.UseSwagger();
 app.UseSwaggerUI(options =>
 {
@@ -31,5 +29,4 @@ app.UseSwaggerUI(options =>
 
 app.MapControllers();
 
-// Run the application
 app.Run();
