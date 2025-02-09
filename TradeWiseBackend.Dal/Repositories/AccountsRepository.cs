@@ -6,11 +6,11 @@ using TradeWiseBackend.Domain.Models;
 
 namespace TradeWiseBackend.Dal.Repositories;
 
-public class AccountsRepository(DbContext dbContext): IAccountsRepository
+public class AccountsRepository(DatabaseContext databaseContext) : IAccountsRepository
 {
     public async Task Create(Account account)
     {
-        await dbContext.Accounts.AddAsync(account.Adapt<AccountEntity>());
-        await dbContext.SaveChangesAsync();
+        await databaseContext.Accounts.AddAsync(account.Adapt<AccountEntity>());
+        await databaseContext.SaveChangesAsync();
     }
 }
