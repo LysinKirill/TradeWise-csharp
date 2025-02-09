@@ -2,7 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using TradeWiseBackend.Dal.DatabaseSettings;
 using TradeWiseBackend.Dal.Repositories;
-using TradeWiseBackend.Domain.Interfaces.Interfaces.Repositories;
+using TradeWiseBackend.Domain.Interfaces.Repositories;
 
 namespace TradeWiseBackend.Dal.Extensions;
 

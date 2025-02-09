@@ -1,6 +1,6 @@
 using TradeWiseBackend.Domain.Models;
 
-namespace TradeWiseBackend.Domain.Interfaces.Interfaces.Repositories;
+namespace TradeWiseBackend.Domain.Interfaces.Repositories;
 
 public interface IAccountsRepository
 {

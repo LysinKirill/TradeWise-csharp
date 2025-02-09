@@ -1,7 +1,6 @@
 using Mapster;
-using TradeWiseBackend.Dal.DatabaseSettings;
 using TradeWiseBackend.Dal.Entities;
-using TradeWiseBackend.Domain.Interfaces.Interfaces.Repositories;
+using TradeWiseBackend.Domain.Interfaces.Repositories;
 using TradeWiseBackend.Domain.Models;
 
 namespace TradeWiseBackend.Dal.Repositories;
