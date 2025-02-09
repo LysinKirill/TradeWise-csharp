@@ -1,0 +1,16 @@
+/Users/anjelika-lika/RiderProjects/TradeWise-csharp/TradeWiseBackend.Bll/bin/Debug/net9.0/TradeWiseBackend.Bll.deps.json
+/Users/anjelika-lika/RiderProjects/TradeWise-csharp/TradeWiseBackend.Bll/bin/Debug/net9.0/TradeWiseBackend.Bll.dll
+/Users/anjelika-lika/RiderProjects/TradeWise-csharp/TradeWiseBackend.Bll/bin/Debug/net9.0/TradeWiseBackend.Bll.pdb
+/Users/anjelika-lika/RiderProjects/TradeWise-csharp/TradeWiseBackend.Bll/bin/Debug/net9.0/TradeWiseBackend.Domain.dll
+/Users/anjelika-lika/RiderProjects/TradeWise-csharp/TradeWiseBackend.Bll/bin/Debug/net9.0/TradeWiseBackend.Domain.pdb
+/Users/anjelika-lika/RiderProjects/TradeWise-csharp/TradeWiseBackend.Bll/obj/Debug/net9.0/TradeWiseBackend.Bll.csproj.AssemblyReference.cache
+/Users/anjelika-lika/RiderProjects/TradeWise-csharp/TradeWiseBackend.Bll/obj/Debug/net9.0/TradeWiseBackend.Bll.GeneratedMSBuildEditorConfig.editorconfig
+/Users/anjelika-lika/RiderProjects/TradeWise-csharp/TradeWiseBackend.Bll/obj/Debug/net9.0/TradeWiseBackend.Bll.AssemblyInfoInputs.cache
+/Users/anjelika-lika/RiderProjects/TradeWise-csharp/TradeWiseBackend.Bll/obj/Debug/net9.0/TradeWiseBackend.Bll.AssemblyInfo.cs
+/Users/anjelika-lika/RiderProjects/TradeWise-csharp/TradeWiseBackend.Bll/obj/Debug/net9.0/TradeWiseBackend.Bll.csproj.CoreCompileInputs.cache
+/Users/anjelika-lika/RiderProjects/TradeWise-csharp/TradeWiseBackend.Bll/obj/Debug/net9.0/TradeWiseBackend.Bll.sourcelink.json
+/Users/anjelika-lika/RiderProjects/TradeWise-csharp/TradeWiseBackend.Bll/obj/Debug/net9.0/TradeWis.A98A0719.Up2Date
+/Users/anjelika-lika/RiderProjects/TradeWise-csharp/TradeWiseBackend.Bll/obj/Debug/net9.0/TradeWiseBackend.Bll.dll
+/Users/anjelika-lika/RiderProjects/TradeWise-csharp/TradeWiseBackend.Bll/obj/Debug/net9.0/refint/TradeWiseBackend.Bll.dll
+/Users/anjelika-lika/RiderProjects/TradeWise-csharp/TradeWiseBackend.Bll/obj/Debug/net9.0/TradeWiseBackend.Bll.pdb
+/Users/anjelika-lika/RiderProjects/TradeWise-csharp/TradeWiseBackend.Bll/obj/Debug/net9.0/ref/TradeWiseBackend.Bll.dll

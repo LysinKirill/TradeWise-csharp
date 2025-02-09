@@ -2,7 +2,7 @@ namespace TradeWiseBackend.Dal.DatabaseSettings;
 
 public record DbSettings
 {
-    public required string UserId { get; init; }
+    public required string Username { get; init; }
     public required string Password { get; init; }
     public required string Host { get; init; }
     public required string Database { get; init; }
@@ -10,10 +10,10 @@ public record DbSettings
 
     public string ConnectionString =>
         $"""
-         User={UserId};
+         Username={Username};
          Password={Password};
          Host={Host};
-         DataBase={Database};
+         Database={Database};
          {Options};
          """;
 }

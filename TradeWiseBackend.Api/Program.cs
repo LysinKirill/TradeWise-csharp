@@ -12,6 +12,7 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwagger();
 builder.Services.AddControllers();
+builder.Services.AddIdentityServices();
 builder.Services.AddBllServices();
 
 builder.Services.Configure<DbSettings>(builder.Configuration.GetSection(nameof(DbSettings)));
@@ -20,6 +21,7 @@ builder.Services.AddDalRepositories().AddDalInfrastructure(config);
 
 var app = builder.Build();
 
+// Middleware configuration
 app.UseSwagger();
 app.UseSwaggerUI(options =>
 {
@@ -29,6 +31,5 @@ app.UseSwaggerUI(options =>
 
 app.MapControllers();
 
-using var scope = app.Services.CreateScope();
-
+// Run the application
 app.Run();
