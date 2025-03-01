@@ -1,8 +1,8 @@
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
+using TradeWiseBackend.Dal.DatabaseSettings;
 using TradeWiseBackend.Dal.Repositories;
-using TradeWiseBackend.Domain.Interfaces.Interfaces.Repositories;
-using DbContext = TradeWiseBackend.Dal.DatabaseSettings.DbContext;
+using TradeWiseBackend.Domain.Interfaces.Repositories;
 
 namespace TradeWiseBackend.Dal.Extensions;
 
@@ -14,10 +14,11 @@ public static class ServiceCollectionExtensions
 
         return services;
     }
-    
-    public static IServiceCollection AddDalInfrastructure(this IServiceCollection services, DatabaseSettings.DbSettings config)
+
+    public static IServiceCollection AddDalInfrastructure(this IServiceCollection services, DbSettings config)
     {
-        services.AddDbContext<DbContext>(options =>
+        Console.WriteLine(config.ConnectionString);
+        services.AddDbContext<DatabaseContext>(options =>
             options.UseNpgsql(config.ConnectionString));
         return services;
     }

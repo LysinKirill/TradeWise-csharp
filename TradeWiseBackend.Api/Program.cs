@@ -1,7 +1,6 @@
 ﻿using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
 using TradeWiseBackend.Api.Extensions;
 using TradeWiseBackend.Bll.Extensions;
 using TradeWiseBackend.Dal.DatabaseSettings;
@@ -12,6 +11,7 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwagger();
 builder.Services.AddControllers();
+builder.Services.AddIdentityServices();
 builder.Services.AddBllServices();
 
 builder.Services.Configure<DbSettings>(builder.Configuration.GetSection(nameof(DbSettings)));
@@ -28,7 +28,5 @@ app.UseSwaggerUI(options =>
 });
 
 app.MapControllers();
-
-using var scope = app.Services.CreateScope();
 
 app.Run();

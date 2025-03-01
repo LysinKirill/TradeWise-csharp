@@ -1,6 +1,6 @@
 using System.Transactions;
-using TradeWiseBackend.Domain.Interfaces.Interfaces.Repositories;
-using TradeWiseBackend.Domain.Interfaces.Interfaces.Services;
+using TradeWiseBackend.Domain.Interfaces.Repositories;
+using TradeWiseBackend.Domain.Interfaces.Services;
 using TradeWiseBackend.Domain.Models;
 using TradeWiseBackend.Domain.ServiceModels;
 
