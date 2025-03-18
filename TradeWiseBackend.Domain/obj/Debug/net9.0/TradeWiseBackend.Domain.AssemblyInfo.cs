@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("TradeWiseBackend.Domain")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+781fd5f7386079dbd2bfdb0ae363ca06fd19d630")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+06a78a4f4032ad157f8464b1f80a206bc98c5a8b")]
 [assembly: System.Reflection.AssemblyProductAttribute("TradeWiseBackend.Domain")]
 [assembly: System.Reflection.AssemblyTitleAttribute("TradeWiseBackend.Domain")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

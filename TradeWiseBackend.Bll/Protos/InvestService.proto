@@ -1,0 +1,11 @@
+syntax = "proto3";
+
+import "google/protobuf/empty.proto";
+
+service InvestService {
+  rpc AddInvestApiKey(AddInvestApiKeyRequest) returns (google.protobuf.Empty);
+}
+
+message AddInvestApiKeyRequest {
+  string api_key = 1;
+}
