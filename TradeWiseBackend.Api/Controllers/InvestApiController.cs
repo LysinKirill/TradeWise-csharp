@@ -1,4 +1,5 @@
 using Mapster;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using TradeWiseBackend.Api.Requests.v1;
@@ -8,6 +9,7 @@ using TradeWiseBackend.Domain.ServiceModels;
 namespace TradeWiseBackend.Api.Controllers;
 
 [ApiController]
+[Authorize]
 [Microsoft.AspNetCore.Components.Route(RoutesV1.InvestApi)]
 public class InvestApiController(IInvestApiService investApiService) : ControllerBase
 {

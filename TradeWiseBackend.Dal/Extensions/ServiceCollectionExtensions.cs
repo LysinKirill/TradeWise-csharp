@@ -1,8 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using TradeWiseBackend.Dal.DatabaseSettings;
-using TradeWiseBackend.Dal.Repositories;
-using TradeWiseBackend.Domain.Interfaces.Repositories;
 
 namespace TradeWiseBackend.Dal.Extensions;
 
@@ -10,8 +8,6 @@ public static class ServiceCollectionExtensions
 {
     public static IServiceCollection AddDalRepositories(this IServiceCollection services)
     {
-        services.AddScoped<IAccountsRepository, AccountsRepository>();
-
         return services;
     }
 

@@ -10,9 +10,12 @@ public static class IdentityCollectionExtensions
     public static IServiceCollection AddIdentityServices(
         this IServiceCollection services)
     {
+        services.AddAuthentication();
         services.AddAuthorizationBuilder();
+
         services.AddIdentityCore<AccountEntity>()
             .AddEntityFrameworkStores<DatabaseContext>();
+
         services.AddIdentityApiEndpoints<AccountEntity>();
         services.Configure<IdentityOptions>(options =>
         {
