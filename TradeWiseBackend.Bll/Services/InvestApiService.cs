@@ -1,24 +1,36 @@
-using Grpc.Net.Client;
+using Grpc.Core;
+using Microsoft.AspNetCore.Http;
 using TradeWiseBackend.Domain.Interfaces.Services;
 using TradeWiseBackend.Domain.ServiceModels;
+using User;
 
 namespace TradeWiseBackend.Bll.Services;
 
-public class InvestApiService : IInvestApiService
+public class InvestApiService(
+    UserService.UserServiceClient userServiceClient,
+    IHttpContextAccessor httpContextAccessor
+) : IInvestApiService
 {
-    public async Task LinkInvestApiKeyWithAccount(LinkInvestApiKeyWithAccountPayload linkInvestApiKeyWithAccountPayload)
+    private Metadata AuthMetadata
     {
-        var address = "https://localhost/50001";
-        using var channel = GrpcChannel.ForAddress(address);
-        var client = new InvestService.InvestServiceClient(channel);
+        get
+        {
+            var token = httpContextAccessor.HttpContext?.Request.Headers["Authorization"].ToString();
+            if (token is null)
+                throw new RpcException(new Status(StatusCode.Unauthenticated, "No authorization header provided"));
+            return new Metadata
+            {
+                { "Authorization", token }
+            };
+        }
+    }
+
+    public async Task LinkInvestApiKeyWithAccount(
+        LinkInvestApiKeyWithAccountPayload linkInvestApiKeyWithAccountPayload,
+        CancellationToken ct)
+    {
         var request = new AddInvestApiKeyRequest { ApiKey = linkInvestApiKeyWithAccountPayload.InvestApiKey };
-        try
-        {
-            await client.AddInvestApiKeyAsync(request);
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"Some error occured: {ex.Message}");
-        }
+
+        await userServiceClient.AddInvestApiKeyAsync(request, headers: AuthMetadata, cancellationToken: ct);
     }
 }

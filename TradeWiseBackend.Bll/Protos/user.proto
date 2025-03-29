@@ -1,0 +1,36 @@
+syntax = "proto3";
+
+package user;
+
+import "google/protobuf/empty.proto";
+
+service UserService {
+  rpc GetAccounts (GetAccountsRequest) returns (GetAccountsResponse);
+  rpc AddInvestApiKey(AddInvestApiKeyRequest) returns (google.protobuf.Empty);
+}
+
+
+message GetAccountsRequest {
+  AccountStatus account_status = 1;
+}
+
+message GetAccountsResponse {
+  repeated AccountInfo accounts = 1;
+}
+
+message AddInvestApiKeyRequest {
+  string api_key = 1;
+}
+
+message AccountInfo {
+  string id = 1;
+  string name = 2;
+}
+
+enum AccountStatus {
+  ACCOUNT_STATUS_UNSPECIFIED = 0;
+  ACCOUNT_STATUS_NEW = 1;
+  ACCOUNT_STATUS_OPEN = 2;
+  ACCOUNT_STATUS_CLOSED = 3;
+  ACCOUNT_STATUS_ALL = 4;
+}
