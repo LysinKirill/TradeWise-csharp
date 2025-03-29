@@ -1,3 +1,0 @@
-obj/Debug/net9.0/Protos/InvestService.cs \
-obj/Debug/net9.0/Protos/InvestServiceGrpc.cs: /Users/anjelika-lika/.nuget/packages/grpc.tools/2.71.0/build/native/include/google/protobuf/empty.proto\
- Protos/InvestService.proto

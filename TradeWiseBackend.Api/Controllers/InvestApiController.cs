@@ -16,10 +16,11 @@ public class InvestApiController(IInvestApiService investApiService) : Controlle
     [HttpPost("link-invest-api-key-with-account")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType<ValidationProblemDetails>(StatusCodes.Status400BadRequest)]
-    public async Task<IActionResult> LinkInvestApiKeyWithAccount(LinkInvestApiKeyWithAccountRequest request)
+    public async Task<IActionResult> LinkInvestApiKeyWithAccount(LinkInvestApiKeyWithAccountRequest request,
+        CancellationToken ct)
     {
         await investApiService.LinkInvestApiKeyWithAccount(
-            request.Adapt<LinkInvestApiKeyWithAccountPayload>());
+            request.Adapt<LinkInvestApiKeyWithAccountPayload>(), ct);
 
         return Ok();
     }
