@@ -1,16 +1,37 @@
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
+using System.Text;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using TradeWiseBackend.Dal;
 using TradeWiseBackend.Dal.Entities;
 
-namespace TradeWiseBackend.Api.Extensions;
-
 public static class IdentityCollectionExtensions
 {
     public static IServiceCollection AddIdentityServices(
-        this IServiceCollection services)
+        this IServiceCollection services, IConfiguration configuration)
     {
-        services.AddAuthentication();
+        services.AddAuthentication(options =>
+            {
+                options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+                options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+                options.DefaultScheme = JwtBearerDefaults.AuthenticationScheme;
+            })
+            .AddJwtBearer(options =>
+            {
+                options.TokenValidationParameters = new TokenValidationParameters
+                {
+                    ValidateIssuerSigningKey = true,
+                    IssuerSigningKey = new SymmetricSecurityKey(
+                        Encoding.UTF8.GetBytes(configuration["Jwt:Key"]!)),
+                    ValidateIssuer = false,
+                    ValidateAudience = false,
+                    ValidateLifetime = true,
+                    ClockSkew = TimeSpan.Zero
+                };
+            });
+
         services.AddAuthorizationBuilder();
 
         services.AddIdentityCore<AccountEntity>()
@@ -20,9 +41,6 @@ public static class IdentityCollectionExtensions
         services.Configure<IdentityOptions>(options =>
         {
             options.Password.RequireDigit = true;
-            //options.Password.RequireLowercase = true;
-            //options.Password.RequireUppercase = true;
-            //options.Password.RequiredLength = 10;
             options.User.RequireUniqueEmail = true;
         });
 
