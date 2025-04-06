@@ -24,7 +24,8 @@ public static class IdentityCollectionExtensions
                 {
                     ValidateIssuerSigningKey = true,
                     IssuerSigningKey = new SymmetricSecurityKey(
-                        Encoding.UTF8.GetBytes(configuration["Jwt:Key"]!)),
+                        Encoding.UTF8.GetBytes(configuration["Jwt:Key"] ??
+                                               Environment.GetEnvironmentVariable("JWT_KEY")!)),
                     ValidateIssuer = false,
                     ValidateAudience = false,
                     ValidateLifetime = true,

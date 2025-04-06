@@ -59,7 +59,7 @@ builder.Configuration.AddJsonFile("appsettings.json")
 
 
 var jwtKey = builder.Configuration["Jwt:Key"] ?? 
-             "2ddc811a5eee11f682c2205ea73326336945877604331a334eaf159e7d2f6d02596b01303c47741133efa7b67e78e35e2442a04acc9f56bdb255fd0d00147500896b45011f2dd6756bb5e012373986bd762077648fbb8cb2cbf66d062464333436ffe9d80e62622f48a68701f8eb190ef7bb71023834cbdb6d01d5ec8cf0c904bf65da75204494b838401dac1b624ae80f24702a997069fb3a9420a205b6b2e1a4a1b7835ef2e7cd321bd279b779f224a62c4c5b9e686f231eb87a3b64ffae20f7b218158151dcaca3ef6148d51a69213e2fa4abe99552590179cdbe8149fe15ab5fd52cd965245c2ec6e808978b2d092af9531dc304e974a7c74ef817a69f33";
+             Environment.GetEnvironmentVariable("JWT_KEY")!;
 
 builder.Services.Configure<JwtSettings>(options =>
 {
