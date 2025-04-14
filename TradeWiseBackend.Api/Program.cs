@@ -22,6 +22,18 @@ builder.Services.AddSwagger();
 builder.Services.AddIdentityServices(builder.Configuration);
 builder.Services.AddBllServices();
 builder.Services.AddHttpContextAccessor();
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowAll",
+        policy =>
+        {
+            policy.AllowAnyOrigin()
+                  .AllowAnyHeader()
+                  .AllowAnyMethod();
+        });
+});
+
+
 
 builder.Services.Configure<DbSettings>(builder.Configuration.GetSection(nameof(DbSettings)));
 var config = builder.Configuration.GetRequiredSection("DbSettings").Get<DbSettings>()!;
@@ -83,6 +95,8 @@ app
     .MapIdentityApi<AccountEntity>();
 
 app.MapControllers();
+// Then use:
+app.UseCors("AllowAll");
 
 app.UseAuthentication();
 app.UseAuthorization();
