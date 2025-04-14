@@ -1,19 +1,18 @@
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Mvc;
+using TradeWiseBackend.Dal.Entities;
 using TradeWiseBackend.Domain.Interfaces.Services;
 using TradeWiseBackend.Domain.Models;
 
 namespace TradeWiseBackend.Api.Controllers;
 
-using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.Mvc;
-using Dal.Entities;
-
 [ApiController]
 [Route("api/auth/v1")]
 public class AuthController : ControllerBase
 {
-    private readonly UserManager<AccountEntity> _userManager;
-    private readonly ITokenService _tokenService;
     private readonly SignInManager<AccountEntity> _signInManager;
+    private readonly ITokenService _tokenService;
+    private readonly UserManager<AccountEntity> _userManager;
 
     public AuthController(
         UserManager<AccountEntity> userManager,
@@ -29,16 +28,10 @@ public class AuthController : ControllerBase
     public async Task<IActionResult> Login([FromBody] LoginModel model)
     {
         var user = await _userManager.FindByEmailAsync(model.Email);
-        if (user == null)
-        {
-            return Unauthorized();
-        }
+        if (user == null) return Unauthorized();
 
         var result = await _signInManager.CheckPasswordSignInAsync(user, model.Password, false);
-        if (!result.Succeeded)
-        {
-            return Unauthorized();
-        }
+        if (!result.Succeeded) return Unauthorized();
 
         var token = await _tokenService.GenerateToken(new AccountEntityModel
         {

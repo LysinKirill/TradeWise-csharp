@@ -13,7 +13,6 @@ using TradeWiseBackend.Dal.Entities;
 using TradeWiseBackend.Dal.Extensions;
 using User;
 
-
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddEndpointsApiExplorer();
@@ -33,14 +32,12 @@ builder.Configuration.AddUserSecrets<Program>();
 var certThumbprint = builder.Configuration["Grpc:CertThumbprint"]
                      ?? Environment.GetEnvironmentVariable("Grpc__CertThumbprint");
 if (string.IsNullOrEmpty(certThumbprint))
-{
     throw new InvalidOperationException("gRPC certificate thumbprint not configured. Set it in User Secrets.");
-}
 
 var cert = X509CertificateLoader.LoadCertificateFromFile("ssl/cert.pem");
 var handler = new HttpClientHandler();
 handler.ClientCertificates.Add(cert);
-handler.ServerCertificateCustomValidationCallback = 
+handler.ServerCertificateCustomValidationCallback =
     (_, actualCert, _, _) => actualCert?.Thumbprint == certThumbprint;
 
 
@@ -58,7 +55,7 @@ builder.Configuration.AddJsonFile("appsettings.json")
     .AddEnvironmentVariables();
 
 
-var jwtKey = builder.Configuration["Jwt:Key"] ?? 
+var jwtKey = builder.Configuration["Jwt:Key"] ??
              Environment.GetEnvironmentVariable("JWT_KEY")!;
 
 builder.Services.Configure<JwtSettings>(options =>

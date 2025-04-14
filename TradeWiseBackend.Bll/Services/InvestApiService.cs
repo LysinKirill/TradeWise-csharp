@@ -31,6 +31,6 @@ public class InvestApiService(
     {
         var request = new AddInvestApiKeyRequest { ApiKey = linkInvestApiKeyWithAccountPayload.InvestApiKey };
 
-        await userServiceClient.AddInvestApiKeyAsync(request, headers: AuthMetadata, cancellationToken: ct);
+        await userServiceClient.AddInvestApiKeyAsync(request, AuthMetadata, cancellationToken: ct);
     }
 }
