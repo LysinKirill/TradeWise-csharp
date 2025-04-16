@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace TradeWiseBackend.Dal.Migrations
 {
     /// <inheritdoc />
-    public partial class AddStrategyAndTransitionTables : Migration
+    public partial class AddStrategiesAndTransitionsTables : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -16,9 +16,7 @@ namespace TradeWiseBackend.Dal.Migrations
                 columns: table => new
                 {
                     StageId = table.Column<Guid>(type: "uuid", nullable: false),
-                    ModelName = table.Column<string>(type: "text", nullable: false),
-                    StageSourceId = table.Column<Guid>(type: "uuid", nullable: false),
-                    StageDestinationId = table.Column<Guid>(type: "uuid", nullable: false)
+                    ModelName = table.Column<string>(type: "text", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -30,16 +28,11 @@ namespace TradeWiseBackend.Dal.Migrations
                 columns: table => new
                 {
                     StrategyTransitionId = table.Column<Guid>(type: "uuid", nullable: false),
-                    StageSourceId = table.Column<Guid>(type: "uuid", nullable: false),
-                    StageDestinationId = table.Column<Guid>(type: "uuid", nullable: false),
+                    StageSourceId = table.Column<Guid>(type: "uuid", nullable: true),
+                    StageDestinationId = table.Column<Guid>(type: "uuid", nullable: true),
+                    StatType = table.Column<int>(type: "integer", nullable: false),
                     Operation = table.Column<int>(type: "integer", nullable: false),
-                    Value = table.Column<double>(type: "double precision", nullable: false),
-                    Timestamp = table.Column<DateTime>(type: "timestamp", nullable: false),
-                    MiddleBand = table.Column<double>(type: "double precision", nullable: false),
-                    UpperBand = table.Column<double>(type: "double precision", nullable: false),
-                    LowerBand = table.Column<double>(type: "double precision", nullable: false),
-                    Signal = table.Column<double>(type: "double precision", nullable: false),
-                    Macd = table.Column<double>(type: "double precision", nullable: false)
+                    Value = table.Column<double>(type: "double precision", nullable: false)
                 },
                 constraints: table =>
                 {

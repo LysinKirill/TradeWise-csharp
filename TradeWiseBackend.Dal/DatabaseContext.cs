@@ -29,7 +29,6 @@ public class DatabaseContext : IdentityDbContext<AccountEntity>
         modelBuilder.Entity<StrategyTransition>(entity =>
         {
             entity.HasKey(e => e.StrategyTransitionId);
-            entity.Property(e => e.Timestamp).HasColumnType("timestamp");
         });
     }
 }

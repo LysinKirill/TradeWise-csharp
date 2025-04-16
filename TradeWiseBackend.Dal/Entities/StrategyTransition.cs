@@ -5,16 +5,11 @@ namespace TradeWiseBackend.Bll.Entities;
 
 public class StrategyTransition
 {
-    [Key] public Guid StrategyTransitionId { get; set; } // UUID strategy_transition_id
+    [Key] public Guid StrategyTransitionId { get; set; }
 
-    public Guid StageSourceId { get; set; } // UUID stage_source_id
-    public Guid StageDestinationId { get; set; } // UUID stage_destination_id
-    public OperationType Operation { get; set; } // OperationType operation
-    public double Value { get; set; } // double value
-    public DateTime Timestamp { get; set; } // timestamp timestamp
-    public double MiddleBand { get; set; } // double middle_band
-    public double UpperBand { get; set; } // double upper_band
-    public double LowerBand { get; set; } // double lower_band
-    public double Signal { get; set; } // double signal
-    public double Macd { get; set; } // double macd
+    public Guid? StageSourceId { get; set; }
+    public Guid? StageDestinationId { get; set; }
+    public StatType StatType { get; set; }
+    public OperationType Operation { get; set; }
+    public double Value { get; set; }
 }
