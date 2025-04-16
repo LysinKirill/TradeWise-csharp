@@ -52,7 +52,7 @@ if (string.IsNullOrEmpty(certThumbprint))
 var cert = X509CertificateLoader.LoadCertificateFromFile("ssl/cert.pem");
 var handler = new HttpClientHandler();
 handler.ClientCertificates.Add(cert);
-handler.ServerCertificateCustomValidationCallback = 
+handler.ServerCertificateCustomValidationCallback =
     (_, actualCert, _, _) => actualCert?.Thumbprint == certThumbprint;
 
 
@@ -70,7 +70,7 @@ builder.Configuration.AddJsonFile("appsettings.json")
     .AddEnvironmentVariables();
 
 
-var jwtKey = builder.Configuration["Jwt:Key"] ?? 
+var jwtKey = builder.Configuration["Jwt:Key"] ??
              Environment.GetEnvironmentVariable("JWT_KEY")!;
 
 builder.Services.Configure<JwtSettings>(options =>
