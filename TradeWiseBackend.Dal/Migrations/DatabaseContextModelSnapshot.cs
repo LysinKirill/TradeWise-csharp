@@ -164,12 +164,6 @@ namespace TradeWiseBackend.Dal.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.Property<Guid>("StageDestinationId")
-                        .HasColumnType("uuid");
-
-                    b.Property<Guid>("StageSourceId")
-                        .HasColumnType("uuid");
-
                     b.HasKey("StageId");
 
                     b.ToTable("StrategyStages");
@@ -181,32 +175,17 @@ namespace TradeWiseBackend.Dal.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
-                    b.Property<double>("LowerBand")
-                        .HasColumnType("double precision");
-
-                    b.Property<double>("Macd")
-                        .HasColumnType("double precision");
-
-                    b.Property<double>("MiddleBand")
-                        .HasColumnType("double precision");
-
                     b.Property<int>("Operation")
                         .HasColumnType("integer");
 
-                    b.Property<double>("Signal")
-                        .HasColumnType("double precision");
-
-                    b.Property<Guid>("StageDestinationId")
+                    b.Property<Guid?>("StageDestinationId")
                         .HasColumnType("uuid");
 
-                    b.Property<Guid>("StageSourceId")
+                    b.Property<Guid?>("StageSourceId")
                         .HasColumnType("uuid");
 
-                    b.Property<DateTime>("Timestamp")
-                        .HasColumnType("timestamp");
-
-                    b.Property<double>("UpperBand")
-                        .HasColumnType("double precision");
+                    b.Property<int>("StatType")
+                        .HasColumnType("integer");
 
                     b.Property<double>("Value")
                         .HasColumnType("double precision");
