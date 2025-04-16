@@ -12,7 +12,8 @@ public static class ServiceCollectionExtensions
         {
             options.SwaggerDoc("v1", new OpenApiInfo
             {
-                Title = "TradeWise", Version = "v1"
+                Title = "TradeWise",
+                Version = "v1"
             });
             options.AddSecurityDefinition("oauth2", new OpenApiSecurityScheme
             {
