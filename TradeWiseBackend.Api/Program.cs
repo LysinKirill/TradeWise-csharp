@@ -63,9 +63,9 @@ builder.Services.AddGrpcClient<UserService.UserServiceClient>(options =>
     })
     .ConfigurePrimaryHttpMessageHandler(() => handler);
 
-
-// Add this to your builder configuration
-builder.Configuration.AddJsonFile("appsettings.json")
+var environment = builder.Environment;
+builder.Configuration.AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
+    .AddJsonFile($"appsettings.{environment.EnvironmentName}.json", optional: true)
     .AddUserSecrets<Program>()
     .AddEnvironmentVariables();
 
