@@ -12,7 +12,7 @@ using TradeWiseBackend.Dal;
 namespace TradeWiseBackend.Dal.Migrations
 {
     [DbContext(typeof(DatabaseContext))]
-    [Migration("20250416191138_AddStrategiesAndTransitionsTables")]
+    [Migration("20250417165506_AddStrategiesAndTransitionsTables")]
     partial class AddStrategiesAndTransitionsTables
     {
         /// <inheritdoc />
@@ -167,7 +167,13 @@ namespace TradeWiseBackend.Dal.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasColumnType("text");
+
                     b.HasKey("StageId");
+
+                    b.HasIndex("UserId");
 
                     b.ToTable("StrategyStages");
                 });
@@ -311,6 +317,17 @@ namespace TradeWiseBackend.Dal.Migrations
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+                });
+
+            modelBuilder.Entity("TradeWiseBackend.Bll.Entities.StrategyStage", b =>
+                {
+                    b.HasOne("TradeWiseBackend.Dal.Entities.AccountEntity", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
                 });
 #pragma warning restore 612, 618
         }

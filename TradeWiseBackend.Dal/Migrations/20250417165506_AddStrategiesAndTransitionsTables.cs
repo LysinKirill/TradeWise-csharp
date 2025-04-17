@@ -16,11 +16,18 @@ namespace TradeWiseBackend.Dal.Migrations
                 columns: table => new
                 {
                     StageId = table.Column<Guid>(type: "uuid", nullable: false),
-                    ModelName = table.Column<string>(type: "text", nullable: false)
+                    ModelName = table.Column<string>(type: "text", nullable: false),
+                    UserId = table.Column<string>(type: "text", nullable: false)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_StrategyStages", x => x.StageId);
+                    table.ForeignKey(
+                        name: "FK_StrategyStages_AspNetUsers_UserId",
+                        column: x => x.UserId,
+                        principalTable: "AspNetUsers",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateTable(
@@ -38,6 +45,11 @@ namespace TradeWiseBackend.Dal.Migrations
                 {
                     table.PrimaryKey("PK_StrategyTransitions", x => x.StrategyTransitionId);
                 });
+
+            migrationBuilder.CreateIndex(
+                name: "IX_StrategyStages_UserId",
+                table: "StrategyStages",
+                column: "UserId");
         }
 
         /// <inheritdoc />
