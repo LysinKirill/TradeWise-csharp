@@ -106,5 +106,4 @@ var dbContext = scope.ServiceProvider.GetRequiredService<DatabaseContext>();
 await dbContext.Database.EnsureDeletedAsync();
 await dbContext.Database.MigrateAsync();
 
-
 app.Run();
