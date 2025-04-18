@@ -22,6 +22,18 @@ public class InvestApiController(IInvestApiService investApiService) : Controlle
         await investApiService.LinkInvestApiKeyWithAccount(
             request.Adapt<LinkInvestApiKeyWithAccountPayload>(), ct);
 
+        //TODO: return actual result
+        return Ok();
+    }
+
+    [HttpPost("get-supported-instruments")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType<ValidationProblemDetails>(StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> GetSupportedInstruments(CancellationToken ct)
+    {
+        await investApiService.GetSupportedInstruments(ct);
+
+        //TODO: return actual result
         return Ok();
     }
 }

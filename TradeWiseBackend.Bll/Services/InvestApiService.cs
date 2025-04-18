@@ -1,3 +1,4 @@
+using Google.Protobuf.WellKnownTypes;
 using Grpc.Core;
 using Microsoft.AspNetCore.Http;
 using TradeWiseBackend.Domain.Interfaces.Services;
@@ -8,6 +9,7 @@ namespace TradeWiseBackend.Bll.Services;
 
 public class InvestApiService(
     UserService.UserServiceClient userServiceClient,
+    InvestService.InvestServiceClient investServiceClient,
     IHttpContextAccessor httpContextAccessor
 ) : IInvestApiService
 {
@@ -32,5 +34,14 @@ public class InvestApiService(
         var request = new AddInvestApiKeyRequest { ApiKey = linkInvestApiKeyWithAccountPayload.InvestApiKey };
 
         await userServiceClient.AddInvestApiKeyAsync(request, headers: AuthMetadata, cancellationToken: ct);
+
+        //TODO: возвращать результат
+    }
+
+    public async Task GetSupportedInstruments(CancellationToken ct)
+    {
+        await investServiceClient.GetSupportedInstrumentsAsync(new Empty(), headers: AuthMetadata, cancellationToken: ct);
+
+        //TODO: возвращать результат
     }
 }
