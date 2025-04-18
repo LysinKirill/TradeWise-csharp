@@ -1,4 +1,5 @@
 ﻿using System.Security.Cryptography.X509Certificates;
+using DotNetEnv;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.EntityFrameworkCore;
@@ -15,6 +16,7 @@ using User;
 
 
 var builder = WebApplication.CreateBuilder(args);
+Env.Load();
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddControllers();
@@ -95,7 +97,6 @@ app
     .MapIdentityApi<AccountEntity>();
 
 app.MapControllers();
-// Then use:
 app.UseCors("AllowAll");
 
 app.UseAuthentication();
@@ -103,7 +104,9 @@ app.UseAuthorization();
 
 using var scope = app.Services.CreateScope();
 var dbContext = scope.ServiceProvider.GetRequiredService<DatabaseContext>();
-await dbContext.Database.EnsureDeletedAsync();
-await dbContext.Database.MigrateAsync();
+if (!await dbContext.Database.CanConnectAsync())
+{
+    await dbContext.Database.MigrateAsync();
+}
 
 app.Run();
