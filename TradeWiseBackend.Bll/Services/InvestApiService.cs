@@ -38,10 +38,22 @@ public class InvestApiService(
         //TODO: возвращать результат
     }
 
-    public async Task GetSupportedInstruments(CancellationToken ct)
+    public async Task<List<Domain.Models.InstrumentInfo>> GetSupportedInstruments(CancellationToken ct)
     {
-        await investServiceClient.GetSupportedInstrumentsAsync(new Empty(), headers: AuthMetadata, cancellationToken: ct);
+        var instrumentsList = await investServiceClient.GetSupportedInstrumentsAsync(new Empty(), headers: AuthMetadata, cancellationToken: ct);
 
-        //TODO: возвращать результат
+        var instruments = instrumentsList.Instruments.Select(protoInstrument => new Domain.Models.InstrumentInfo
+        {
+            id = protoInstrument.Id,
+            figi = protoInstrument.Figi ?? string.Empty,
+            name = protoInstrument.Name,
+            lot = protoInstrument.Lot,
+            currency = protoInstrument.Currency,
+            sector = protoInstrument.Sector,
+            buy_available = protoInstrument.BuyAvailable,
+            sell_available = protoInstrument.SellAvailable
+        }).ToList();
+
+        return instruments;
     }
 }

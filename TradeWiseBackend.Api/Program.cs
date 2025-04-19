@@ -59,7 +59,7 @@ handler.ServerCertificateCustomValidationCallback =
 
 
 //TODO: replace localhost with uri
-//TODO: replace localhost with uri
+//TODO: move into extensions
 builder.Services.AddGrpcClient<UserService.UserServiceClient>(options =>
     {
         options.Address = new Uri("https://python-backend:50051");
