@@ -110,9 +110,12 @@ app.UseAuthorization();
 
 using var scope = app.Services.CreateScope();
 var dbContext = scope.ServiceProvider.GetRequiredService<DatabaseContext>();
-if (!await dbContext.Database.CanConnectAsync())
+var pendingMigrations = await dbContext.Database.GetPendingMigrationsAsync();
+if (pendingMigrations.Any())
 {
+    Console.WriteLine("Applying migrations...");
     await dbContext.Database.MigrateAsync();
+    Console.WriteLine("Migrations applied.");
 }
 
 app.Run();
