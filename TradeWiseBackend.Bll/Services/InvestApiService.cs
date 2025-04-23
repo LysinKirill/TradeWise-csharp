@@ -1,5 +1,6 @@
 using Google.Protobuf.WellKnownTypes;
 using Grpc.Core;
+using Mapster;
 using Microsoft.AspNetCore.Http;
 using TradeWiseBackend.Domain.Interfaces.Services;
 using TradeWiseBackend.Domain.ServiceModels;
@@ -42,18 +43,6 @@ public class InvestApiService(
     {
         var instrumentsList = await investServiceClient.GetSupportedInstrumentsAsync(new Empty(), headers: AuthMetadata, cancellationToken: ct);
 
-        var instruments = instrumentsList.Instruments.Select(protoInstrument => new Domain.Models.InstrumentInfo
-        {
-            id = protoInstrument.Id,
-            figi = protoInstrument.Figi ?? string.Empty,
-            name = protoInstrument.Name,
-            lot = protoInstrument.Lot,
-            currency = protoInstrument.Currency,
-            sector = protoInstrument.Sector,
-            buy_available = protoInstrument.BuyAvailable,
-            sell_available = protoInstrument.SellAvailable
-        }).ToList();
-
-        return instruments;
+        return instrumentsList.Instruments.Adapt<List<Domain.Models.InstrumentInfo>>();
     }
 }

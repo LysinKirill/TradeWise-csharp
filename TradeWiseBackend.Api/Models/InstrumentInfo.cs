@@ -2,12 +2,12 @@ namespace TradeWiseBackend.Api.Models;
 
 public record class InstrumentInfo
 {
-    public required string id { get; init; }
-    public required string figi { get; init; }
-    public required string name { get; init; }
-    public required int lot { get; init; }
-    public required string currency { get; init; }
-    public required string sector { get; init; }
-    public required bool buy_available { get; init; }
-    public required bool sell_available { get; init; }
+    public required string Id { get; init; }
+    public required string Figi { get; init; }
+    public required string Name { get; init; }
+    public required int Lot { get; init; }
+    public required string Currency { get; init; }
+    public required string Sector { get; init; }
+    public required bool BuyAvailable { get; init; }
+    public required bool SellAvailable { get; init; }
 }
