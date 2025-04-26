@@ -50,7 +50,7 @@ public class InvestApiController(IInvestApiService investApiService) : Controlle
         return Ok(instrumentsList.Adapt<List<InstrumentInfo>>());
     }
 
-    [HttpGet("get-instrument-stat")]
+    [HttpPost("get-instrument-stat")]
     [ProducesResponseType<GetInstrumentStatResponse>(StatusCodes.Status200OK)]
     [ProducesResponseType<ValidationProblemDetails>(StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> GetInstrumentStat(GetInstrumentStatRequest request, CancellationToken ct)
