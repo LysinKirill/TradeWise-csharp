@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 using TradeWiseBackend.Api.Models;
 using TradeWiseBackend.Api.Requests.v1;
 using TradeWiseBackend.Api.Responses;
+using TradeWiseBackend.Api.Responses.v1;
 using TradeWiseBackend.Domain.Interfaces.Services;
 using TradeWiseBackend.Domain.ServiceModels;
 
@@ -36,5 +37,15 @@ public class InvestApiController(IInvestApiService investApiService) : Controlle
         var instrumentsList = await investApiService.GetSupportedInstruments(ct);
 
         return Ok(instrumentsList.Adapt<List<InstrumentInfo>>());
+    }
+
+    [HttpGet("get-instrument-stat")]
+    [ProducesResponseType<GetInstrumentStatResponse>(StatusCodes.Status200OK)]
+    [ProducesResponseType<ValidationProblemDetails>(StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> GetInstrumentStat(GetInstrumentStatRequest request, CancellationToken ct)
+    {
+        var instrumentStat = await investApiService.GetInstrumentStat(request.Adapt<GetInstrumentStatPayload>(), ct);
+
+        return Ok(instrumentStat.Adapt<GetInstrumentStatResponse>());
     }
 }
