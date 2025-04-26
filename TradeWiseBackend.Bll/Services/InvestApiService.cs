@@ -59,10 +59,6 @@ public class InvestApiService(
 
     public async Task<InstrumentStat> GetInstrumentStat(GetInstrumentStatPayload payload, CancellationToken ct)
     {
-
-        // var s = System.Enum.TryParse<User.StatType>(payload.StatType.ToString(), out var parsed)
-        // ? parsed
-        // : User.StatType.Unknown;
         var statType = payload.StatType switch
         {
             ApiStatType.BollingerBandLower => UserStatType.BollingerBandLower,
