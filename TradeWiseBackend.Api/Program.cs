@@ -7,6 +7,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using TradeWiseBackend.Api.Configuration;
 using TradeWiseBackend.Api.Extensions;
+using TradeWiseBackend.Api.PythonBackend;
 using TradeWiseBackend.Bll.Extensions;
 using TradeWiseBackend.Dal;
 using TradeWiseBackend.Dal.DatabaseSettings;
@@ -36,7 +37,6 @@ builder.Services.AddCors(options =>
 });
 
 
-
 builder.Services.Configure<DbSettings>(builder.Configuration.GetSection(nameof(DbSettings)));
 var config = builder.Configuration.GetRequiredSection("DbSettings").Get<DbSettings>()!;
 builder.Services.AddDalRepositories().AddDalInfrastructure(config);
@@ -60,14 +60,16 @@ handler.ServerCertificateCustomValidationCallback =
 
 //TODO: replace localhost with uri
 //TODO: move into extensions
+builder.Services.Configure<PythonBackend>(builder.Configuration.GetSection(nameof(PythonBackend)));
+var python_backend = builder.Configuration.GetRequiredSection("PythonBackend").Get<PythonBackend>()!;
 builder.Services.AddGrpcClient<UserService.UserServiceClient>(options =>
     {
-        options.Address = new Uri("https://python-backend:50051");
+        options.Address = new Uri(python_backend.Url);
     })
     .ConfigurePrimaryHttpMessageHandler(() => handler);
 builder.Services.AddGrpcClient<InvestService.InvestServiceClient>(options =>
     {
-        options.Address = new Uri("https://python-backend:50051");
+        options.Address = new Uri(python_backend.Url);
     })
     .ConfigurePrimaryHttpMessageHandler(() => handler);
 
