@@ -8,13 +8,13 @@ using TradeWiseBackend.Domain.ServiceModels;
 using User;
 
 using ApiStatType = TradeWiseBackend.Api.Requests.models.StatType;
-using UserStatType = User.StatType;
+using UserStatType = Invest.StatType;
 
 namespace TradeWiseBackend.Bll.Services;
 
 public class InvestApiService(
     UserService.UserServiceClient userServiceClient,
-    InvestService.InvestServiceClient investServiceClient,
+    Invest.InvestService.InvestServiceClient investServiceClient,
     IHttpContextAccessor httpContextAccessor
 ) : IInvestApiService
 {
@@ -67,7 +67,7 @@ public class InvestApiService(
             ApiStatType.RelativeStrengthIndex => UserStatType.RelativeStrengthIndex,
             _ => UserStatType.Unknown
         };
-        var request = new GetInstrumentStatRequest { InstrumentId = payload.InstrumentId, StatType = statType, From = Timestamp.FromDateTime(payload.From), To = Timestamp.FromDateTime(payload.To) };
+        var request = new Invest.GetInstrumentStatRequest { InstrumentId = payload.InstrumentId, StatType = statType, From = Timestamp.FromDateTime(payload.From.ToUniversalTime()), To = Timestamp.FromDateTime(payload.To.ToUniversalTime()) };
         var instrumentStat = await investServiceClient.GetInstrumentStatAsync(request, headers: AuthMetadata, cancellationToken: ct);
 
         return instrumentStat.Adapt<InstrumentStat>();

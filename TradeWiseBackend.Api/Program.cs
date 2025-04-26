@@ -67,7 +67,7 @@ builder.Services.AddGrpcClient<UserService.UserServiceClient>(options =>
         options.Address = new Uri(python_backend.Url);
     })
     .ConfigurePrimaryHttpMessageHandler(() => handler);
-builder.Services.AddGrpcClient<InvestService.InvestServiceClient>(options =>
+builder.Services.AddGrpcClient<Invest.InvestService.InvestServiceClient>(options =>
     {
         options.Address = new Uri(python_backend.Url);
     })
