@@ -13,18 +13,18 @@ namespace TradeWiseBackend.Api.Controllers
     [Route(RoutesV1.StrategyApi)]
     public class StrategyController(IStrategyService strategyService) : ControllerBase
     {
-    [HttpPost("create")]
-    [ProducesResponseType(StatusCodes.Status200OK)]
-    [ProducesResponseType<ValidationProblemDetails>(StatusCodes.Status400BadRequest)]
-    [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> CreateStrategy(CreateStrategyRequest request,
-        CancellationToken ct)
-    {
-        await strategyService.CreateStrategy(
-            request.Adapt<CreateStrategyPayload>(), ct);
+        [HttpPost("create")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType<ValidationProblemDetails>(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public async Task<IActionResult> CreateStrategy(CreateStrategyRequest request,
+            CancellationToken ct)
+        {
+            await strategyService.CreateStrategy(
+                request.Adapt<CreateStrategyPayload>(), ct);
 
-        // TODO: добавить обработку ошибок
-        return Ok();
-    }
+            // TODO: добавить обработку ошибок
+            return Ok();
+        }
     }
 }
