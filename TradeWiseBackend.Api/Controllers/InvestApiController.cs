@@ -8,6 +8,7 @@ using TradeWiseBackend.Api.Responses;
 using TradeWiseBackend.Api.Responses.v1;
 using TradeWiseBackend.Domain.Interfaces.Services;
 using TradeWiseBackend.Domain.ServiceModels;
+using Grpc.Net.Client;
 
 namespace TradeWiseBackend.Api.Controllers;
 
@@ -19,14 +20,24 @@ public class InvestApiController(IInvestApiService investApiService) : Controlle
     [HttpPost("link-invest-api-key-with-account")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType<ValidationProblemDetails>(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> LinkInvestApiKeyWithAccount(LinkInvestApiKeyWithAccountRequest request,
         CancellationToken ct)
     {
-        await investApiService.LinkInvestApiKeyWithAccount(
+        var result = await investApiService.LinkInvestApiKeyWithAccount(
             request.Adapt<LinkInvestApiKeyWithAccountPayload>(), ct);
 
-        //TODO: return actual result
-        return Ok();
+        if (result.IsSuccess)
+        {
+            return Ok();
+        }
+
+        return result.StatusCode switch
+        {
+            Grpc.Core.StatusCode.InvalidArgument => BadRequest(new { error = result.ErrorMessage }),
+            Grpc.Core.StatusCode.NotFound => NotFound(new { error = result.ErrorMessage }),
+            _ => StatusCode(StatusCodes.Status500InternalServerError, new { error = result.ErrorMessage })
+        };
     }
 
     [HttpGet("get-supported-instruments")]

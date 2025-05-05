@@ -32,15 +32,22 @@ public class InvestApiService(
         }
     }
 
-    public async Task LinkInvestApiKeyWithAccount(
+    public async Task<GrpcCallResult> LinkInvestApiKeyWithAccount(
         LinkInvestApiKeyWithAccountPayload linkInvestApiKeyWithAccountPayload,
         CancellationToken ct)
     {
         var request = new AddInvestApiKeyRequest { ApiKey = linkInvestApiKeyWithAccountPayload.InvestApiKey };
 
-        await userServiceClient.AddInvestApiKeyAsync(request, headers: AuthMetadata, cancellationToken: ct);
-
-        //TODO: возвращать результат
+        try
+        {
+            var response = await userServiceClient.AddInvestApiKeyAsync(request, headers: AuthMetadata, cancellationToken: ct);
+            return GrpcCallResult.Success();
+        }
+        catch (RpcException ex)
+        {
+            Console.WriteLine($"Exception in add-invest-api-key: status = {ex.Status.StatusCode}, details = {ex.Status.Detail}");
+            return GrpcCallResult.Fail(ex.Status.StatusCode, ex.Status.Detail);
+        }
     }
 
     public async Task<List<Domain.Models.InstrumentInfo>> GetSupportedInstruments(CancellationToken ct)
