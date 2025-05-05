@@ -93,6 +93,8 @@ builder.Services.Configure<JwtSettings>(options =>
 
 var app = builder.Build();
 
+app.UseExceptionHandler(c => { });
+
 app.UseSwagger();
 app.UseSwaggerUI(options =>
 {
