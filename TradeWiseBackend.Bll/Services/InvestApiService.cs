@@ -32,22 +32,13 @@ public class InvestApiService(
         }
     }
 
-    public async Task<GrpcCallResult> LinkInvestApiKeyWithAccount(
+    public async Task LinkInvestApiKeyWithAccount(
         LinkInvestApiKeyWithAccountPayload linkInvestApiKeyWithAccountPayload,
         CancellationToken ct)
     {
         var request = new AddInvestApiKeyRequest { ApiKey = linkInvestApiKeyWithAccountPayload.InvestApiKey };
 
-        try
-        {
-            var response = await userServiceClient.AddInvestApiKeyAsync(request, headers: AuthMetadata, cancellationToken: ct);
-            return GrpcCallResult.Success();
-        }
-        catch (RpcException ex)
-        {
-            Console.WriteLine($"Exception in add-invest-api-key: status = {ex.Status.StatusCode}, details = {ex.Status.Detail}");
-            return GrpcCallResult.Fail(ex.Status.StatusCode, ex.Status.Detail);
-        }
+        await userServiceClient.AddInvestApiKeyAsync(request, headers: AuthMetadata, cancellationToken: ct);
     }
 
     public async Task<List<Domain.Models.InstrumentInfo>> GetSupportedInstruments(CancellationToken ct)
@@ -72,7 +63,6 @@ public class InvestApiService(
         };
         var request = new Invest.GetInstrumentStatRequest { InstrumentId = payload.InstrumentId, StatType = statType, From = Timestamp.FromDateTime(payload.From.ToUniversalTime()), To = Timestamp.FromDateTime(payload.To.ToUniversalTime()) };
         var instrumentStat = await investServiceClient.GetInstrumentStatAsync(request, headers: AuthMetadata, cancellationToken: ct);
-
         return instrumentStat.Adapt<InstrumentStat>();
     }
 }
