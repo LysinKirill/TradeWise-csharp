@@ -14,7 +14,7 @@ namespace TradeWiseBackend.Api.Controllers;
 
 [ApiController]
 [Authorize]
-[Microsoft.AspNetCore.Components.Route(RoutesV1.InvestApi)]
+[Route(RoutesV1.InvestApi)]
 public class InvestApiController(IInvestApiService investApiService) : ControllerBase
 {
     [HttpPost("link-invest-api-key-with-account")]
