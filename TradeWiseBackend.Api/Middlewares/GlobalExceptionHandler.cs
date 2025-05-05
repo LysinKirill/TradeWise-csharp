@@ -21,7 +21,6 @@ internal sealed class GlobalExceptionHandler : IExceptionHandler
         Exception exception,
         CancellationToken cancellationToken)
     {
-        Console.WriteLine("KEKE GlobalExceptionHandler ");
         _logger.LogError(
             exception, "Exception occurred: {Message}", exception.Message);
 

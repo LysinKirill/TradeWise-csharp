@@ -21,6 +21,7 @@ using User;
 var builder = WebApplication.CreateBuilder(args);
 Env.Load();
 
+builder.Services.AddExceptionHandlingMiddleware(builder.Configuration);
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddControllers();
 builder.Services.AddSwagger();
@@ -100,7 +101,6 @@ app.UseExceptionHandler(new ExceptionHandlerOptions
     AllowStatusCode404Response = true,
     ExceptionHandler = async context =>
     {
-        Console.WriteLine("KEKE UseExceptionHandler ");
         context.Response.ContentType = "application/json";
 
         var exception = context.Features.Get<IExceptionHandlerFeature>()?.Error;
