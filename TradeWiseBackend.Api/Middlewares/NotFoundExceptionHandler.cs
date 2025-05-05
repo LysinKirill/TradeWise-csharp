@@ -20,7 +20,8 @@ internal sealed class NotFoundExceptionHandler : IExceptionHandler
         HttpContext httpContext,
         Exception exception,
         CancellationToken cancellationToken)
-    {
+    {   
+        Console.WriteLine("KEKE NotFoundExceptionHandler ");
         if (exception is not RpcException notFoundException || notFoundException.StatusCode == StatusCode.NotFound)
         {
             return false;

@@ -1,6 +1,8 @@
 ﻿using System.Security.Cryptography.X509Certificates;
 using DotNetEnv;
 using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Diagnostics;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -93,7 +95,41 @@ builder.Services.Configure<JwtSettings>(options =>
 
 var app = builder.Build();
 
-app.UseExceptionHandler(c => { });
+app.UseExceptionHandler(new ExceptionHandlerOptions
+{
+    AllowStatusCode404Response = true,
+    ExceptionHandler = async context =>
+    {
+        Console.WriteLine("KEKE UseExceptionHandler ");
+        context.Response.ContentType = "application/json";
+
+        var exception = context.Features.Get<IExceptionHandlerFeature>()?.Error;
+
+        if (exception == null)
+        {
+            context.Response.StatusCode = StatusCodes.Status500InternalServerError;
+            var errorObj = new { error = "Internal Server Error" };
+            await context.Response.WriteAsync(System.Text.Json.JsonSerializer.Serialize(errorObj));
+            return;
+        }
+
+        var handlers = context.RequestServices.GetServices<IExceptionHandler>();
+        foreach (var handler in handlers)
+        {
+            var cancellationToken = context.RequestAborted;
+            var handled = await handler.TryHandleAsync(context, exception, cancellationToken);
+            if (handled) return;
+        }
+
+        context.Response.StatusCode = StatusCodes.Status500InternalServerError;
+
+        var fallbackError = new { error = "Internal Server Error", code = 500 };
+        var fallbackJson = System.Text.Json.JsonSerializer.Serialize(fallbackError);
+
+        await context.Response.WriteAsync(fallbackJson);
+    }
+});
+
 
 app.UseSwagger();
 app.UseSwaggerUI(options =>
