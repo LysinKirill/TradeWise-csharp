@@ -24,20 +24,10 @@ public class InvestApiController(IInvestApiService investApiService) : Controlle
     public async Task<IActionResult> LinkInvestApiKeyWithAccount(LinkInvestApiKeyWithAccountRequest request,
         CancellationToken ct)
     {
-        var result = await investApiService.LinkInvestApiKeyWithAccount(
+        await investApiService.LinkInvestApiKeyWithAccount(
             request.Adapt<LinkInvestApiKeyWithAccountPayload>(), ct);
 
-        if (result.IsSuccess)
-        {
-            return Ok();
-        }
-
-        return result.StatusCode switch
-        {
-            Grpc.Core.StatusCode.InvalidArgument => BadRequest(new { error = result.ErrorMessage }),
-            Grpc.Core.StatusCode.NotFound => NotFound(new { error = result.ErrorMessage }),
-            _ => StatusCode(StatusCodes.Status500InternalServerError, new { error = result.ErrorMessage })
-        };
+        return Ok();
     }
 
     [HttpGet("get-supported-instruments")]
