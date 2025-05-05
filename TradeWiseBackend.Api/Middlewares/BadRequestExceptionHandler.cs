@@ -21,7 +21,6 @@ internal sealed class BadRequestExceptionHandler : IExceptionHandler
         Exception exception,
         CancellationToken cancellationToken)
     {
-        Console.WriteLine("KEKE BadRequestExceptionHandler ");
         if (exception is not RpcException badRequestException || badRequestException.StatusCode == StatusCode.InvalidArgument)
         {
             return false;

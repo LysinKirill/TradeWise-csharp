@@ -62,9 +62,7 @@ public class InvestApiService(
             _ => UserStatType.Unknown
         };
         var request = new Invest.GetInstrumentStatRequest { InstrumentId = payload.InstrumentId, StatType = statType, From = Timestamp.FromDateTime(payload.From.ToUniversalTime()), To = Timestamp.FromDateTime(payload.To.ToUniversalTime()) };
-        Console.WriteLine("KEKE1 " + request.ToString());
         var instrumentStat = await investServiceClient.GetInstrumentStatAsync(request, headers: AuthMetadata, cancellationToken: ct);
-        Console.WriteLine("KEKE " + instrumentStat.ToString());
         return instrumentStat.Adapt<InstrumentStat>();
     }
 }
