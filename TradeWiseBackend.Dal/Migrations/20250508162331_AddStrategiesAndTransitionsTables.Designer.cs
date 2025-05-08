@@ -12,7 +12,7 @@ using TradeWiseBackend.Dal;
 namespace TradeWiseBackend.Dal.Migrations
 {
     [DbContext(typeof(DatabaseContext))]
-    [Migration("20250508145516_AddStrategiesAndTransitionsTables")]
+    [Migration("20250508162331_AddStrategiesAndTransitionsTables")]
     partial class AddStrategiesAndTransitionsTables
     {
         /// <inheritdoc />
@@ -180,6 +180,10 @@ namespace TradeWiseBackend.Dal.Migrations
 
                     b.HasKey("StrategyTransitionId");
 
+                    b.HasIndex("StageDestinationId");
+
+                    b.HasIndex("StageSourceId");
+
                     b.ToTable("StrategyTransitions");
                 });
 
@@ -317,6 +321,23 @@ namespace TradeWiseBackend.Dal.Migrations
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+                });
+
+            modelBuilder.Entity("TradeWiseBackend.Bll.Entities.StrategyTransitionEntity", b =>
+                {
+                    b.HasOne("TradeWiseBackend.Dal.Entities.StrategyStageEntity", "StageDestination")
+                        .WithMany()
+                        .HasForeignKey("StageDestinationId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("TradeWiseBackend.Dal.Entities.StrategyStageEntity", "StageSource")
+                        .WithMany()
+                        .HasForeignKey("StageSourceId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.Navigation("StageDestination");
+
+                    b.Navigation("StageSource");
                 });
 
             modelBuilder.Entity("TradeWiseBackend.Dal.Entities.StrategyStageEntity", b =>

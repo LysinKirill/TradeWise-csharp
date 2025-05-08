@@ -23,4 +23,19 @@ public class StrategyRepository(DatabaseContext dbContext) : IStrategyRepository
         await dbContext.StrategyStages.AddRangeAsync(strategyStageEntities);
         await dbContext.SaveChangesAsync();
     }
+
+    public async Task SaveStrategyTransitions(List<StrategyStage> strategyStages)
+    {
+        var strategyStageEntities = strategyStages.Adapt<List<StrategyStageEntity>>();
+        foreach (var stageEntity in strategyStageEntities)
+        {
+            var originalStage = strategyStages.First(s => s.StageId == stageEntity.StageId);
+
+            stageEntity.UserId = originalStage.User.Id;
+            stageEntity.User = null;
+        }
+
+        await dbContext.StrategyStages.AddRangeAsync(strategyStageEntities);
+        await dbContext.SaveChangesAsync();
+    }
 }

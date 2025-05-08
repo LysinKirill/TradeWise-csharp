@@ -44,22 +44,44 @@ namespace TradeWiseBackend.Dal.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_StrategyTransitions", x => x.StrategyTransitionId);
+                    table.ForeignKey(
+                        name: "FK_StrategyTransitions_StrategyStages_StageDestinationId",
+                        column: x => x.StageDestinationId,
+                        principalTable: "StrategyStages",
+                        principalColumn: "StageId",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_StrategyTransitions_StrategyStages_StageSourceId",
+                        column: x => x.StageSourceId,
+                        principalTable: "StrategyStages",
+                        principalColumn: "StageId",
+                        onDelete: ReferentialAction.Restrict);
                 });
 
             migrationBuilder.CreateIndex(
                 name: "IX_StrategyStages_UserId",
                 table: "StrategyStages",
                 column: "UserId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_StrategyTransitions_StageDestinationId",
+                table: "StrategyTransitions",
+                column: "StageDestinationId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_StrategyTransitions_StageSourceId",
+                table: "StrategyTransitions",
+                column: "StageSourceId");
         }
 
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropTable(
-                name: "StrategyStages");
+                name: "StrategyTransitions");
 
             migrationBuilder.DropTable(
-                name: "StrategyTransitions");
+                name: "StrategyStages");
         }
     }
 }
