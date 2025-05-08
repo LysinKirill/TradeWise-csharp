@@ -34,6 +34,16 @@ public class DatabaseContext : IdentityDbContext<AccountEntity>
         modelBuilder.Entity<StrategyTransitionEntity>(entity =>
         {
             entity.HasKey(e => e.StrategyTransitionId);
+
+            entity.HasOne(e => e.StageSource)
+              .WithMany()
+              .HasForeignKey(e => e.StageSourceId)
+              .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne(e => e.StageDestination)
+              .WithMany()
+              .HasForeignKey(e => e.StageDestinationId)
+              .OnDelete(DeleteBehavior.Restrict);
         });
     }
 }
