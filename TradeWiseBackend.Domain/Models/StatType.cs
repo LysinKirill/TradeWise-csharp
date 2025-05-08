@@ -1,4 +1,4 @@
-namespace TradeWiseBackend.Api.Requests.models;
+namespace TradeWiseBackend.Domain.Models;
 
 public enum StatType
 {

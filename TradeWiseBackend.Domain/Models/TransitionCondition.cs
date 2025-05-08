@@ -1,6 +1,6 @@
 using System;
 
-namespace TradeWiseBackend.Api.Requests.models;
+namespace TradeWiseBackend.Domain.Models;
 
 public record TransitionCondition
 (

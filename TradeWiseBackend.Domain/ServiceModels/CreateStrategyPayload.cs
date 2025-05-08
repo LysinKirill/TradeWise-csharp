@@ -1,4 +1,6 @@
-using TradeWiseBackend.Api.Requests.models;
+
+
+using TradeWiseBackend.Domain.Models;
 
 namespace TradeWiseBackend.Domain.ServiceModels;
 
