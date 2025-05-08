@@ -10,6 +10,7 @@ public static class ServiceCollectionExtensions
     {
         services.AddScoped<IInvestApiService, InvestApiService>();
         services.AddScoped<ITokenService, TokenService>();
+        services.AddScoped<IStrategyService, StrategyService>();
 
         return services;
     }

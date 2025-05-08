@@ -7,7 +7,6 @@ using TradeWiseBackend.Domain.Models;
 using TradeWiseBackend.Domain.ServiceModels;
 using User;
 
-using ApiStatType = TradeWiseBackend.Api.Requests.models.StatType;
 using UserStatType = Invest.StatType;
 
 namespace TradeWiseBackend.Bll.Services;
@@ -52,13 +51,13 @@ public class InvestApiService(
     {
         var statType = payload.StatType switch
         {
-            ApiStatType.BollingerBandLower => UserStatType.BollingerBandLower,
-            ApiStatType.BollingerBandMiddle => UserStatType.BollingerBandMiddle,
-            ApiStatType.BollingerBandUpper => UserStatType.BollingerBandUpper,
-            ApiStatType.ExponentialMovingAverage => UserStatType.ExponentialMovingAverage,
-            ApiStatType.MovingAverage => UserStatType.MovingAverage,
-            ApiStatType.MovingAverageConvergenceDivergence => UserStatType.MovingAverageConvergenceDivergence,
-            ApiStatType.RelativeStrengthIndex => UserStatType.RelativeStrengthIndex,
+            StatType.BollingerBandLower => UserStatType.BollingerBandLower,
+            StatType.BollingerBandMiddle => UserStatType.BollingerBandMiddle,
+            StatType.BollingerBandUpper => UserStatType.BollingerBandUpper,
+            StatType.ExponentialMovingAverage => UserStatType.ExponentialMovingAverage,
+            StatType.MovingAverage => UserStatType.MovingAverage,
+            StatType.MovingAverageConvergenceDivergence => UserStatType.MovingAverageConvergenceDivergence,
+            StatType.RelativeStrengthIndex => UserStatType.RelativeStrengthIndex,
             _ => UserStatType.Unknown
         };
         var request = new Invest.GetInstrumentStatRequest { InstrumentId = payload.InstrumentId, StatType = statType, From = Timestamp.FromDateTime(payload.From.ToUniversalTime()), To = Timestamp.FromDateTime(payload.To.ToUniversalTime()) };
