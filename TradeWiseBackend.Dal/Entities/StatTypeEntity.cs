@@ -2,7 +2,7 @@ using System;
 
 namespace TradeWiseBackend.Bll.Entities;
 
-public enum StatType
+public enum StatTypeEntity
 {
     Timestamp = 0,
     MiddleBand = 1,

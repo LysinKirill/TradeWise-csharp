@@ -5,5 +5,5 @@ namespace TradeWiseBackend.Domain.Interfaces.Services;
 
 public interface IStrategyService
 {
-    Task CreateStrategy(CreateStrategyPayload createStrategyPayload, CancellationToken ct);
+    Task CreateStrategyStages(CreateStrategyPayload createStrategyPayload, CancellationToken ct);
 }

@@ -13,14 +13,14 @@ public class DatabaseContext : IdentityDbContext<AccountEntity>
     }
 
     public required DbSet<AccountEntity> Accounts { get; set; }
-    public DbSet<StrategyStage> StrategyStages { get; set; }
-    public DbSet<StrategyTransition> StrategyTransitions { get; set; }
+    public DbSet<StrategyStageEntity> StrategyStages { get; set; }
+    public DbSet<StrategyTransitionEntity> StrategyTransitions { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
 
-        modelBuilder.Entity<StrategyStage>(entity =>
+        modelBuilder.Entity<StrategyStageEntity>(entity =>
         {
             entity.HasKey(e => e.StageId);
             entity.Property(e => e.ModelName).IsRequired();
@@ -31,7 +31,7 @@ public class DatabaseContext : IdentityDbContext<AccountEntity>
                       .IsRequired();
         });
 
-        modelBuilder.Entity<StrategyTransition>(entity =>
+        modelBuilder.Entity<StrategyTransitionEntity>(entity =>
         {
             entity.HasKey(e => e.StrategyTransitionId);
         });

@@ -20,10 +20,13 @@ namespace TradeWiseBackend.Api.Controllers
         public async Task<IActionResult> CreateStrategy(CreateStrategyRequest request,
             CancellationToken ct)
         {
-            await strategyService.CreateStrategy(
-                request.Adapt<CreateStrategyPayload>(), ct);
+            var userId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+            Console.WriteLine("KEKE " + userId);
 
-            // TODO: добавить обработку ошибок
+            var createPayload = request.Adapt<CreateStrategyPayload>() with { UserId = userId };
+            await strategyService.CreateStrategyStages(
+                createPayload, ct);
+
             return Ok();
         }
     }

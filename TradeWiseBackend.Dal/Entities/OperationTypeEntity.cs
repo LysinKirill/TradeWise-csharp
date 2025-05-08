@@ -2,7 +2,7 @@ using System;
 
 namespace TradeWiseBackend.Bll.Entities;
 
-public enum OperationType
+public enum OperationTypeEntity
 {
     Unknown = 0,
     GreaterThan = 1,

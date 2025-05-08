@@ -6,7 +6,7 @@ namespace TradeWiseBackend.Bll.Services;
 
 public class StrategyService : IStrategyService
 {
-    public Task CreateStrategy(CreateStrategyPayload createStrategyPayload, CancellationToken ct)
+    public Task CreateStrategyStages(CreateStrategyPayload createStrategyPayload, CancellationToken ct)
     {
         throw new NotImplementedException();
     }

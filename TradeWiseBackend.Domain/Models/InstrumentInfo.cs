@@ -1,6 +1,6 @@
 namespace TradeWiseBackend.Domain.Models;
 
-public record class InstrumentInfo
+public record InstrumentInfo
 {
     public required string Id { get; init; }
     public required string Figi { get; init; }
