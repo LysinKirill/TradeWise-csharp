@@ -1,17 +1,16 @@
-using System;
 using Mapster;
 using TradeWiseBackend.Bll.Entities;
 using TradeWiseBackend.Dal.Entities;
 using TradeWiseBackend.Domain.Interfaces.Repositories;
 using TradeWiseBackend.Domain.Models;
-using TradeWiseBackend.Domain.RepositoryModels;
-using Microsoft.EntityFrameworkCore;
+using StrategyStage = TradeWiseBackend.Domain.RepositoryModels.StrategyStage;
+using StrategyTransition = TradeWiseBackend.Domain.RepositoryModels.StrategyTransition;
 
 namespace TradeWiseBackend.Dal.Repositories;
 
 public class StrategyRepository(DatabaseContext dbContext) : IStrategyRepository
 {
-    public async Task SaveStrategyStages(List<Domain.RepositoryModels.StrategyStage> strategyStages)
+    public async Task SaveStrategyStages(List<StrategyStage> strategyStages)
     {
         var strategyStageEntities = strategyStages.Adapt<List<StrategyStageEntity>>();
         foreach (var stageEntity in strategyStageEntities)
@@ -26,7 +25,7 @@ public class StrategyRepository(DatabaseContext dbContext) : IStrategyRepository
         await dbContext.SaveChangesAsync();
     }
 
-    public async Task SaveStrategyTransitions(List<Domain.RepositoryModels.StrategyTransition> transitions)
+    public async Task SaveStrategyTransitions(List<StrategyTransition> transitions)
     {
         var entities = transitions.Select(t => new StrategyTransitionEntity
         {

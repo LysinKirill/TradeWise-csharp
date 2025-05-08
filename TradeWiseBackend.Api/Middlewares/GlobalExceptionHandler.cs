@@ -1,11 +1,9 @@
-using System;
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Http;
-using Microsoft.Extensions.Logging;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
 
 namespace TradeWiseBackend.Api.Middlewares;
-
 
 internal sealed class GlobalExceptionHandler : IExceptionHandler
 {

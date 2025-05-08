@@ -1,13 +1,9 @@
 using Google.Protobuf.WellKnownTypes;
 using Grpc.Core;
-using Mapster;
 using Microsoft.AspNetCore.Http;
 using TradeWiseBackend.Domain.Interfaces.Services;
 using TradeWiseBackend.Domain.Models;
 using TradeWiseBackend.Domain.ServiceModels;
-using User;
-
-using UserStatType = Invest.StatType;
 
 namespace TradeWiseBackend.Bll.Services;
 
@@ -40,11 +36,13 @@ public class InvestApiService(
         await userServiceClient.AddInvestApiKeyAsync(request, headers: AuthMetadata, cancellationToken: ct);
     }
 
-    public async Task<List<Domain.Models.InstrumentInfo>> GetSupportedInstruments(CancellationToken ct)
+    public async Task<List<InstrumentInfo>> GetSupportedInstruments(CancellationToken ct)
     {
-        var instrumentsList = await investServiceClient.GetSupportedInstrumentsAsync(new Empty(), headers: AuthMetadata, cancellationToken: ct);
+        var instrumentsList =
+            await investServiceClient.GetSupportedInstrumentsAsync(new Empty(), headers: AuthMetadata,
+                cancellationToken: ct);
 
-        return instrumentsList.Instruments.Adapt<List<Domain.Models.InstrumentInfo>>();
+        return instrumentsList.Instruments.Adapt<List<InstrumentInfo>>();
     }
 
     public async Task<InstrumentStat> GetInstrumentStat(GetInstrumentStatPayload payload, CancellationToken ct)
@@ -60,8 +58,14 @@ public class InvestApiService(
             StatType.RelativeStrengthIndex => UserStatType.RelativeStrengthIndex,
             _ => UserStatType.Unknown
         };
-        var request = new Invest.GetInstrumentStatRequest { InstrumentId = payload.InstrumentId, StatType = statType, From = Timestamp.FromDateTime(payload.From.ToUniversalTime()), To = Timestamp.FromDateTime(payload.To.ToUniversalTime()) };
-        var instrumentStat = await investServiceClient.GetInstrumentStatAsync(request, headers: AuthMetadata, cancellationToken: ct);
+        var request = new Invest.GetInstrumentStatRequest
+        {
+            InstrumentId = payload.InstrumentId, StatType = statType,
+            From = Timestamp.FromDateTime(payload.From.ToUniversalTime()),
+            To = Timestamp.FromDateTime(payload.To.ToUniversalTime())
+        };
+        var instrumentStat =
+            await investServiceClient.GetInstrumentStatAsync(request, headers: AuthMetadata, cancellationToken: ct);
         return instrumentStat.Adapt<InstrumentStat>();
     }
 }
