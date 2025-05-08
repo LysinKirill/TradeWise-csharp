@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using TradeWiseBackend.Api.Middlewares;
+using Hellang.Middleware.ProblemDetails;
 
 namespace TradeWiseBackend.Api.Extensions;
 
