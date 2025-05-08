@@ -6,6 +6,7 @@ public record StrategyTransition(
     Guid StrategyTransitionId,
     Guid? StageSourceId,
     Guid? StageDestinationId,
+    Guid StrategyId,
     StatType StatType,
     TransitionConditionType Operation,
     double Value

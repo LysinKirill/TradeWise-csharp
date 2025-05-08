@@ -12,7 +12,7 @@ using TradeWiseBackend.Dal;
 namespace TradeWiseBackend.Dal.Migrations
 {
     [DbContext(typeof(DatabaseContext))]
-    [Migration("20250508162331_AddStrategiesAndTransitionsTables")]
+    [Migration("20250508194257_AddStrategiesAndTransitionsTables")]
     partial class AddStrategiesAndTransitionsTables
     {
         /// <inheritdoc />
@@ -175,14 +175,17 @@ namespace TradeWiseBackend.Dal.Migrations
                     b.Property<int>("StatType")
                         .HasColumnType("integer");
 
+                    b.Property<Guid>("StrategyId")
+                        .HasColumnType("uuid");
+
                     b.Property<double>("Value")
                         .HasColumnType("double precision");
 
                     b.HasKey("StrategyTransitionId");
 
-                    b.HasIndex("StageDestinationId");
+                    b.HasIndex("StageDestinationId", "StrategyId");
 
-                    b.HasIndex("StageSourceId");
+                    b.HasIndex("StageSourceId", "StrategyId");
 
                     b.ToTable("StrategyTransitions");
                 });
@@ -254,7 +257,9 @@ namespace TradeWiseBackend.Dal.Migrations
             modelBuilder.Entity("TradeWiseBackend.Dal.Entities.StrategyStageEntity", b =>
                 {
                     b.Property<Guid>("StageId")
-                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("StrategyId")
                         .HasColumnType("uuid");
 
                     b.Property<string>("ModelName")
@@ -265,7 +270,7 @@ namespace TradeWiseBackend.Dal.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.HasKey("StageId");
+                    b.HasKey("StageId", "StrategyId");
 
                     b.HasIndex("UserId");
 
@@ -327,12 +332,12 @@ namespace TradeWiseBackend.Dal.Migrations
                 {
                     b.HasOne("TradeWiseBackend.Dal.Entities.StrategyStageEntity", "StageDestination")
                         .WithMany()
-                        .HasForeignKey("StageDestinationId")
+                        .HasForeignKey("StageDestinationId", "StrategyId")
                         .OnDelete(DeleteBehavior.Restrict);
 
                     b.HasOne("TradeWiseBackend.Dal.Entities.StrategyStageEntity", "StageSource")
                         .WithMany()
-                        .HasForeignKey("StageSourceId")
+                        .HasForeignKey("StageSourceId", "StrategyId")
                         .OnDelete(DeleteBehavior.Restrict);
 
                     b.Navigation("StageDestination");

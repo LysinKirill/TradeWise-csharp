@@ -9,6 +9,7 @@ public class StrategyTransitionEntity
     [Key] public Guid StrategyTransitionId { get; set; }
     public Guid? StageSourceId { get; set; }
     public Guid? StageDestinationId { get; set; }
+    public Guid StrategyId { get; set; }
 
     [ForeignKey(nameof(StageSourceId))] public StrategyStageEntity? StageSource { get; set; }
 

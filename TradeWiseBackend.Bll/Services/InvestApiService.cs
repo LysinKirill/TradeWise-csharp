@@ -62,7 +62,8 @@ public class InvestApiService(
         };
         var request = new Invest.GetInstrumentStatRequest
         {
-            InstrumentId = payload.InstrumentId, StatType = statType,
+            InstrumentId = payload.InstrumentId,
+            StatType = statType,
             From = Timestamp.FromDateTime(payload.From.ToUniversalTime()),
             To = Timestamp.FromDateTime(payload.To.ToUniversalTime())
         };
