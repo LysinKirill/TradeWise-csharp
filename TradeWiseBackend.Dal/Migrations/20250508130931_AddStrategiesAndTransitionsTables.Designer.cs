@@ -12,7 +12,7 @@ using TradeWiseBackend.Dal;
 namespace TradeWiseBackend.Dal.Migrations
 {
     [DbContext(typeof(DatabaseContext))]
-    [Migration("20250417165506_AddStrategiesAndTransitionsTables")]
+    [Migration("20250508130931_AddStrategiesAndTransitionsTables")]
     partial class AddStrategiesAndTransitionsTables
     {
         /// <inheritdoc />
@@ -157,28 +157,7 @@ namespace TradeWiseBackend.Dal.Migrations
                     b.ToTable("AspNetUserTokens", (string)null);
                 });
 
-            modelBuilder.Entity("TradeWiseBackend.Bll.Entities.StrategyStage", b =>
-                {
-                    b.Property<Guid>("StageId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
-
-                    b.Property<string>("ModelName")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("UserId")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.HasKey("StageId");
-
-                    b.HasIndex("UserId");
-
-                    b.ToTable("StrategyStages");
-                });
-
-            modelBuilder.Entity("TradeWiseBackend.Bll.Entities.StrategyTransition", b =>
+            modelBuilder.Entity("TradeWiseBackend.Bll.Entities.StrategyTransitionEntity", b =>
                 {
                     b.Property<Guid>("StrategyTransitionId")
                         .ValueGeneratedOnAdd()
@@ -268,6 +247,27 @@ namespace TradeWiseBackend.Dal.Migrations
                     b.ToTable("AspNetUsers", (string)null);
                 });
 
+            modelBuilder.Entity("TradeWiseBackend.Dal.Entities.StrategyStageEntity", b =>
+                {
+                    b.Property<Guid>("StageId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("ModelName")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.HasKey("StageId");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("StrategyStages");
+                });
+
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
                 {
                     b.HasOne("Microsoft.AspNetCore.Identity.IdentityRole", null)
@@ -319,7 +319,7 @@ namespace TradeWiseBackend.Dal.Migrations
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("TradeWiseBackend.Bll.Entities.StrategyStage", b =>
+            modelBuilder.Entity("TradeWiseBackend.Dal.Entities.StrategyStageEntity", b =>
                 {
                     b.HasOne("TradeWiseBackend.Dal.Entities.AccountEntity", "User")
                         .WithMany()

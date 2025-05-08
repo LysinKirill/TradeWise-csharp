@@ -2,9 +2,9 @@ using System;
 using System.ComponentModel.DataAnnotations;
 using TradeWiseBackend.Dal.Entities;
 
-namespace TradeWiseBackend.Bll.Entities;
+namespace TradeWiseBackend.Dal.Entities;
 
-public class StrategyStage
+public class StrategyStageEntity
 {
     [Key] public Guid StageId { get; set; }
 
