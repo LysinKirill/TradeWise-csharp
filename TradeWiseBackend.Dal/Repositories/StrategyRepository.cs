@@ -16,7 +16,6 @@ public class StrategyRepository(DatabaseContext dbContext) : IStrategyRepository
         foreach (var stageEntity in strategyStageEntities)
         {
             var originalStage = strategyStages.First(s => s.StageId == stageEntity.StageId);
-
             stageEntity.UserId = originalStage.User.Id;
             stageEntity.User = null;
         }
@@ -32,6 +31,7 @@ public class StrategyRepository(DatabaseContext dbContext) : IStrategyRepository
             StrategyTransitionId = Guid.NewGuid(),
             StageSourceId = t.StageSourceId,
             StageDestinationId = t.StageDestinationId,
+            StrategyId = t.StrategyId,
             StatType = MapStatTypeEntity(t.StatType),
             Operation = MapOperationTypeEntity(t.Operation),
             Value = t.Value
