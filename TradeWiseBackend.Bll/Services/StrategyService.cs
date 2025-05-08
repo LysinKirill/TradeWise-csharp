@@ -23,7 +23,7 @@ public class StrategyService(IStrategyRepository strategyRepository, IAccountRep
             stage.StageModel.ToString(),
             user.GetAwaiter().GetResult()!
         )).ToList();
-        
+
         await strategyRepository.SaveStrategyStages(stages);
     }
 }

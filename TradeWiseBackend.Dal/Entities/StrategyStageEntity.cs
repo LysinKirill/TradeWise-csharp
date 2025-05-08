@@ -10,5 +10,5 @@ public class StrategyStageEntity
 
     public required string ModelName { get; set; }
     public required string UserId { get; set; }
-    public required AccountEntity User { get; set; }
+    public AccountEntity? User { get; set; }
 }
