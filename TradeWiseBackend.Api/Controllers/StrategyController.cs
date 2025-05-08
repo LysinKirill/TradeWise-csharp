@@ -21,7 +21,9 @@ namespace TradeWiseBackend.Api.Controllers
             CancellationToken ct)
         {
             var userId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
-            Console.WriteLine("KEKE " + userId);
+
+            if (userId == null)
+                return Unauthorized();
 
             var createPayload = request.Adapt<CreateStrategyPayload>() with { UserId = userId };
             await strategyService.CreateStrategyStages(

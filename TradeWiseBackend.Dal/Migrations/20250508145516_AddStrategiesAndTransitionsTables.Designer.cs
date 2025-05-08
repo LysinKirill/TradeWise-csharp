@@ -12,7 +12,7 @@ using TradeWiseBackend.Dal;
 namespace TradeWiseBackend.Dal.Migrations
 {
     [DbContext(typeof(DatabaseContext))]
-    [Migration("20250508130931_AddStrategiesAndTransitionsTables")]
+    [Migration("20250508145516_AddStrategiesAndTransitionsTables")]
     partial class AddStrategiesAndTransitionsTables
     {
         /// <inheritdoc />
