@@ -1,5 +1,6 @@
 ﻿using System.Security.Cryptography.X509Certificates;
 using System.Text.Json;
+using DotNetEnv;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Http;
@@ -15,6 +16,7 @@ using TradeWiseBackend.Dal;
 using TradeWiseBackend.Dal.DatabaseSettings;
 using TradeWiseBackend.Dal.Entities;
 using TradeWiseBackend.Dal.Extensions;
+using User;
 
 var builder = WebApplication.CreateBuilder(args);
 Env.Load();

@@ -1,9 +1,11 @@
 using Google.Protobuf.WellKnownTypes;
 using Grpc.Core;
+using Mapster;
 using Microsoft.AspNetCore.Http;
 using TradeWiseBackend.Domain.Interfaces.Services;
 using TradeWiseBackend.Domain.Models;
 using TradeWiseBackend.Domain.ServiceModels;
+using User;
 
 namespace TradeWiseBackend.Bll.Services;
 
@@ -49,14 +51,14 @@ public class InvestApiService(
     {
         var statType = payload.StatType switch
         {
-            StatType.BollingerBandLower => UserStatType.BollingerBandLower,
-            StatType.BollingerBandMiddle => UserStatType.BollingerBandMiddle,
-            StatType.BollingerBandUpper => UserStatType.BollingerBandUpper,
-            StatType.ExponentialMovingAverage => UserStatType.ExponentialMovingAverage,
-            StatType.MovingAverage => UserStatType.MovingAverage,
-            StatType.MovingAverageConvergenceDivergence => UserStatType.MovingAverageConvergenceDivergence,
-            StatType.RelativeStrengthIndex => UserStatType.RelativeStrengthIndex,
-            _ => UserStatType.Unknown
+            StatType.BollingerBandLower => Invest.StatType.BollingerBandLower,
+            StatType.BollingerBandMiddle => Invest.StatType.BollingerBandMiddle,
+            StatType.BollingerBandUpper => Invest.StatType.BollingerBandUpper,
+            StatType.ExponentialMovingAverage => Invest.StatType.ExponentialMovingAverage,
+            StatType.MovingAverage => Invest.StatType.MovingAverage,
+            StatType.MovingAverageConvergenceDivergence => Invest.StatType.MovingAverageConvergenceDivergence,
+            StatType.RelativeStrengthIndex => Invest.StatType.RelativeStrengthIndex,
+            _ => Invest.StatType.Unknown
         };
         var request = new Invest.GetInstrumentStatRequest
         {
