@@ -8,7 +8,6 @@ using TradeWiseBackend.Api.Responses;
 using TradeWiseBackend.Api.Responses.v1;
 using TradeWiseBackend.Domain.Interfaces.Services;
 using TradeWiseBackend.Domain.ServiceModels;
-using Grpc.Net.Client;
 
 namespace TradeWiseBackend.Api.Controllers;
 

@@ -1,9 +1,6 @@
-using System;
-
 namespace TradeWiseBackend.Api.Requests.models;
 
-public record TransitionCondition
-(
+public record TransitionCondition(
     TransitionConditionType TransitionConditionType,
     StatType StatType,
     double Value

@@ -1,11 +1,9 @@
-using System;
 using Grpc.Core;
+using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using TradeWiseBackend.Api.Middlewares;
-using Microsoft.AspNetCore.Http;
 using Hellang.Middleware.ProblemDetails;
-using Microsoft.AspNetCore.Diagnostics;
 
 namespace TradeWiseBackend.Api.Extensions;
 
@@ -27,7 +25,7 @@ public static class ExceptionHandlingExtensions
                     StatusCode.InvalidArgument => StatusCodes.Status400BadRequest,
                     StatusCode.NotFound => StatusCodes.Status404NotFound,
                     StatusCode.PermissionDenied => StatusCodes.Status403Forbidden,
-                    _ => StatusCodes.Status500InternalServerError,
+                    _ => StatusCodes.Status500InternalServerError
                 };
                 return new StatusCodeProblemDetails(statusCode);
             });

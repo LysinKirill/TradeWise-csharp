@@ -7,8 +7,6 @@ using TradeWiseBackend.Domain.Models;
 using TradeWiseBackend.Domain.ServiceModels;
 using User;
 
-using UserStatType = Invest.StatType;
-
 namespace TradeWiseBackend.Bll.Services;
 
 public class InvestApiService(
@@ -40,28 +38,36 @@ public class InvestApiService(
         await userServiceClient.AddInvestApiKeyAsync(request, headers: AuthMetadata, cancellationToken: ct);
     }
 
-    public async Task<List<Domain.Models.InstrumentInfo>> GetSupportedInstruments(CancellationToken ct)
+    public async Task<List<InstrumentInfo>> GetSupportedInstruments(CancellationToken ct)
     {
-        var instrumentsList = await investServiceClient.GetSupportedInstrumentsAsync(new Empty(), headers: AuthMetadata, cancellationToken: ct);
+        var instrumentsList =
+            await investServiceClient.GetSupportedInstrumentsAsync(new Empty(), headers: AuthMetadata,
+                cancellationToken: ct);
 
-        return instrumentsList.Instruments.Adapt<List<Domain.Models.InstrumentInfo>>();
+        return instrumentsList.Instruments.Adapt<List<InstrumentInfo>>();
     }
 
     public async Task<InstrumentStat> GetInstrumentStat(GetInstrumentStatPayload payload, CancellationToken ct)
     {
         var statType = payload.StatType switch
         {
-            StatType.BollingerBandLower => UserStatType.BollingerBandLower,
-            StatType.BollingerBandMiddle => UserStatType.BollingerBandMiddle,
-            StatType.BollingerBandUpper => UserStatType.BollingerBandUpper,
-            StatType.ExponentialMovingAverage => UserStatType.ExponentialMovingAverage,
-            StatType.MovingAverage => UserStatType.MovingAverage,
-            StatType.MovingAverageConvergenceDivergence => UserStatType.MovingAverageConvergenceDivergence,
-            StatType.RelativeStrengthIndex => UserStatType.RelativeStrengthIndex,
-            _ => UserStatType.Unknown
+            StatType.BollingerBandLower => Invest.StatType.BollingerBandLower,
+            StatType.BollingerBandMiddle => Invest.StatType.BollingerBandMiddle,
+            StatType.BollingerBandUpper => Invest.StatType.BollingerBandUpper,
+            StatType.ExponentialMovingAverage => Invest.StatType.ExponentialMovingAverage,
+            StatType.MovingAverage => Invest.StatType.MovingAverage,
+            StatType.MovingAverageConvergenceDivergence => Invest.StatType.MovingAverageConvergenceDivergence,
+            StatType.RelativeStrengthIndex => Invest.StatType.RelativeStrengthIndex,
+            _ => Invest.StatType.Unknown
         };
-        var request = new Invest.GetInstrumentStatRequest { InstrumentId = payload.InstrumentId, StatType = statType, From = Timestamp.FromDateTime(payload.From.ToUniversalTime()), To = Timestamp.FromDateTime(payload.To.ToUniversalTime()) };
-        var instrumentStat = await investServiceClient.GetInstrumentStatAsync(request, headers: AuthMetadata, cancellationToken: ct);
+        var request = new Invest.GetInstrumentStatRequest
+        {
+            InstrumentId = payload.InstrumentId, StatType = statType,
+            From = Timestamp.FromDateTime(payload.From.ToUniversalTime()),
+            To = Timestamp.FromDateTime(payload.To.ToUniversalTime())
+        };
+        var instrumentStat =
+            await investServiceClient.GetInstrumentStatAsync(request, headers: AuthMetadata, cancellationToken: ct);
         return instrumentStat.Adapt<InstrumentStat>();
     }
 }

@@ -1,5 +1,3 @@
-using System;
-
 namespace TradeWiseBackend.Bll.Entities;
 
 public enum OperationTypeEntity

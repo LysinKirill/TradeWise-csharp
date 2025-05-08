@@ -1,4 +1,5 @@
 ﻿using System.Security.Cryptography.X509Certificates;
+using System.Text.Json;
 using DotNetEnv;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Diagnostics;
@@ -17,7 +18,6 @@ using TradeWiseBackend.Dal.Entities;
 using TradeWiseBackend.Dal.Extensions;
 using User;
 
-
 var builder = WebApplication.CreateBuilder(args);
 Env.Load();
 
@@ -34,8 +34,8 @@ builder.Services.AddCors(options =>
         policy =>
         {
             policy.AllowAnyOrigin()
-                  .AllowAnyHeader()
-                  .AllowAnyMethod();
+                .AllowAnyHeader()
+                .AllowAnyMethod();
         });
 });
 
@@ -50,9 +50,7 @@ builder.Configuration.AddUserSecrets<Program>();
 var certThumbprint = builder.Configuration["Grpc:CertThumbprint"]
                      ?? Environment.GetEnvironmentVariable("Grpc__CertThumbprint");
 if (string.IsNullOrEmpty(certThumbprint))
-{
     throw new InvalidOperationException("gRPC certificate thumbprint not configured. Set it in User Secrets.");
-}
 
 var cert = X509CertificateLoader.LoadCertificateFromFile("ssl/cert.pem");
 var handler = new HttpClientHandler();
@@ -77,8 +75,8 @@ builder.Services.AddGrpcClient<Invest.InvestService.InvestServiceClient>(options
     .ConfigurePrimaryHttpMessageHandler(() => handler);
 
 var environment = builder.Environment;
-builder.Configuration.AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
-    .AddJsonFile($"appsettings.{environment.EnvironmentName}.json", optional: true)
+builder.Configuration.AddJsonFile("appsettings.json", false, true)
+    .AddJsonFile($"appsettings.{environment.EnvironmentName}.json", true)
     .AddUserSecrets<Program>()
     .AddEnvironmentVariables();
 
@@ -109,7 +107,7 @@ app.UseExceptionHandler(new ExceptionHandlerOptions
         {
             context.Response.StatusCode = StatusCodes.Status500InternalServerError;
             var errorObj = new { error = "Internal Server Error" };
-            await context.Response.WriteAsync(System.Text.Json.JsonSerializer.Serialize(errorObj));
+            await context.Response.WriteAsync(JsonSerializer.Serialize(errorObj));
             return;
         }
 
@@ -124,7 +122,7 @@ app.UseExceptionHandler(new ExceptionHandlerOptions
         context.Response.StatusCode = StatusCodes.Status500InternalServerError;
 
         var fallbackError = new { error = "Internal Server Error", code = 500 };
-        var fallbackJson = System.Text.Json.JsonSerializer.Serialize(fallbackError);
+        var fallbackJson = JsonSerializer.Serialize(fallbackError);
 
         await context.Response.WriteAsync(fallbackJson);
     }
