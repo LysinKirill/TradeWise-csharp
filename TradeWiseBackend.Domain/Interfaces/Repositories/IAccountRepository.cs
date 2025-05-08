@@ -1,8 +1,9 @@
+using System;
 using TradeWiseBackend.Domain.RepositoryModels;
 
 namespace TradeWiseBackend.Domain.Interfaces.Repositories;
 
-public interface IStrategyRepository
+public interface IAccountRepository
 {
-    Task SaveStrategyStages(List<StrategyStage> strategy);
+    Task<Account?> GetUserById(string userId);
 }

@@ -7,5 +7,5 @@ public record CreateStrategyPayload(
     string? Description,
     List<StrategyStage> StrategyStages,
     List<StrategyTransition> StrategyTransitions,
-    string? UserId
+    string UserId
 );
