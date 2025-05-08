@@ -1,7 +1,7 @@
-namespace TradeWiseBackend.Api.Requests.models;
+namespace TradeWiseBackend.Domain.Models;
 
 public record StrategyTransition(
-    int SourceStageId,
-    int DestinationStageId,
+    Guid? SourceStageId,
+    Guid? DestinationStageId,
     List<TransitionCondition> TransitionConditions
 );
