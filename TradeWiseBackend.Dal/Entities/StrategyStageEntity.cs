@@ -1,6 +1,4 @@
-using System;
 using System.ComponentModel.DataAnnotations;
-using TradeWiseBackend.Dal.Entities;
 
 namespace TradeWiseBackend.Dal.Entities;
 

@@ -26,9 +26,9 @@ public class DatabaseContext : IdentityDbContext<AccountEntity>
             entity.Property(e => e.ModelName).IsRequired();
 
             entity.HasOne(e => e.User)
-                      .WithMany()
-                      .HasForeignKey(e => e.UserId)
-                      .IsRequired();
+                .WithMany()
+                .HasForeignKey(e => e.UserId)
+                .IsRequired();
         });
 
         modelBuilder.Entity<StrategyTransitionEntity>(entity =>
@@ -36,14 +36,14 @@ public class DatabaseContext : IdentityDbContext<AccountEntity>
             entity.HasKey(e => e.StrategyTransitionId);
 
             entity.HasOne(e => e.StageSource)
-              .WithMany()
-              .HasForeignKey(e => e.StageSourceId)
-              .OnDelete(DeleteBehavior.Restrict);
+                .WithMany()
+                .HasForeignKey(e => e.StageSourceId)
+                .OnDelete(DeleteBehavior.Restrict);
 
             entity.HasOne(e => e.StageDestination)
-              .WithMany()
-              .HasForeignKey(e => e.StageDestinationId)
-              .OnDelete(DeleteBehavior.Restrict);
+                .WithMany()
+                .HasForeignKey(e => e.StageDestinationId)
+                .OnDelete(DeleteBehavior.Restrict);
         });
     }
 }

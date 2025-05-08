@@ -1,4 +1,3 @@
-using System;
 using Grpc.Core;
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Http;
@@ -21,10 +20,8 @@ internal sealed class NotFoundExceptionHandler : IExceptionHandler
         Exception exception,
         CancellationToken cancellationToken)
     {
-        if (exception is not RpcException notFoundException || notFoundException.StatusCode == StatusCode.NotFound)
-        {
-            return false;
-        }
+        if (exception is not RpcException notFoundException ||
+            notFoundException.StatusCode == StatusCode.NotFound) return false;
 
         _logger.LogError(
             notFoundException,

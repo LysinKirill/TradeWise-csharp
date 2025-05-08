@@ -8,4 +8,4 @@ public record GetInstrumentStatRequest
     public required StatType StatType { get; init; }
     public DateTime From { get; init; } = DateTime.Now;
     public DateTime To { get; init; } = DateTime.Now.AddMinutes(5);
-};
+}

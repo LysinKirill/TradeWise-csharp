@@ -1,4 +1,3 @@
-
 namespace TradeWiseBackend.Domain.RepositoryModels;
 
 public record Account(

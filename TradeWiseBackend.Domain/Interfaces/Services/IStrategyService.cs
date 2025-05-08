@@ -1,4 +1,3 @@
-using System;
 using TradeWiseBackend.Domain.ServiceModels;
 
 namespace TradeWiseBackend.Domain.Interfaces.Services;
