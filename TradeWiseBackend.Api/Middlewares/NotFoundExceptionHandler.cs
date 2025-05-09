@@ -21,7 +21,7 @@ internal sealed class NotFoundExceptionHandler : IExceptionHandler
         CancellationToken cancellationToken)
     {
         if (exception is not RpcException notFoundException ||
-            notFoundException.StatusCode == StatusCode.NotFound) return false;
+            notFoundException.StatusCode != StatusCode.NotFound) return false;
 
         _logger.LogError(
             notFoundException,

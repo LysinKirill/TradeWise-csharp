@@ -4,8 +4,8 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using TradeWiseBackend.Api.Middlewares;
 using Hellang.Middleware.ProblemDetails;
-using TradeWiseBackend.Domain.Exceptions;
 using Microsoft.AspNetCore.Mvc;
+using System.ComponentModel.DataAnnotations;
 
 namespace TradeWiseBackend.Api.Extensions;
 using HellangProblemDetails = Hellang.Middleware.ProblemDetails.ProblemDetailsExtensions;
@@ -23,7 +23,7 @@ public static class ExceptionHandlingExtensions
         HellangProblemDetails.AddProblemDetails(services);
         services.Configure<Hellang.Middleware.ProblemDetails.ProblemDetailsOptions>(options =>
         {
-            options.Map<StrategyValidationError>(ex =>
+            options.Map<ValidationException>(ex =>
                 new ProblemDetails
                 {
                     Status = StatusCodes.Status400BadRequest,

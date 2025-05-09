@@ -1,3 +1,4 @@
+using System.ComponentModel.DataAnnotations;
 using TradeWiseBackend.Domain.Interfaces.Repositories;
 using TradeWiseBackend.Domain.Interfaces.Services;
 using TradeWiseBackend.Domain.RepositoryModels;
@@ -11,6 +12,7 @@ public class StrategyService(IStrategyRepository strategyRepository, IAccountRep
     public async Task CreateStrategyStages(CreateStrategyPayload createStrategyPayload, CancellationToken ct)
     {
         var user = accountRepository.GetUserById(createStrategyPayload.UserId);
+        
         if (user == null)
         {
             throw new Exception("User not found");
@@ -21,7 +23,7 @@ public class StrategyService(IStrategyRepository strategyRepository, IAccountRep
 
         if (!isValid)
         {
-            Console.WriteLine(error);
+            throw new ValidationException(error!);
         }
 
         var stageIdMap = new Dictionary<Guid, Guid>();
