@@ -9,7 +9,13 @@ public class StrategyValidationService(List<StrategyStage> stages, List<Strategy
     {
         var stageIds = GetStageIds();
 
-        var check = CheckInvalidSelfTransitions();
+        var check = CheckEmptyness();
+        if (!check.IsValid) return check;
+
+        check = CheckUnknownStagesInTransitions();
+        if (!check.IsValid) return check;
+
+        check = CheckInvalidSelfTransitions();
         if (!check.IsValid) return check;
 
         check = CheckNullSourceDestinationTransitions();
@@ -19,8 +25,6 @@ public class StrategyValidationService(List<StrategyStage> stages, List<Strategy
         if (!check.IsValid) return check;
 
         var adjacency = BuildAdjacency(stageIds);
-        if (adjacency == null)
-            return (false, "The transition contains an unknown stage");
 
         var possibleRoots = FindRoots(stageIds);
         if (possibleRoots.Count != 1)
@@ -44,6 +48,28 @@ public class StrategyValidationService(List<StrategyStage> stages, List<Strategy
         return new HashSet<Guid>(stages.Select(s => s.Id));
     }
 
+    private (bool IsValid, string? ErrorMessage) CheckEmptyness() {
+        if(transitions.Count == 0 || stages.Count == 0) {
+            return (false, "List of transitions or stages is empty");
+        }
+        return (true, null);
+    }
+
+    private (bool IsValid, string? ErrorMessage) CheckUnknownStagesInTransitions()
+    {
+        var stageIdMap = GetStageIds();
+        foreach (var transition in transitions) {
+            if (transition.SourceStageId.HasValue && !stageIdMap.Contains(transition.SourceStageId.Value)) {
+                return (false, "The transition contains an unknown start stage " + transition.SourceStageId.Value);
+            }
+
+            if (transition.DestinationStageId.HasValue && !stageIdMap.Contains(transition.DestinationStageId.Value)) {
+                return (false, "The transition contains an unknown end stage " + transition.DestinationStageId.Value);
+            }
+        }
+        return (true, null);
+    }
+
     private (bool IsValid, string? ErrorMessage) CheckInvalidSelfTransitions()
     {
         if (transitions.Any(t => t.SourceStageId == t.DestinationStageId && t.SourceStageId != null))
@@ -62,11 +88,11 @@ public class StrategyValidationService(List<StrategyStage> stages, List<Strategy
     {
         if (transitions.Count(t => t.SourceStageId == null) != 1 ||
             transitions.Count(t => t.DestinationStageId == null) != 1)
-            return (false, "More than one transition with an empty start or end");
+            return (false, "Only one node with an empty beginning and end is expected");
         return (true, null);
     }
 
-    private Dictionary<Guid, List<Guid>>? BuildAdjacency(HashSet<Guid> stageIds)
+    private Dictionary<Guid, List<Guid>> BuildAdjacency(HashSet<Guid> stageIds)
     {
         var adjacency = new Dictionary<Guid, List<Guid>>();
         foreach (var stageId in stageIds)
@@ -76,9 +102,6 @@ public class StrategyValidationService(List<StrategyStage> stages, List<Strategy
         {
             if (t.SourceStageId != null && t.DestinationStageId != null)
             {
-                if (!stageIds.Contains(t.SourceStageId.Value) || !stageIds.Contains(t.DestinationStageId.Value))
-                    return null;
-
                 adjacency[t.SourceStageId.Value].Add(t.DestinationStageId.Value);
             }
         }
@@ -113,4 +136,3 @@ public class StrategyValidationService(List<StrategyStage> stages, List<Strategy
         return true;
     }
 }
-

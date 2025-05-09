@@ -1,9 +1,8 @@
-using Grpc.Core;
+using System.ComponentModel.DataAnnotations;
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
-using TradeWiseBackend.Domain.Exceptions;
 
 namespace TradeWiseBackend.Api.Middlewares;
 
@@ -21,7 +20,7 @@ internal sealed class ValidationExceptionHandler : IExceptionHandler
         Exception exception,
         CancellationToken cancellationToken)
     {
-        if (exception is not StrategyValidationError validationException) return false;
+        if (exception is not ValidationException validationException) return false;
 
         _logger.LogError(
             validationException,
