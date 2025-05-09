@@ -32,9 +32,8 @@ public class StrategyValidationService(List<StrategyStage> stages, List<Strategy
 
         var root = possibleRoots[0];
         var visited = new HashSet<Guid>();
-        var inStack = new HashSet<Guid>();
 
-        if (!Dfs(root, adjacency, visited, inStack))
+        if (!Dfs(root, adjacency, ref visited))
             return (false, "A cycle has been detected in the graph");
 
         if (visited.Count != stageIds.Count)
@@ -115,24 +114,22 @@ public class StrategyValidationService(List<StrategyStage> stages, List<Strategy
         return stageIds.Except(allDestinations).ToList();
     }
 
-    private static bool Dfs(Guid node, Dictionary<Guid, List<Guid>> adjacency, HashSet<Guid> visited, HashSet<Guid> inStack)
+    private static bool Dfs(Guid node, Dictionary<Guid, List<Guid>> adjacency, ref HashSet<Guid> visited)
     {
-        if (inStack.Contains(node))
-            return false;
+        Console.WriteLine("start visited: " + string.Join(", ", visited));
 
         if (visited.Contains(node))
-            return true;
+            return false;
 
         visited.Add(node);
-        inStack.Add(node);
 
+        Console.WriteLine("end visited: " + string.Join(", ", visited));
         foreach (var linkedNode in adjacency[node])
         {
-            if (!Dfs(linkedNode, adjacency, visited, inStack))
+            if (!Dfs(linkedNode, adjacency, ref visited))
                 return false;
         }
 
-        inStack.Remove(node);
         return true;
     }
 }
