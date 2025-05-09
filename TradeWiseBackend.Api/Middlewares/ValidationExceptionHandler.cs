@@ -1,4 +1,4 @@
-using Grpc.Core;
+using System.ComponentModel.DataAnnotations;
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -6,11 +6,11 @@ using Microsoft.Extensions.Logging;
 
 namespace TradeWiseBackend.Api.Middlewares;
 
-internal sealed class BadRequestExceptionHandler : IExceptionHandler
+internal sealed class ValidationExceptionHandler : IExceptionHandler
 {
-    private readonly ILogger<BadRequestExceptionHandler> _logger;
+    private readonly ILogger<ValidationExceptionHandler> _logger;
 
-    public BadRequestExceptionHandler(ILogger<BadRequestExceptionHandler> logger)
+    public ValidationExceptionHandler(ILogger<ValidationExceptionHandler> logger)
     {
         _logger = logger;
     }
@@ -20,19 +20,18 @@ internal sealed class BadRequestExceptionHandler : IExceptionHandler
         Exception exception,
         CancellationToken cancellationToken)
     {
-        if (exception is not RpcException badRequestException ||
-            badRequestException.StatusCode != StatusCode.InvalidArgument) return false;
+        if (exception is not ValidationException validationException) return false;
 
         _logger.LogError(
-            badRequestException,
+            validationException,
             "Exception occurred: {Message}",
-            badRequestException.Message);
+            validationException.Message);
 
         var problemDetails = new ProblemDetails
         {
             Status = StatusCodes.Status400BadRequest,
-            Title = "Bad Request",
-            Detail = badRequestException.Message
+            Title = "Validation failed",
+            Detail = validationException.Message
         };
 
         httpContext.Response.StatusCode = problemDetails.Status.Value;
