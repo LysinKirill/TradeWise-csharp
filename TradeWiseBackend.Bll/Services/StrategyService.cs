@@ -16,6 +16,14 @@ public class StrategyService(IStrategyRepository strategyRepository, IAccountRep
             throw new Exception("User not found");
         }
 
+        var validator = new StrategyValidationService(createStrategyPayload.StrategyStages, createStrategyPayload.StrategyTransitions);
+        var (isValid, error) = validator.Validate();
+
+        if (!isValid)
+        {
+            Console.WriteLine(error);
+        }
+
         var stageIdMap = new Dictionary<Guid, Guid>();
         foreach (var stage in createStrategyPayload.StrategyStages) stageIdMap[stage.Id] = Guid.NewGuid();
 
@@ -31,8 +39,6 @@ public class StrategyService(IStrategyRepository strategyRepository, IAccountRep
 
         var transitionEntities = new List<StrategyTransition>();
 
-        // TODO: валидировать что нет и первой и последней пустых нод
-        // TODO: валидировать что такой ноды или перехода уже нет
         foreach (var transition in createStrategyPayload.StrategyTransitions)
             foreach (var condition in transition.TransitionConditions)
             {

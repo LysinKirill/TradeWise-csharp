@@ -4,8 +4,11 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using TradeWiseBackend.Api.Middlewares;
 using Hellang.Middleware.ProblemDetails;
+using TradeWiseBackend.Domain.Exceptions;
+using Microsoft.AspNetCore.Mvc;
 
 namespace TradeWiseBackend.Api.Extensions;
+using HellangProblemDetails = Hellang.Middleware.ProblemDetails.ProblemDetailsExtensions;
 
 public static class ExceptionHandlingExtensions
 {
@@ -14,10 +17,19 @@ public static class ExceptionHandlingExtensions
     {
         services.AddExceptionHandler<BadRequestExceptionHandler>();
         services.AddExceptionHandler<NotFoundExceptionHandler>();
+        services.AddExceptionHandler<ValidationExceptionHandler>();
         services.AddExceptionHandler<GlobalExceptionHandler>();
 
-        services.AddProblemDetails(options =>
+        HellangProblemDetails.AddProblemDetails(services);
+        services.Configure<Hellang.Middleware.ProblemDetails.ProblemDetailsOptions>(options =>
         {
+            options.Map<StrategyValidationError>(ex =>
+                new ProblemDetails
+                {
+                    Status = StatusCodes.Status400BadRequest,
+                    Title = "Validation Failed",
+                    Detail = ex.Message
+                });
             options.Map<RpcException>(ex =>
             {
                 var statusCode = ex.StatusCode switch

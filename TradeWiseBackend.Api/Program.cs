@@ -1,6 +1,7 @@
 ﻿using System.Security.Cryptography.X509Certificates;
 using System.Text.Json;
 using DotNetEnv;
+using Hellang.Middleware.ProblemDetails;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Http;
@@ -94,6 +95,7 @@ builder.Services.Configure<JwtSettings>(options =>
 
 var app = builder.Build();
 
+app.UseProblemDetails();
 app.UseExceptionHandler(new ExceptionHandlerOptions
 {
     AllowStatusCode404Response = true,
