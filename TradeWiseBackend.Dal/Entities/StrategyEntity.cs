@@ -4,11 +4,10 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace TradeWiseBackend.Dal.Entities;
 
-[Table("Strategies")]
 public class StrategyEntity
 {
     [Key]
-    public Guid StrategyId { get; set; }
+    public Guid Id { get; set; }
     public required string Title { get; set; }
     public string? Description { get; set; }
     public required string UserId { get; set; }

@@ -1,10 +1,9 @@
-namespace TradeWiseBackend.Domain.RepositoryModels;
+namespace TradeWiseBackend.Domain.ServiceModels;
 
-public record class Strategy(
+public record class StrategyInfo(
     Guid Id,
     string Title,
     string? Description,
-    string UserId,
     DateTime CreatedAt,
     DateTime UpdatedAt
 );

@@ -1,4 +1,7 @@
 using System.ComponentModel.DataAnnotations;
+using Mapster;
+using Microsoft.AspNetCore.Http.HttpResults;
+using Microsoft.AspNetCore.Mvc;
 using TradeWiseBackend.Domain.Interfaces.Repositories;
 using TradeWiseBackend.Domain.Interfaces.Services;
 using TradeWiseBackend.Domain.RepositoryModels;
@@ -11,6 +14,7 @@ public class StrategyService(IStrategyRepository strategyRepository, IAccountRep
 {
     public async Task CreateStrategy(CreateStrategyPayload createStrategyPayload, CancellationToken ct)
     {
+        // TODO: декомпозировать
         var user = await accountRepository.GetUserById(createStrategyPayload.UserId);
 
         if (user == null)
@@ -65,14 +69,18 @@ public class StrategyService(IStrategyRepository strategyRepository, IAccountRep
             DateTime.Now.ToUniversalTime()
         );
 
+        // TODO: под транзакцией
         await strategyRepository.SaveStrategy(strategy);
         await strategyRepository.SaveStrategyStages(stages);
         await strategyRepository.SaveStrategyTransitions(transitionEntities);
     }
 
-    public Task GetUserStrategies(CancellationToken ct)
+    public async Task<List<StrategyGeneralInfo>> GetUserStrategies(string userId, CancellationToken ct)
     {
-        throw new NotImplementedException();
+        // TODO: считать Profit
+        var strategies = await strategyRepository.FetchUserStrategies(userId);
+
+        return strategies.Adapt<List<StrategyGeneralInfo>>();
     }
 
     public Task ValidateStrategyStages(ValidateStrategyPayload validateStrategyPayload, CancellationToken ct)

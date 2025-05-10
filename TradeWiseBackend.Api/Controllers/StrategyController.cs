@@ -53,6 +53,8 @@ public class StrategyController(IStrategyService strategyService) : ControllerBa
         if (string.IsNullOrEmpty(userId))
             return Unauthorized();
 
-        return Ok();
+        var userStrategies = await strategyService.GetUserStrategies(userId, ct);
+
+        return Ok(userStrategies);
     }
 }
