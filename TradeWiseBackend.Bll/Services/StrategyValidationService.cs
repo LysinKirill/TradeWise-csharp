@@ -42,13 +42,20 @@ public class StrategyValidationService(List<StrategyStage> stages, List<Strategy
         return (true, null);
     }
 
+    public (bool IsValid, string? ErrorMessage) PreValidate()
+    {
+        throw new NotImplementedException();
+    }
+
     private HashSet<Guid> GetStageIds()
     {
         return new HashSet<Guid>(stages.Select(s => s.Id));
     }
 
-    private (bool IsValid, string? ErrorMessage) CheckEmptyness() {
-        if(transitions.Count == 0 || stages.Count == 0) {
+    private (bool IsValid, string? ErrorMessage) CheckEmptyness()
+    {
+        if (transitions.Count == 0 || stages.Count == 0)
+        {
             return (false, "List of transitions or stages is empty");
         }
         return (true, null);
@@ -57,12 +64,15 @@ public class StrategyValidationService(List<StrategyStage> stages, List<Strategy
     private (bool IsValid, string? ErrorMessage) CheckUnknownStagesInTransitions()
     {
         var stageIdMap = GetStageIds();
-        foreach (var transition in transitions) {
-            if (transition.SourceStageId.HasValue && !stageIdMap.Contains(transition.SourceStageId.Value)) {
+        foreach (var transition in transitions)
+        {
+            if (transition.SourceStageId.HasValue && !stageIdMap.Contains(transition.SourceStageId.Value))
+            {
                 return (false, "The transition contains an unknown start stage " + transition.SourceStageId.Value);
             }
 
-            if (transition.DestinationStageId.HasValue && !stageIdMap.Contains(transition.DestinationStageId.Value)) {
+            if (transition.DestinationStageId.HasValue && !stageIdMap.Contains(transition.DestinationStageId.Value))
+            {
                 return (false, "The transition contains an unknown end stage " + transition.DestinationStageId.Value);
             }
         }

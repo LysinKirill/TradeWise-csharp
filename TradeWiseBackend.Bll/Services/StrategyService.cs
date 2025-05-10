@@ -12,7 +12,7 @@ public class StrategyService(IStrategyRepository strategyRepository, IAccountRep
     public async Task CreateStrategyStages(CreateStrategyPayload createStrategyPayload, CancellationToken ct)
     {
         var user = await accountRepository.GetUserById(createStrategyPayload.UserId);
-        
+
         if (user == null)
         {
             throw new Exception("User not found");
@@ -60,5 +60,18 @@ public class StrategyService(IStrategyRepository strategyRepository, IAccountRep
 
         await strategyRepository.SaveStrategyStages(stages);
         await strategyRepository.SaveStrategyTransitions(transitionEntities);
+    }
+
+    public Task ValidateStrategyStages(ValidateStrategyPayload validateStrategyPayload, CancellationToken ct)
+    {
+        var validator = new StrategyValidationService(validateStrategyPayload.StrategyStages, validateStrategyPayload.StrategyTransitions);
+        var (isValid, error) = validator.PreValidate();
+
+        if (!isValid)
+        {
+            throw new ValidationException(error!);
+        }
+
+        return Task.CompletedTask;
     }
 }
