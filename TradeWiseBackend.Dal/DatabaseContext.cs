@@ -23,7 +23,9 @@ public class DatabaseContext : IdentityDbContext<AccountEntity>
 
         modelBuilder.Entity<StrategyEntity>(entity =>
         {
-            entity.HasKey(e => e.StrategyId);
+            entity.ToTable("Strategies");
+
+            entity.HasKey(e => e.Id);
 
             entity.Property(e => e.UserId).IsRequired();
 
@@ -32,11 +34,11 @@ public class DatabaseContext : IdentityDbContext<AccountEntity>
                 .HasForeignKey(e => e.UserId)
                 .IsRequired()
                 .OnDelete(DeleteBehavior.Cascade);
-        });
+                });
 
         modelBuilder.Entity<StrategyStageEntity>(entity =>
         {
-            entity.HasKey(e => new { e.StageId, e.StrategyId });
+            entity.HasKey(e => new { e.Id, e.StrategyId });
             entity.Property(e => e.ModelName).IsRequired();
             entity.HasOne(e => e.Strategy)
                 .WithMany()
@@ -47,16 +49,16 @@ public class DatabaseContext : IdentityDbContext<AccountEntity>
 
         modelBuilder.Entity<StrategyTransitionEntity>(entity =>
         {
-            entity.HasKey(e => e.StrategyTransitionId);
+            entity.HasKey(e => e.Id);
 
             entity.HasOne(e => e.StageSource)
                 .WithMany()
-                .HasForeignKey("StageSourceId", "StrategyId")
+                .HasForeignKey(e => new { e.StageSourceId, e.StrategyId })
                 .OnDelete(DeleteBehavior.Restrict);
 
             entity.HasOne(e => e.StageDestination)
                 .WithMany()
-                .HasForeignKey("StageDestinationId", "StrategyId")
+                .HasForeignKey(e => new { e.StageDestinationId, e.StrategyId })
                 .OnDelete(DeleteBehavior.Restrict);
         });
     }

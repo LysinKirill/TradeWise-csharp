@@ -12,7 +12,7 @@ using TradeWiseBackend.Dal;
 namespace TradeWiseBackend.Dal.Migrations
 {
     [DbContext(typeof(DatabaseContext))]
-    [Migration("20250510155250_AddStrategyTables")]
+    [Migration("20250510193323_AddStrategyTables")]
     partial class AddStrategyTables
     {
         /// <inheritdoc />
@@ -159,7 +159,7 @@ namespace TradeWiseBackend.Dal.Migrations
 
             modelBuilder.Entity("TradeWiseBackend.Bll.Entities.StrategyTransitionEntity", b =>
                 {
-                    b.Property<Guid>("StrategyTransitionId")
+                    b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
@@ -181,7 +181,7 @@ namespace TradeWiseBackend.Dal.Migrations
                     b.Property<double>("Value")
                         .HasColumnType("double precision");
 
-                    b.HasKey("StrategyTransitionId");
+                    b.HasKey("Id");
 
                     b.HasIndex("StageDestinationId", "StrategyId");
 
@@ -256,7 +256,7 @@ namespace TradeWiseBackend.Dal.Migrations
 
             modelBuilder.Entity("TradeWiseBackend.Dal.Entities.StrategyEntity", b =>
                 {
-                    b.Property<Guid>("StrategyId")
+                    b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
@@ -277,16 +277,16 @@ namespace TradeWiseBackend.Dal.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.HasKey("StrategyId");
+                    b.HasKey("Id");
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("Strategies");
+                    b.ToTable("Strategies", (string)null);
                 });
 
             modelBuilder.Entity("TradeWiseBackend.Dal.Entities.StrategyStageEntity", b =>
                 {
-                    b.Property<Guid>("StageId")
+                    b.Property<Guid>("Id")
                         .HasColumnType("uuid");
 
                     b.Property<Guid>("StrategyId")
@@ -296,7 +296,7 @@ namespace TradeWiseBackend.Dal.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.HasKey("StageId", "StrategyId");
+                    b.HasKey("Id", "StrategyId");
 
                     b.HasIndex("StrategyId");
 
