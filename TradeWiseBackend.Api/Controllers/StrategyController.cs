@@ -32,7 +32,7 @@ public class StrategyController(IStrategyService strategyService) : ControllerBa
         return Ok();
     }
 
-    [HttpGet("validate")]
+    [HttpPost("validate")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType<ValidationProblemDetails>(StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> ValidateStrategy(ValidateStrategyRequest request,
