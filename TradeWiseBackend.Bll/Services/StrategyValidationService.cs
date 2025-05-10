@@ -1,4 +1,5 @@
 using System;
+using System.ComponentModel.DataAnnotations;
 using TradeWiseBackend.Domain.Models;
 
 namespace TradeWiseBackend.Bll.Services;
@@ -21,16 +22,13 @@ public class StrategyValidationService(List<StrategyStage> stages, List<Strategy
         check = CheckNullSourceDestinationTransitions();
         if (!check.IsValid) return check;
 
-        check = CheckSingleNullStartEndTransitions();
+        check = CheckCountNullStartEndTransitions();
         if (!check.IsValid) return check;
 
         var adjacency = BuildAdjacency(stageIds);
 
-        var possibleRoots = FindRoots(stageIds);
-        if (possibleRoots.Count != 1)
-            return (false, "There must be exactly one root of the graph (a vertex with no incoming edges)");
+        var root = FindRoot();
 
-        var root = possibleRoots[0];
         var visited = new HashSet<Guid>();
 
         if (!Dfs(root, adjacency, ref visited))
@@ -93,10 +91,14 @@ public class StrategyValidationService(List<StrategyStage> stages, List<Strategy
         return (true, null);
     }
 
-    private (bool IsValid, string? ErrorMessage) CheckSingleNullStartEndTransitions()
+    private (bool IsValid, string? ErrorMessage) CheckCountNullStartEndTransitions()
     {
         if (transitions.Count(t => t.SourceStageId == null) != 1)
-            return (false, "Only one node with an empty start is expected");
+            return (false, "Only one transition with an empty start is expected");
+        
+        if (!transitions.Any(t => t.DestinationStageId == null))
+            return (false, "There is no any transitins with empty end");
+        
         return (true, null);
     }
 
@@ -117,22 +119,23 @@ public class StrategyValidationService(List<StrategyStage> stages, List<Strategy
         return adjacency;
     }
 
-    private List<Guid> FindRoots(HashSet<Guid> stageIds)
+    private Guid FindRoot()
     {
-        var allDestinations = new HashSet<Guid>(transitions.Where(t => t.DestinationStageId != null).Select(t => t.DestinationStageId!.Value));
-        return stageIds.Except(allDestinations).ToList();
-    }
+        var rootId = transitions.SingleOrDefault(t => t.SourceStageId == null)?.DestinationStageId ??
+               throw new ValidationException("No root found for strategy");
 
+        if (stages.All(stage => stage.Id != rootId))
+            throw new ValidationException("Found transition to root node, but the node itself does not exist!");
+
+        return rootId;
+    }
     private static bool Dfs(Guid node, Dictionary<Guid, List<Guid>> adjacency, ref HashSet<Guid> visited)
     {
-        Console.WriteLine("start visited: " + string.Join(", ", visited));
-
         if (visited.Contains(node))
             return false;
 
         visited.Add(node);
 
-        Console.WriteLine("end visited: " + string.Join(", ", visited));
         foreach (var linkedNode in adjacency[node])
         {
             if (!Dfs(linkedNode, adjacency, ref visited))
