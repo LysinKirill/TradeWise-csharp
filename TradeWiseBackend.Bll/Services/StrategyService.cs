@@ -6,7 +6,7 @@ using TradeWiseBackend.Domain.ServiceModels;
 
 namespace TradeWiseBackend.Bll.Services;
 
-public class StrategyService(IStrategyRepository strategyRepository, IAccountRepository accountRepository)
+public class StrategyService(IStrategyRepository strategyRepository, IAccountRepository accountRepository, StrategyValidationService validator)
     : IStrategyService
 {
     public async Task CreateStrategyStages(CreateStrategyPayload createStrategyPayload, CancellationToken ct)
@@ -18,8 +18,7 @@ public class StrategyService(IStrategyRepository strategyRepository, IAccountRep
             throw new Exception("User not found");
         }
 
-        var validator = new StrategyValidationService(createStrategyPayload.StrategyStages, createStrategyPayload.StrategyTransitions);
-        var (isValid, error) = validator.Validate();
+        var (isValid, error) = validator.Validate(createStrategyPayload.StrategyStages, createStrategyPayload.StrategyTransitions);
 
         if (!isValid)
         {
@@ -64,8 +63,7 @@ public class StrategyService(IStrategyRepository strategyRepository, IAccountRep
 
     public Task ValidateStrategyStages(ValidateStrategyPayload validateStrategyPayload, CancellationToken ct)
     {
-        var validator = new StrategyValidationService(validateStrategyPayload.StrategyStages, validateStrategyPayload.StrategyTransitions);
-        var (isValid, error) = validator.PreValidate();
+        var (isValid, error) = validator.PreValidate(validateStrategyPayload.StrategyStages, validateStrategyPayload.StrategyTransitions);
 
         if (!isValid)
         {

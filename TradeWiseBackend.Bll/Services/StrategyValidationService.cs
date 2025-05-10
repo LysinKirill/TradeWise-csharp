@@ -4,30 +4,33 @@ using TradeWiseBackend.Domain.Models;
 
 namespace TradeWiseBackend.Bll.Services;
 
-public class StrategyValidationService(List<StrategyStage> stages, List<StrategyTransition> transitions)
+public class StrategyValidationService()
 {
-    public (bool IsValid, string? ErrorMessage) Validate()
+    public (bool IsValid, string? ErrorMessage) Validate(List<StrategyStage> stages, List<StrategyTransition> transitions)
     {
-        var stageIds = GetStageIds();
+        var stageIds = GetStageIds(stages);
 
-        var check = CheckEmptyness();
+        var check = CheckNotEmptyModelExceptStartAndEnd(stages);
         if (!check.IsValid) return check;
 
-        check = CheckUnknownStagesInTransitions();
+        check = CheckEmptyness(stages, transitions);
         if (!check.IsValid) return check;
 
-        check = CheckInvalidSelfTransitions();
+        check = CheckUnknownStagesInTransitions(stages, transitions);
         if (!check.IsValid) return check;
 
-        check = CheckNullSourceDestinationTransitions();
+        check = CheckInvalidSelfTransitions(transitions);
         if (!check.IsValid) return check;
 
-        check = CheckCountNullStartEndTransitions();
+        check = CheckNullSourceDestinationTransitions(transitions);
         if (!check.IsValid) return check;
 
-        var adjacency = BuildAdjacency(stageIds);
+        check = CheckCountNullStartEndTransitions(transitions);
+        if (!check.IsValid) return check;
 
-        var root = FindRoot();
+        var adjacency = BuildAdjacency(stageIds, transitions);
+
+        var root = FindRoot(stages, transitions);
 
         var visited = new HashSet<Guid>();
 
@@ -40,17 +43,40 @@ public class StrategyValidationService(List<StrategyStage> stages, List<Strategy
         return (true, null);
     }
 
-    public (bool IsValid, string? ErrorMessage) PreValidate()
+    public (bool IsValid, string? ErrorMessage) PreValidate(List<StrategyStage> stages, List<StrategyTransition> transitions)
     {
-        throw new NotImplementedException();
+        var stageIds = GetStageIds(stages);
+
+        var check = CheckUnknownStagesInTransitions(stages, transitions);
+        if (!check.IsValid) return check;
+
+        check = CheckInvalidSelfTransitions(transitions);
+        if (!check.IsValid) return check;
+
+        check = CheckNullSourceDestinationTransitions(transitions);
+        if (!check.IsValid) return check;
+
+        check = CheckCountNullStartEndTransitions(transitions);
+        if (!check.IsValid) return check;
+
+        var adjacency = BuildAdjacency(stageIds, transitions);
+
+        var root = FindRoot(stages, transitions);
+
+        var visited = new HashSet<Guid>();
+
+        if (!Dfs(root, adjacency, ref visited))
+            return (false, "A cycle has been detected in the graph");
+
+        return (true, null);
     }
 
-    private HashSet<Guid> GetStageIds()
+    private HashSet<Guid> GetStageIds(List<StrategyStage> stages)
     {
         return new HashSet<Guid>(stages.Select(s => s.Id));
     }
 
-    private (bool IsValid, string? ErrorMessage) CheckEmptyness()
+    private (bool IsValid, string? ErrorMessage) CheckEmptyness(List<StrategyStage> stages, List<StrategyTransition> transitions)
     {
         if (transitions.Count == 0 || stages.Count == 0)
         {
@@ -59,9 +85,9 @@ public class StrategyValidationService(List<StrategyStage> stages, List<Strategy
         return (true, null);
     }
 
-    private (bool IsValid, string? ErrorMessage) CheckUnknownStagesInTransitions()
+    private (bool IsValid, string? ErrorMessage) CheckUnknownStagesInTransitions(List<StrategyStage> stages, List<StrategyTransition> transitions)
     {
-        var stageIdMap = GetStageIds();
+        var stageIdMap = GetStageIds(stages);
         foreach (var transition in transitions)
         {
             if (transition.SourceStageId.HasValue && !stageIdMap.Contains(transition.SourceStageId.Value))
@@ -77,32 +103,47 @@ public class StrategyValidationService(List<StrategyStage> stages, List<Strategy
         return (true, null);
     }
 
-    private (bool IsValid, string? ErrorMessage) CheckInvalidSelfTransitions()
+    private (bool IsValid, string? ErrorMessage) CheckInvalidSelfTransitions(List<StrategyTransition> transitions)
     {
         if (transitions.Any(t => t.SourceStageId == t.DestinationStageId && t.SourceStageId != null))
             return (false, "The start and end of the transition cannot match");
         return (true, null);
     }
 
-    private (bool IsValid, string? ErrorMessage) CheckNullSourceDestinationTransitions()
+    private (bool IsValid, string? ErrorMessage) CheckNullSourceDestinationTransitions(List<StrategyTransition> transitions)
     {
         if (transitions.Any(t => t.SourceStageId == null && t.DestinationStageId == null))
             return (false, "Start and end of the transition are empty");
         return (true, null);
     }
 
-    private (bool IsValid, string? ErrorMessage) CheckCountNullStartEndTransitions()
+    private (bool IsValid, string? ErrorMessage) CheckCountNullStartEndTransitions(List<StrategyTransition> transitions)
     {
         if (transitions.Count(t => t.SourceStageId == null) != 1)
             return (false, "Only one transition with an empty start is expected");
         
         if (!transitions.Any(t => t.DestinationStageId == null))
-            return (false, "There is no any transitins with empty end");
+            return (false, "There is no any transitions with empty end");
         
         return (true, null);
     }
 
-    private Dictionary<Guid, List<Guid>> BuildAdjacency(HashSet<Guid> stageIds)
+    private (bool IsValid, string? ErrorMessage) CheckNotEmptyModelExceptStartAndEnd(List<StrategyStage> stages)
+    {
+        foreach (var stage in stages)
+        {
+            bool isStartOrFinish = stage.StageType == StrategyStageType.Start || stage.StageType == StrategyStageType.Finish;
+
+            if (!isStartOrFinish && string.IsNullOrWhiteSpace(stage.StageModel))
+            {
+                return (false, $"Stage with Id {stage.Id} has empty ModelId but is not a start or finish node.");
+            }
+        }
+
+        return (true, null);
+    }
+
+    private Dictionary<Guid, List<Guid>> BuildAdjacency(HashSet<Guid> stageIds, List<StrategyTransition> transitions)
     {
         var adjacency = new Dictionary<Guid, List<Guid>>();
         foreach (var stageId in stageIds)
@@ -119,7 +160,7 @@ public class StrategyValidationService(List<StrategyStage> stages, List<Strategy
         return adjacency;
     }
 
-    private Guid FindRoot()
+    private Guid FindRoot(List<StrategyStage> stages, List<StrategyTransition> transitions)
     {
         var rootId = transitions.SingleOrDefault(t => t.SourceStageId == null)?.DestinationStageId ??
                throw new ValidationException("No root found for strategy");
