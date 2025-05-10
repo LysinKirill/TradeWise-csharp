@@ -26,7 +26,7 @@ public class StrategyController(IStrategyService strategyService) : ControllerBa
             return Unauthorized();
 
         var createPayload = request.Adapt<CreateStrategyPayload>() with { UserId = userId };
-        await strategyService.CreateStrategyStages(
+        await strategyService.CreateStrategy(
             createPayload, ct);
 
         return Ok();
@@ -52,7 +52,6 @@ public class StrategyController(IStrategyService strategyService) : ControllerBa
         var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
         if (string.IsNullOrEmpty(userId))
             return Unauthorized();
-
 
         return Ok();
     }

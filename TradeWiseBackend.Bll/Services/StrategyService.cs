@@ -9,7 +9,7 @@ namespace TradeWiseBackend.Bll.Services;
 public class StrategyService(IStrategyRepository strategyRepository, IAccountRepository accountRepository, StrategyValidationService validator)
     : IStrategyService
 {
-    public async Task CreateStrategyStages(CreateStrategyPayload createStrategyPayload, CancellationToken ct)
+    public async Task CreateStrategy(CreateStrategyPayload createStrategyPayload, CancellationToken ct)
     {
         var user = await accountRepository.GetUserById(createStrategyPayload.UserId);
 
@@ -34,8 +34,7 @@ public class StrategyService(IStrategyRepository strategyRepository, IAccountRep
         (
             stageIdMap[stage.Id],
             strategyId,
-            stage.StageModel,
-            user
+            stage.StageModel
         )).ToList();
 
         var transitionEntities = new List<StrategyTransition>();
@@ -56,7 +55,17 @@ public class StrategyService(IStrategyRepository strategyRepository, IAccountRep
 
                 transitionEntities.Add(entity);
             }
+        
+        var strategy = new Strategy (
+            strategyId,
+            createStrategyPayload.Title,
+            createStrategyPayload.Description,
+            createStrategyPayload.UserId,
+            DateTime.Now.ToUniversalTime(),
+            DateTime.Now.ToUniversalTime()
+        );
 
+        await strategyRepository.SaveStrategy(strategy);
         await strategyRepository.SaveStrategyStages(stages);
         await strategyRepository.SaveStrategyTransitions(transitionEntities);
     }

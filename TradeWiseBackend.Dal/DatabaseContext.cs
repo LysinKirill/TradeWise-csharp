@@ -13,6 +13,7 @@ public class DatabaseContext : IdentityDbContext<AccountEntity>
     }
 
     public required DbSet<AccountEntity> Accounts { get; set; }
+    public DbSet<StrategyEntity> Strategies { get; set; }
     public DbSet<StrategyStageEntity> StrategyStages { get; set; }
     public DbSet<StrategyTransitionEntity> StrategyTransitions { get; set; }
 

@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Mvc;
 
 using StrategyStage = TradeWiseBackend.Domain.RepositoryModels.StrategyStage;
 using StrategyTransition = TradeWiseBackend.Domain.RepositoryModels.StrategyTransition;
+using TradeWiseBackend.Domain.RepositoryModels;
 
 namespace TradeWiseBackend.Dal.Repositories;
 
@@ -39,6 +40,14 @@ public class StrategyRepository(DatabaseContext dbContext) : IStrategyRepository
         }).ToList();
 
         await dbContext.StrategyTransitions.AddRangeAsync(entities);
+        await dbContext.SaveChangesAsync();
+    }
+
+    public async Task SaveStrategy(Strategy strategy)
+    {
+        var strategyEntity = strategy.Adapt<StrategyEntity>();
+
+        await dbContext.Strategies.AddAsync(strategyEntity);
         await dbContext.SaveChangesAsync();
     }
 
