@@ -20,15 +20,28 @@ public class DatabaseContext : IdentityDbContext<AccountEntity>
     {
         base.OnModelCreating(modelBuilder);
 
-        modelBuilder.Entity<StrategyStageEntity>(entity =>
+        modelBuilder.Entity<StrategyEntity>(entity =>
         {
-            entity.HasKey(e => new { e.StageId, e.StrategyId });
-            entity.Property(e => e.ModelName).IsRequired();
+            entity.HasKey(e => e.StrategyId);
+
+            entity.Property(e => e.UserId).IsRequired();
 
             entity.HasOne(e => e.User)
                 .WithMany()
                 .HasForeignKey(e => e.UserId)
-                .IsRequired();
+                .IsRequired()
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<StrategyStageEntity>(entity =>
+        {
+            entity.HasKey(e => new { e.StageId, e.StrategyId });
+            entity.Property(e => e.ModelName).IsRequired();
+            entity.HasOne(e => e.Strategy)
+                .WithMany()
+                .HasForeignKey(e => e.StrategyId)
+                .IsRequired()
+                .OnDelete(DeleteBehavior.Cascade);
         });
 
         modelBuilder.Entity<StrategyTransitionEntity>(entity =>

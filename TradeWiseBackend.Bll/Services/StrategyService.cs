@@ -61,6 +61,11 @@ public class StrategyService(IStrategyRepository strategyRepository, IAccountRep
         await strategyRepository.SaveStrategyTransitions(transitionEntities);
     }
 
+    public Task GetUserStrategies(CancellationToken ct)
+    {
+        throw new NotImplementedException();
+    }
+
     public Task ValidateStrategyStages(ValidateStrategyPayload validateStrategyPayload, CancellationToken ct)
     {
         var (isValid, error) = validator.PreValidate(validateStrategyPayload.StrategyStages, validateStrategyPayload.StrategyTransitions);
