@@ -1,8 +1,11 @@
 using Mapster;
+using Microsoft.EntityFrameworkCore;
 using TradeWiseBackend.Bll.Entities;
 using TradeWiseBackend.Dal.Entities;
 using TradeWiseBackend.Domain.Interfaces.Repositories;
 using TradeWiseBackend.Domain.Models;
+using Microsoft.AspNetCore.Mvc;
+
 using StrategyStage = TradeWiseBackend.Domain.RepositoryModels.StrategyStage;
 using StrategyTransition = TradeWiseBackend.Domain.RepositoryModels.StrategyTransition;
 
@@ -16,8 +19,6 @@ public class StrategyRepository(DatabaseContext dbContext) : IStrategyRepository
         foreach (var stageEntity in strategyStageEntities)
         {
             var originalStage = strategyStages.First(s => s.StageId == stageEntity.StageId);
-            stageEntity.UserId = originalStage.User.Id;
-            stageEntity.User = null;
         }
 
         await dbContext.StrategyStages.AddRangeAsync(strategyStageEntities);
@@ -39,6 +40,11 @@ public class StrategyRepository(DatabaseContext dbContext) : IStrategyRepository
 
         await dbContext.StrategyTransitions.AddRangeAsync(entities);
         await dbContext.SaveChangesAsync();
+    }
+
+    public Task<IActionResult> FetchUserStrategies(string userId)
+    {
+        throw new NotImplementedException();
     }
 
     private static StatTypeEntity MapStatTypeEntity(StatType dtoValue)

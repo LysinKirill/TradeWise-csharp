@@ -22,7 +22,7 @@ public class StrategyController(IStrategyService strategyService) : ControllerBa
     {
         var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
-        if (userId == null)
+        if (string.IsNullOrEmpty(userId))
             return Unauthorized();
 
         var createPayload = request.Adapt<CreateStrategyPayload>() with { UserId = userId };
@@ -41,6 +41,18 @@ public class StrategyController(IStrategyService strategyService) : ControllerBa
         var validatePayload = request.Adapt<ValidateStrategyPayload>();
         await strategyService.ValidateStrategyStages(
             validatePayload, ct);
+
+        return Ok();
+    }
+
+    [HttpGet("user-strategies")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    public async Task<IActionResult> GetUserStrategies(CancellationToken ct)
+    {
+        var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        if (string.IsNullOrEmpty(userId))
+            return Unauthorized();
+
 
         return Ok();
     }
