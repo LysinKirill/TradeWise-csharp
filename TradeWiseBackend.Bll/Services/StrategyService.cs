@@ -11,7 +11,7 @@ public class StrategyService(IStrategyRepository strategyRepository, IAccountRep
 {
     public async Task CreateStrategyStages(CreateStrategyPayload createStrategyPayload, CancellationToken ct)
     {
-        var user = accountRepository.GetUserById(createStrategyPayload.UserId);
+        var user = await accountRepository.GetUserById(createStrategyPayload.UserId);
         
         if (user == null)
         {
@@ -36,7 +36,7 @@ public class StrategyService(IStrategyRepository strategyRepository, IAccountRep
             stageIdMap[stage.Id],
             strategyId,
             stage.StageModel,
-            user.GetAwaiter().GetResult()!
+            user
         )).ToList();
 
         var transitionEntities = new List<StrategyTransition>();

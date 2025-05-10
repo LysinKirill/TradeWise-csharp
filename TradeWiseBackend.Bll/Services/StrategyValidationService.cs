@@ -85,9 +85,8 @@ public class StrategyValidationService(List<StrategyStage> stages, List<Strategy
 
     private (bool IsValid, string? ErrorMessage) CheckSingleNullStartEndTransitions()
     {
-        if (transitions.Count(t => t.SourceStageId == null) != 1 ||
-            transitions.Count(t => t.DestinationStageId == null) != 1)
-            return (false, "Only one node with an empty beginning and end is expected");
+        if (transitions.Count(t => t.SourceStageId == null) != 1)
+            return (false, "Only one node with an empty start is expected");
         return (true, null);
     }
 
