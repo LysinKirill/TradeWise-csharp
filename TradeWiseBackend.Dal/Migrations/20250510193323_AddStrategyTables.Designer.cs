@@ -12,8 +12,8 @@ using TradeWiseBackend.Dal;
 namespace TradeWiseBackend.Dal.Migrations
 {
     [DbContext(typeof(DatabaseContext))]
-    [Migration("20250508194257_AddStrategiesAndTransitionsTables")]
-    partial class AddStrategiesAndTransitionsTables
+    [Migration("20250510193323_AddStrategyTables")]
+    partial class AddStrategyTables
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -159,7 +159,7 @@ namespace TradeWiseBackend.Dal.Migrations
 
             modelBuilder.Entity("TradeWiseBackend.Bll.Entities.StrategyTransitionEntity", b =>
                 {
-                    b.Property<Guid>("StrategyTransitionId")
+                    b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
@@ -181,7 +181,7 @@ namespace TradeWiseBackend.Dal.Migrations
                     b.Property<double>("Value")
                         .HasColumnType("double precision");
 
-                    b.HasKey("StrategyTransitionId");
+                    b.HasKey("Id");
 
                     b.HasIndex("StageDestinationId", "StrategyId");
 
@@ -254,9 +254,39 @@ namespace TradeWiseBackend.Dal.Migrations
                     b.ToTable("AspNetUsers", (string)null);
                 });
 
+            modelBuilder.Entity("TradeWiseBackend.Dal.Entities.StrategyEntity", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Description")
+                        .HasColumnType("text");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("Strategies", (string)null);
+                });
+
             modelBuilder.Entity("TradeWiseBackend.Dal.Entities.StrategyStageEntity", b =>
                 {
-                    b.Property<Guid>("StageId")
+                    b.Property<Guid>("Id")
                         .HasColumnType("uuid");
 
                     b.Property<Guid>("StrategyId")
@@ -266,13 +296,9 @@ namespace TradeWiseBackend.Dal.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.Property<string>("UserId")
-                        .IsRequired()
-                        .HasColumnType("text");
+                    b.HasKey("Id", "StrategyId");
 
-                    b.HasKey("StageId", "StrategyId");
-
-                    b.HasIndex("UserId");
+                    b.HasIndex("StrategyId");
 
                     b.ToTable("StrategyStages");
                 });
@@ -345,7 +371,7 @@ namespace TradeWiseBackend.Dal.Migrations
                     b.Navigation("StageSource");
                 });
 
-            modelBuilder.Entity("TradeWiseBackend.Dal.Entities.StrategyStageEntity", b =>
+            modelBuilder.Entity("TradeWiseBackend.Dal.Entities.StrategyEntity", b =>
                 {
                     b.HasOne("TradeWiseBackend.Dal.Entities.AccountEntity", "User")
                         .WithMany()
@@ -354,6 +380,17 @@ namespace TradeWiseBackend.Dal.Migrations
                         .IsRequired();
 
                     b.Navigation("User");
+                });
+
+            modelBuilder.Entity("TradeWiseBackend.Dal.Entities.StrategyStageEntity", b =>
+                {
+                    b.HasOne("TradeWiseBackend.Dal.Entities.StrategyEntity", "Strategy")
+                        .WithMany()
+                        .HasForeignKey("StrategyId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Strategy");
                 });
 #pragma warning restore 612, 618
         }

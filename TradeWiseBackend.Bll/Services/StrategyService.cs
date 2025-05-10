@@ -1,4 +1,7 @@
 using System.ComponentModel.DataAnnotations;
+using Mapster;
+using Microsoft.AspNetCore.Http.HttpResults;
+using Microsoft.AspNetCore.Mvc;
 using TradeWiseBackend.Domain.Interfaces.Repositories;
 using TradeWiseBackend.Domain.Interfaces.Services;
 using TradeWiseBackend.Domain.RepositoryModels;
@@ -9,8 +12,9 @@ namespace TradeWiseBackend.Bll.Services;
 public class StrategyService(IStrategyRepository strategyRepository, IAccountRepository accountRepository, StrategyValidationService validator)
     : IStrategyService
 {
-    public async Task CreateStrategyStages(CreateStrategyPayload createStrategyPayload, CancellationToken ct)
+    public async Task CreateStrategy(CreateStrategyPayload createStrategyPayload, CancellationToken ct)
     {
+        // TODO: декомпозировать
         var user = await accountRepository.GetUserById(createStrategyPayload.UserId);
 
         if (user == null)
@@ -34,8 +38,7 @@ public class StrategyService(IStrategyRepository strategyRepository, IAccountRep
         (
             stageIdMap[stage.Id],
             strategyId,
-            stage.StageModel,
-            user
+            stage.StageModel
         )).ToList();
 
         var transitionEntities = new List<StrategyTransition>();
@@ -56,9 +59,28 @@ public class StrategyService(IStrategyRepository strategyRepository, IAccountRep
 
                 transitionEntities.Add(entity);
             }
+        
+        var strategy = new Strategy (
+            strategyId,
+            createStrategyPayload.Title,
+            createStrategyPayload.Description,
+            createStrategyPayload.UserId,
+            DateTime.Now.ToUniversalTime(),
+            DateTime.Now.ToUniversalTime()
+        );
 
+        // TODO: под транзакцией
+        await strategyRepository.SaveStrategy(strategy);
         await strategyRepository.SaveStrategyStages(stages);
         await strategyRepository.SaveStrategyTransitions(transitionEntities);
+    }
+
+    public async Task<List<StrategyGeneralInfo>> GetUserStrategies(string userId, CancellationToken ct)
+    {
+        // TODO: считать Profit
+        var strategies = await strategyRepository.FetchUserStrategies(userId);
+
+        return strategies.Adapt<List<StrategyGeneralInfo>>();
     }
 
     public Task ValidateStrategyStages(ValidateStrategyPayload validateStrategyPayload, CancellationToken ct)

@@ -6,27 +6,48 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace TradeWiseBackend.Dal.Migrations
 {
     /// <inheritdoc />
-    public partial class AddStrategiesAndTransitionsTables : Migration
+    public partial class AddStrategyTables : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.CreateTable(
-                name: "StrategyStages",
+                name: "Strategies",
                 columns: table => new
                 {
-                    StrategyId = table.Column<Guid>(type: "uuid", nullable: false),
-                    StageId = table.Column<Guid>(type: "uuid", nullable: false),
-                    ModelName = table.Column<string>(type: "text", nullable: false),
-                    UserId = table.Column<string>(type: "text", nullable: false)
+                    Id = table.Column<Guid>(type: "uuid", nullable: false),
+                    Title = table.Column<string>(type: "text", nullable: false),
+                    Description = table.Column<string>(type: "text", nullable: true),
+                    UserId = table.Column<string>(type: "text", nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    UpdatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_StrategyStages", x => new { x.StageId, x.StrategyId });
+                    table.PrimaryKey("PK_Strategies", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_StrategyStages_AspNetUsers_UserId",
+                        name: "FK_Strategies_AspNetUsers_UserId",
                         column: x => x.UserId,
                         principalTable: "AspNetUsers",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "StrategyStages",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "uuid", nullable: false),
+                    StrategyId = table.Column<Guid>(type: "uuid", nullable: false),
+                    ModelName = table.Column<string>(type: "text", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_StrategyStages", x => new { x.Id, x.StrategyId });
+                    table.ForeignKey(
+                        name: "FK_StrategyStages_Strategies_StrategyId",
+                        column: x => x.StrategyId,
+                        principalTable: "Strategies",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                 });
@@ -35,7 +56,7 @@ namespace TradeWiseBackend.Dal.Migrations
                 name: "StrategyTransitions",
                 columns: table => new
                 {
-                    StrategyTransitionId = table.Column<Guid>(type: "uuid", nullable: false),
+                    Id = table.Column<Guid>(type: "uuid", nullable: false),
                     StageSourceId = table.Column<Guid>(type: "uuid", nullable: true),
                     StageDestinationId = table.Column<Guid>(type: "uuid", nullable: true),
                     StrategyId = table.Column<Guid>(type: "uuid", nullable: false),
@@ -45,25 +66,30 @@ namespace TradeWiseBackend.Dal.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_StrategyTransitions", x => x.StrategyTransitionId);
+                    table.PrimaryKey("PK_StrategyTransitions", x => x.Id);
                     table.ForeignKey(
                         name: "FK_StrategyTransitions_StrategyStages_StageDestinationId_Strat~",
                         columns: x => new { x.StageDestinationId, x.StrategyId },
                         principalTable: "StrategyStages",
-                        principalColumns: new[] { "StageId", "StrategyId" },
+                        principalColumns: new[] { "Id", "StrategyId" },
                         onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
                         name: "FK_StrategyTransitions_StrategyStages_StageSourceId_StrategyId",
                         columns: x => new { x.StageSourceId, x.StrategyId },
                         principalTable: "StrategyStages",
-                        principalColumns: new[] { "StageId", "StrategyId" },
+                        principalColumns: new[] { "Id", "StrategyId" },
                         onDelete: ReferentialAction.Restrict);
                 });
 
             migrationBuilder.CreateIndex(
-                name: "IX_StrategyStages_UserId",
-                table: "StrategyStages",
+                name: "IX_Strategies_UserId",
+                table: "Strategies",
                 column: "UserId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_StrategyStages_StrategyId",
+                table: "StrategyStages",
+                column: "StrategyId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_StrategyTransitions_StageDestinationId_StrategyId",
@@ -84,6 +110,9 @@ namespace TradeWiseBackend.Dal.Migrations
 
             migrationBuilder.DropTable(
                 name: "StrategyStages");
+
+            migrationBuilder.DropTable(
+                name: "Strategies");
         }
     }
 }

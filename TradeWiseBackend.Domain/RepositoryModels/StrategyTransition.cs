@@ -3,7 +3,7 @@ using TradeWiseBackend.Domain.Models;
 namespace TradeWiseBackend.Domain.RepositoryModels;
 
 public record StrategyTransition(
-    Guid StrategyTransitionId,
+    Guid Id,
     Guid? StageSourceId,
     Guid? StageDestinationId,
     Guid StrategyId,
