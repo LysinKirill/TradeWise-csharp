@@ -17,7 +17,6 @@ public class StrategyController(IStrategyService strategyService) : ControllerBa
     [HttpPost("create")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType<ValidationProblemDetails>(StatusCodes.Status400BadRequest)]
-    [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> CreateStrategy(CreateStrategyRequest request,
         CancellationToken ct)
     {
@@ -29,6 +28,19 @@ public class StrategyController(IStrategyService strategyService) : ControllerBa
         var createPayload = request.Adapt<CreateStrategyPayload>() with { UserId = userId };
         await strategyService.CreateStrategyStages(
             createPayload, ct);
+
+        return Ok();
+    }
+
+    [HttpPost("validate")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType<ValidationProblemDetails>(StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> ValidateStrategy(ValidateStrategyRequest request,
+        CancellationToken ct)
+    {
+        var validatePayload = request.Adapt<ValidateStrategyPayload>();
+        await strategyService.ValidateStrategyStages(
+            validatePayload, ct);
 
         return Ok();
     }

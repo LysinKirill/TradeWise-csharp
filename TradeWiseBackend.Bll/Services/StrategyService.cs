@@ -6,20 +6,19 @@ using TradeWiseBackend.Domain.ServiceModels;
 
 namespace TradeWiseBackend.Bll.Services;
 
-public class StrategyService(IStrategyRepository strategyRepository, IAccountRepository accountRepository)
+public class StrategyService(IStrategyRepository strategyRepository, IAccountRepository accountRepository, StrategyValidationService validator)
     : IStrategyService
 {
     public async Task CreateStrategyStages(CreateStrategyPayload createStrategyPayload, CancellationToken ct)
     {
-        var user = accountRepository.GetUserById(createStrategyPayload.UserId);
-        
+        var user = await accountRepository.GetUserById(createStrategyPayload.UserId);
+
         if (user == null)
         {
             throw new Exception("User not found");
         }
 
-        var validator = new StrategyValidationService(createStrategyPayload.StrategyStages, createStrategyPayload.StrategyTransitions);
-        var (isValid, error) = validator.Validate();
+        var (isValid, error) = validator.Validate(createStrategyPayload.StrategyStages, createStrategyPayload.StrategyTransitions);
 
         if (!isValid)
         {
@@ -36,7 +35,7 @@ public class StrategyService(IStrategyRepository strategyRepository, IAccountRep
             stageIdMap[stage.Id],
             strategyId,
             stage.StageModel,
-            user.GetAwaiter().GetResult()!
+            user
         )).ToList();
 
         var transitionEntities = new List<StrategyTransition>();
@@ -60,5 +59,17 @@ public class StrategyService(IStrategyRepository strategyRepository, IAccountRep
 
         await strategyRepository.SaveStrategyStages(stages);
         await strategyRepository.SaveStrategyTransitions(transitionEntities);
+    }
+
+    public Task ValidateStrategyStages(ValidateStrategyPayload validateStrategyPayload, CancellationToken ct)
+    {
+        var (isValid, error) = validator.PreValidate(validateStrategyPayload.StrategyStages, validateStrategyPayload.StrategyTransitions);
+
+        if (!isValid)
+        {
+            throw new ValidationException(error!);
+        }
+
+        return Task.CompletedTask;
     }
 }
