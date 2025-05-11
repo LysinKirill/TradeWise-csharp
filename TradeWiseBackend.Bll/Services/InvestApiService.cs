@@ -71,4 +71,18 @@ public class InvestApiService(
             await investServiceClient.GetInstrumentStatAsync(request, headers: AuthMetadata, cancellationToken: ct);
         return instrumentStat.Adapt<InstrumentStat>();
     }
+
+    public async Task<List<CandleInfo>> GetCandlesByInstrument(GetCandlesByInstrumentPayload payload, CancellationToken ct)
+    {
+        var request = new Invest.GetCandlesRequest {
+            InstrumentId = payload.InstrumentId,
+            From = Timestamp.FromDateTime(payload.From.ToUniversalTime()),
+            To = Timestamp.FromDateTime(payload.To.ToUniversalTime())
+        };
+
+        var candles =
+            await investServiceClient.GetCandlesAsync(request, headers: AuthMetadata, cancellationToken: ct);
+
+        return candles.Candles.Adapt<List<CandleInfo>>();
+    }
 }
