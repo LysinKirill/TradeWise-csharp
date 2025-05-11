@@ -121,10 +121,10 @@ public class StrategyValidationService()
     {
         if (transitions.Count(t => t.SourceStageId == null) != 1)
             return (false, "Only one transition with an empty start is expected");
-        
+
         if (!transitions.Any(t => t.DestinationStageId == null))
             return (false, "There is no any transitions with empty end");
-        
+
         return (true, null);
     }
 

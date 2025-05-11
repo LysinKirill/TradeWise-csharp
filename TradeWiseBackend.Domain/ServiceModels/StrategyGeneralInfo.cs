@@ -5,6 +5,5 @@ public record class StrategyGeneralInfo(
     string Title,
     string? Description,
     DateTime CreatedAt,
-    DateTime UpdatedAt,
-    double Profit
+    DateTime UpdatedAt
 );

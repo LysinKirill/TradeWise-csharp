@@ -7,7 +7,7 @@ using TradeWiseBackend.Domain.Models;
 namespace TradeWiseBackend.Api.Controllers;
 
 [ApiController]
-[Route("api/auth/v1")]
+[Route(RoutesV1.AuthApi)]
 public class AuthController : ControllerBase
 {
     private readonly SignInManager<AccountEntity> _signInManager;

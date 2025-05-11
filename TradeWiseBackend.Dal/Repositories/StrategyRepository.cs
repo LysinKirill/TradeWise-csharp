@@ -18,7 +18,7 @@ public class StrategyRepository(DatabaseContext dbContext) : IStrategyRepository
     public async Task SaveStrategyStages(List<StrategyStage> strategyStages)
     {
         var strategyStageEntities = strategyStages.Adapt<List<StrategyStageEntity>>();
-        
+
         await dbContext.StrategyStages.AddRangeAsync(strategyStageEntities);
         await dbContext.SaveChangesAsync();
     }
@@ -36,7 +36,8 @@ public class StrategyRepository(DatabaseContext dbContext) : IStrategyRepository
             Value = t.Value
         }).ToList();
 
-        foreach(var t in entities) {
+        foreach (var t in entities)
+        {
             Console.WriteLine("KEKE! " + t.StageDestinationId);
             Console.WriteLine("KEKE!! " + t.StageSourceId);
             Console.WriteLine("KEKEGTGT " + t.StrategyId);
