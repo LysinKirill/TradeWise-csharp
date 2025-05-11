@@ -35,11 +35,7 @@ public class AccountService(IStrategyRepository strategyRepository,
 
         var potfolioInfo = await userServiceClient.GetPortfolioAsync(new Empty(), headers: AuthMetadata, cancellationToken: ct);
 
-        double totalPnl = 0;
-        foreach (var position in potfolioInfo.Positions)
-        {
-            totalPnl += position.DailyYield * position.Quantity;
-        }
+        double totalPnl = potfolioInfo.Positions.Sum(position => position.DailyYield);
 
         return new AccountOverviewInfo(
             strategiesCount,
