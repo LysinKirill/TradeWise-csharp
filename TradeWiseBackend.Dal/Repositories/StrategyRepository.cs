@@ -36,13 +36,6 @@ public class StrategyRepository(DatabaseContext dbContext) : IStrategyRepository
             Value = t.Value
         }).ToList();
 
-        foreach (var t in entities)
-        {
-            Console.WriteLine("KEKE! " + t.StageDestinationId);
-            Console.WriteLine("KEKE!! " + t.StageSourceId);
-            Console.WriteLine("KEKEGTGT " + t.StrategyId);
-        }
-
         await dbContext.StrategyTransitions.AddRangeAsync(entities);
         await dbContext.SaveChangesAsync();
     }
