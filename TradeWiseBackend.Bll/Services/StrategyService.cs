@@ -59,8 +59,8 @@ public class StrategyService(IStrategyRepository strategyRepository, IAccountRep
 
                 transitionEntities.Add(entity);
             }
-        
-        var strategy = new Strategy (
+
+        var strategy = new Strategy(
             strategyId,
             createStrategyPayload.Title,
             createStrategyPayload.Description,
@@ -77,7 +77,6 @@ public class StrategyService(IStrategyRepository strategyRepository, IAccountRep
 
     public async Task<List<StrategyGeneralInfo>> GetUserStrategies(string userId, CancellationToken ct)
     {
-        // TODO: считать Profit
         var strategies = await strategyRepository.FetchUserStrategies(userId);
 
         return strategies.Adapt<List<StrategyGeneralInfo>>();

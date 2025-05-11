@@ -34,7 +34,7 @@ public class DatabaseContext : IdentityDbContext<AccountEntity>
                 .HasForeignKey(e => e.UserId)
                 .IsRequired()
                 .OnDelete(DeleteBehavior.Cascade);
-                });
+        });
 
         modelBuilder.Entity<StrategyStageEntity>(entity =>
         {
