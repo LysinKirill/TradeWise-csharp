@@ -1,7 +1,9 @@
 ﻿using System.Security.Cryptography.X509Certificates;
 using System.Text.Json;
 using DotNetEnv;
+using Google.Protobuf.WellKnownTypes;
 using Hellang.Middleware.ProblemDetails;
+using Mapster;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Http;
@@ -39,6 +41,9 @@ builder.Services.AddCors(options =>
                 .AllowAnyMethod();
         });
 });
+
+TypeAdapterConfig<Timestamp, DateTime>.NewConfig()
+    .MapWith(src => src.ToDateTime());
 
 
 builder.Services.Configure<DbSettings>(builder.Configuration.GetSection(nameof(DbSettings)));
