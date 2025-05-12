@@ -12,8 +12,8 @@ using TradeWiseBackend.Dal;
 namespace TradeWiseBackend.Dal.Migrations
 {
     [DbContext(typeof(DatabaseContext))]
-    [Migration("20250510193323_AddStrategyTables")]
-    partial class AddStrategyTables
+    [Migration("20250512080812_AddExecutionsTables")]
+    partial class AddExecutionsTables
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -183,9 +183,9 @@ namespace TradeWiseBackend.Dal.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("StageDestinationId", "StrategyId");
+                    b.HasIndex("StageDestinationId");
 
-                    b.HasIndex("StageSourceId", "StrategyId");
+                    b.HasIndex("StageSourceId");
 
                     b.ToTable("StrategyTransitions");
                 });
@@ -254,6 +254,42 @@ namespace TradeWiseBackend.Dal.Migrations
                     b.ToTable("AspNetUsers", (string)null);
                 });
 
+            modelBuilder.Entity("TradeWiseBackend.Dal.Entities.StageExecutionEntity", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp with time zone")
+                        .HasDefaultValueSql("NOW()");
+
+                    b.Property<Guid>("ExecutionId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("StageId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp with time zone")
+                        .HasDefaultValueSql("NOW()");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ExecutionId");
+
+                    b.HasIndex("StageId");
+
+                    b.ToTable("StageExecutions", (string)null);
+                });
+
             modelBuilder.Entity("TradeWiseBackend.Dal.Entities.StrategyEntity", b =>
                 {
                     b.Property<Guid>("Id")
@@ -284,19 +320,51 @@ namespace TradeWiseBackend.Dal.Migrations
                     b.ToTable("Strategies", (string)null);
                 });
 
+            modelBuilder.Entity("TradeWiseBackend.Dal.Entities.StrategyExecutionEntity", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp with time zone")
+                        .HasDefaultValueSql("NOW()");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)");
+
+                    b.Property<Guid>("StrategyId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp with time zone")
+                        .HasDefaultValueSql("NOW()");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("StrategyId");
+
+                    b.ToTable("StrategyExecutions", (string)null);
+                });
+
             modelBuilder.Entity("TradeWiseBackend.Dal.Entities.StrategyStageEntity", b =>
                 {
                     b.Property<Guid>("Id")
-                        .HasColumnType("uuid");
-
-                    b.Property<Guid>("StrategyId")
+                        .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
                     b.Property<string>("ModelName")
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.HasKey("Id", "StrategyId");
+                    b.Property<Guid>("StrategyId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
 
                     b.HasIndex("StrategyId");
 
@@ -358,17 +426,36 @@ namespace TradeWiseBackend.Dal.Migrations
                 {
                     b.HasOne("TradeWiseBackend.Dal.Entities.StrategyStageEntity", "StageDestination")
                         .WithMany()
-                        .HasForeignKey("StageDestinationId", "StrategyId")
+                        .HasForeignKey("StageDestinationId")
                         .OnDelete(DeleteBehavior.Restrict);
 
                     b.HasOne("TradeWiseBackend.Dal.Entities.StrategyStageEntity", "StageSource")
                         .WithMany()
-                        .HasForeignKey("StageSourceId", "StrategyId")
+                        .HasForeignKey("StageSourceId")
                         .OnDelete(DeleteBehavior.Restrict);
 
                     b.Navigation("StageDestination");
 
                     b.Navigation("StageSource");
+                });
+
+            modelBuilder.Entity("TradeWiseBackend.Dal.Entities.StageExecutionEntity", b =>
+                {
+                    b.HasOne("TradeWiseBackend.Dal.Entities.StrategyExecutionEntity", "StrategyExecution")
+                        .WithMany()
+                        .HasForeignKey("ExecutionId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("TradeWiseBackend.Dal.Entities.StrategyStageEntity", "Stage")
+                        .WithMany()
+                        .HasForeignKey("StageId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Stage");
+
+                    b.Navigation("StrategyExecution");
                 });
 
             modelBuilder.Entity("TradeWiseBackend.Dal.Entities.StrategyEntity", b =>
@@ -380,6 +467,17 @@ namespace TradeWiseBackend.Dal.Migrations
                         .IsRequired();
 
                     b.Navigation("User");
+                });
+
+            modelBuilder.Entity("TradeWiseBackend.Dal.Entities.StrategyExecutionEntity", b =>
+                {
+                    b.HasOne("TradeWiseBackend.Dal.Entities.StrategyEntity", "Strategy")
+                        .WithMany()
+                        .HasForeignKey("StrategyId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Strategy");
                 });
 
             modelBuilder.Entity("TradeWiseBackend.Dal.Entities.StrategyStageEntity", b =>

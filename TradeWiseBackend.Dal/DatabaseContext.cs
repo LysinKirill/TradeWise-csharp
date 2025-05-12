@@ -19,6 +19,7 @@ public class DatabaseContext : IdentityDbContext<AccountEntity>
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
+        // TOOD: добавить маппинг enum к строкам
         base.OnModelCreating(modelBuilder);
 
         modelBuilder.Entity<StrategyEntity>(entity =>
@@ -38,7 +39,7 @@ public class DatabaseContext : IdentityDbContext<AccountEntity>
 
         modelBuilder.Entity<StrategyStageEntity>(entity =>
         {
-            entity.HasKey(e => new { e.Id, e.StrategyId });
+            entity.HasKey(e => e.Id);
             entity.Property(e => e.ModelName).IsRequired();
             entity.HasOne(e => e.Strategy)
                 .WithMany()
@@ -53,13 +54,66 @@ public class DatabaseContext : IdentityDbContext<AccountEntity>
 
             entity.HasOne(e => e.StageSource)
                 .WithMany()
-                .HasForeignKey(e => new { e.StageSourceId, e.StrategyId })
+                .HasForeignKey(e => e.StageSourceId)
                 .OnDelete(DeleteBehavior.Restrict);
 
             entity.HasOne(e => e.StageDestination)
                 .WithMany()
-                .HasForeignKey(e => new { e.StageDestinationId, e.StrategyId })
+                .HasForeignKey(e => e.StageDestinationId)
                 .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        modelBuilder.Entity<StrategyExecutionEntity>(entity =>
+        {
+            entity.ToTable("StrategyExecutions");
+
+            entity.HasKey(e => e.Id);
+
+            entity.Property(e => e.CreatedAt)
+                .IsRequired()
+                .HasDefaultValueSql("NOW()");
+
+            entity.Property(e => e.UpdatedAt)
+                .IsRequired()
+                .HasDefaultValueSql("NOW()");
+
+            entity.Property(e => e.Status)
+                .IsRequired()
+                .HasMaxLength(255);
+
+            entity.HasOne(e => e.Strategy)
+                .WithMany()
+                .HasForeignKey(e => e.StrategyId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<StageExecutionEntity>(entity =>
+        {
+            entity.ToTable("StageExecutions");
+
+            entity.HasKey(e => e.Id);
+
+            entity.Property(e => e.CreatedAt)
+                .IsRequired()
+                .HasDefaultValueSql("NOW()");
+
+            entity.Property(e => e.UpdatedAt)
+                .IsRequired()
+                .HasDefaultValueSql("NOW()");
+
+            entity.Property(e => e.Status)
+                .IsRequired()
+                .HasMaxLength(255);
+
+            entity.HasOne(e => e.Stage)
+                .WithMany()
+                .HasForeignKey(e => e.StageId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(e => e.StrategyExecution)
+                .WithMany()
+                .HasForeignKey(e => e.ExecutionId)
+                .OnDelete(DeleteBehavior.Cascade);
         });
     }
 }
