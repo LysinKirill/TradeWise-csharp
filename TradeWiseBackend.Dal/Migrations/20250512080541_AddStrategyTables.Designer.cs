@@ -12,7 +12,7 @@ using TradeWiseBackend.Dal;
 namespace TradeWiseBackend.Dal.Migrations
 {
     [DbContext(typeof(DatabaseContext))]
-    [Migration("20250510193323_AddStrategyTables")]
+    [Migration("20250512080541_AddStrategyTables")]
     partial class AddStrategyTables
     {
         /// <inheritdoc />
@@ -183,9 +183,9 @@ namespace TradeWiseBackend.Dal.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("StageDestinationId", "StrategyId");
+                    b.HasIndex("StageDestinationId");
 
-                    b.HasIndex("StageSourceId", "StrategyId");
+                    b.HasIndex("StageSourceId");
 
                     b.ToTable("StrategyTransitions");
                 });
@@ -287,16 +287,17 @@ namespace TradeWiseBackend.Dal.Migrations
             modelBuilder.Entity("TradeWiseBackend.Dal.Entities.StrategyStageEntity", b =>
                 {
                     b.Property<Guid>("Id")
-                        .HasColumnType("uuid");
-
-                    b.Property<Guid>("StrategyId")
+                        .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
                     b.Property<string>("ModelName")
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.HasKey("Id", "StrategyId");
+                    b.Property<Guid>("StrategyId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
 
                     b.HasIndex("StrategyId");
 
@@ -358,12 +359,12 @@ namespace TradeWiseBackend.Dal.Migrations
                 {
                     b.HasOne("TradeWiseBackend.Dal.Entities.StrategyStageEntity", "StageDestination")
                         .WithMany()
-                        .HasForeignKey("StageDestinationId", "StrategyId")
+                        .HasForeignKey("StageDestinationId")
                         .OnDelete(DeleteBehavior.Restrict);
 
                     b.HasOne("TradeWiseBackend.Dal.Entities.StrategyStageEntity", "StageSource")
                         .WithMany()
-                        .HasForeignKey("StageSourceId", "StrategyId")
+                        .HasForeignKey("StageSourceId")
                         .OnDelete(DeleteBehavior.Restrict);
 
                     b.Navigation("StageDestination");

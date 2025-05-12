@@ -38,7 +38,7 @@ public class DatabaseContext : IdentityDbContext<AccountEntity>
 
         modelBuilder.Entity<StrategyStageEntity>(entity =>
         {
-            entity.HasKey(e => new { e.Id, e.StrategyId });
+            entity.HasKey(e => e.Id);
             entity.Property(e => e.ModelName).IsRequired();
             entity.HasOne(e => e.Strategy)
                 .WithMany()
@@ -53,12 +53,12 @@ public class DatabaseContext : IdentityDbContext<AccountEntity>
 
             entity.HasOne(e => e.StageSource)
                 .WithMany()
-                .HasForeignKey(e => new { e.StageSourceId, e.StrategyId })
+                .HasForeignKey(e => e.StageSourceId)
                 .OnDelete(DeleteBehavior.Restrict);
 
             entity.HasOne(e => e.StageDestination)
                 .WithMany()
-                .HasForeignKey(e => new { e.StageDestinationId, e.StrategyId })
+                .HasForeignKey(e => e.StageDestinationId)
                 .OnDelete(DeleteBehavior.Restrict);
         });
     }

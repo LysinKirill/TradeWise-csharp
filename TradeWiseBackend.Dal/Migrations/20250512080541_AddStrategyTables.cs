@@ -43,7 +43,7 @@ namespace TradeWiseBackend.Dal.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_StrategyStages", x => new { x.Id, x.StrategyId });
+                    table.PrimaryKey("PK_StrategyStages", x => x.Id);
                     table.ForeignKey(
                         name: "FK_StrategyStages_Strategies_StrategyId",
                         column: x => x.StrategyId,
@@ -68,16 +68,16 @@ namespace TradeWiseBackend.Dal.Migrations
                 {
                     table.PrimaryKey("PK_StrategyTransitions", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_StrategyTransitions_StrategyStages_StageDestinationId_Strat~",
-                        columns: x => new { x.StageDestinationId, x.StrategyId },
+                        name: "FK_StrategyTransitions_StrategyStages_StageDestinationId",
+                        column: x => x.StageDestinationId,
                         principalTable: "StrategyStages",
-                        principalColumns: new[] { "Id", "StrategyId" },
+                        principalColumn: "Id",
                         onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
-                        name: "FK_StrategyTransitions_StrategyStages_StageSourceId_StrategyId",
-                        columns: x => new { x.StageSourceId, x.StrategyId },
+                        name: "FK_StrategyTransitions_StrategyStages_StageSourceId",
+                        column: x => x.StageSourceId,
                         principalTable: "StrategyStages",
-                        principalColumns: new[] { "Id", "StrategyId" },
+                        principalColumn: "Id",
                         onDelete: ReferentialAction.Restrict);
                 });
 
@@ -92,14 +92,14 @@ namespace TradeWiseBackend.Dal.Migrations
                 column: "StrategyId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_StrategyTransitions_StageDestinationId_StrategyId",
+                name: "IX_StrategyTransitions_StageDestinationId",
                 table: "StrategyTransitions",
-                columns: new[] { "StageDestinationId", "StrategyId" });
+                column: "StageDestinationId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_StrategyTransitions_StageSourceId_StrategyId",
+                name: "IX_StrategyTransitions_StageSourceId",
                 table: "StrategyTransitions",
-                columns: new[] { "StageSourceId", "StrategyId" });
+                column: "StageSourceId");
         }
 
         /// <inheritdoc />
