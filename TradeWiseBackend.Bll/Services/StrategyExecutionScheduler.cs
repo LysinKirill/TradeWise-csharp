@@ -52,7 +52,7 @@ public class StrategyExecutionScheduler : BackgroundService
                 }
 
                 var previousStageExecution = await _strategyRepository.FetchStageExecutionById(transitionsPrevStages.StageSourceId);
-
+                // проверить все терминальные статусы
                 if (previousStageExecution.Status == StageExecutionStatus.Completed)
                 {
                     executableNodes.Add(node);
