@@ -74,7 +74,8 @@ public class InvestApiService(
 
     public async Task<List<CandleInfo>> GetCandlesByInstrument(GetCandlesByInstrumentPayload payload, CancellationToken ct)
     {
-        var request = new Invest.GetCandlesRequest {
+        var request = new Invest.GetCandlesRequest
+        {
             InstrumentId = payload.InstrumentId,
             From = Timestamp.FromDateTime(payload.From.ToUniversalTime()),
             To = Timestamp.FromDateTime(payload.To.ToUniversalTime())
