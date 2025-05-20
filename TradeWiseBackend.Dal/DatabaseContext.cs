@@ -16,6 +16,8 @@ public class DatabaseContext : IdentityDbContext<AccountEntity>
     public DbSet<StrategyEntity> Strategies { get; set; }
     public DbSet<StrategyStageEntity> StrategyStages { get; set; }
     public DbSet<StrategyTransitionEntity> StrategyTransitions { get; set; }
+    public DbSet<StrategyExecutionEntity> StrategyExecutions { get; set; }
+    public DbSet<StageExecutionEntity> StageExecutions { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

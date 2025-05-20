@@ -9,4 +9,6 @@ public interface IStrategyRepository
     Task SaveStrategyTransitions(List<StrategyTransition> transitions);
     Task<List<StrategyInfo>> FetchUserStrategies(string userId);
     Task SaveStrategy(Strategy strategy);
+    Task<List<StrategyExecutionInfo>> GetActiveStrategies();
+    Task<List<StageExecutionInfo>> GetStagesByStrategy(Guid strategyId);
 }

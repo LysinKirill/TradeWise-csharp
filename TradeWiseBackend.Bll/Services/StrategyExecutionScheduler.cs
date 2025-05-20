@@ -8,18 +8,57 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.DependencyInjection;
+using Model;
+using TradeWiseBackend.Domain.Interfaces.Repositories;
 
 public class StrategyExecutionScheduler : BackgroundService
 {
     private readonly IServiceProvider _serviceProvider;
     private readonly ILogger<StrategyExecutionScheduler> _logger;
+    private readonly ModelService.ModelServiceClient _modelServiceClient;
+    private readonly IStrategyRepository _strategyRepository;
 
     public StrategyExecutionScheduler(
         IServiceProvider serviceProvider,
-        ILogger<StrategyExecutionScheduler> logger)
+        ILogger<StrategyExecutionScheduler> logger,
+        ModelService.ModelServiceClient modelServiceClient,
+        IStrategyRepository strategyRepository)
     {
         _serviceProvider = serviceProvider;
         _logger = logger;
+        _modelServiceClient = modelServiceClient;
+        _modelServiceClient = modelServiceClient;
+        _strategyRepository = strategyRepository;
+    }
+
+    private async Task<List<StageExecutionEntity>> GetExecutableNodesAsync(DatabaseContext dbContext, CancellationToken ct)
+    {
+
+        var activeStrategyExecutions = await _strategyRepository.GetActiveStrategies();
+        var executableNodes = new List<StageExecutionEntity>();
+
+        foreach (var strategyExecution in activeStrategyExecutions)
+        {
+            var nodes = await _strategyRepository.GetStagesByStrategy(strategyExecution.Id);
+
+            var nextNode = nodes
+                .Where(n => n.Status == ExecutionStatus.Pending)
+                .FirstOrDefault(n =>
+                {
+                    if (n.PreviousStageExecutionId == null)
+                        return true; // Начальная нода
+
+                    var prev = nodes.FirstOrDefault(p => p.Id == n.PreviousStageExecutionId);
+                    return prev != null && prev.Status == ExecutionStatus.Completed;
+                });
+
+            if (nextNode != null)
+            {
+                executableNodes.Add(nextNode);
+            }
+        }
+
+        return executableNodes;
     }
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -56,6 +95,5 @@ public class StrategyExecutionScheduler : BackgroundService
 
         _logger.LogInformation("StrategyExecutionScheduler stopping.");
     }
-
 }
 

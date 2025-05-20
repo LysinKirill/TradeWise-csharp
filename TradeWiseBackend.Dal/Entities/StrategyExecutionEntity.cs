@@ -9,11 +9,11 @@ public class StrategyExecutionEntity
     [Key]
     public Guid Id { get; set; }
 
-    public DateTime CreatedAt { get; set; }
+    public required DateTime CreatedAt { get; set; }
 
-    public DateTime UpdatedAt { get; set; }
+    public required DateTime UpdatedAt { get; set; }
 
-    public required string Status { get; set; }
+    public required StrategyExecutionStatus Status { get; set; }
 
     [ForeignKey(nameof(Strategy))]
     public Guid StrategyId { get; set; }

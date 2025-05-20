@@ -55,6 +55,19 @@ public class StrategyRepository(DatabaseContext dbContext) : IStrategyRepository
             .ToListAsync()).Adapt<List<StrategyInfo>>();
     }
 
+    public async Task<List<StrategyExecutionInfo>> GetActiveStrategies()
+    {
+        return (await dbContext.StrategyExecutions
+        .Where(se => se.Status == StrategyExecutionStatus.Running || se.Status == StrategyExecutionStatus.Pending)
+        .ToListAsync()).Adapt<List<StrategyExecutionInfo>>();
+    }
+
+    public async Task<List<StageExecutionInfo>> GetStagesByStrategy(Guid strategyId)
+    {
+        return (await dbContext.StageExecutions
+                .Where(n => n.StrategyExecution.Id == strategyId)
+                .ToListAsync()).Adapt<List<StageExecutionInfo>>();
+    }
     private static StatTypeEntity MapStatTypeEntity(StatType dtoValue)
     {
         return (StatTypeEntity)dtoValue;
