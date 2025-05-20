@@ -9,7 +9,7 @@ using TradeWiseBackend.Domain.ServiceModels;
 
 namespace TradeWiseBackend.Bll.Services;
 
-public class StrategyService(IStrategyRepository strategyRepository, IAccountRepository accountRepository, StrategyValidationService validator)
+public class StrategyService(IStrategyRepository strategyRepository, IAccountRepository accountRepository, StrategyValidationService validator, IUnitOfWork unitOfWork)
     : IStrategyService
 {
     public async Task CreateStrategy(CreateStrategyPayload createStrategyPayload, CancellationToken ct)
@@ -69,10 +69,20 @@ public class StrategyService(IStrategyRepository strategyRepository, IAccountRep
             DateTime.Now.ToUniversalTime()
         );
 
-        // TODO: под транзакцией
-        await strategyRepository.SaveStrategy(strategy);
-        await strategyRepository.SaveStrategyStages(stages);
-        await strategyRepository.SaveStrategyTransitions(transitionEntities);
+        await unitOfWork.BeginTransactionAsync();
+        try
+        {
+            await strategyRepository.SaveStrategy(strategy);
+            await strategyRepository.SaveStrategyStages(stages);
+            await strategyRepository.SaveStrategyTransitions(transitionEntities);
+
+            await unitOfWork.CommitAsync();
+        }
+        catch
+        {
+            await unitOfWork.RollbackAsync();
+            throw;
+        }
     }
 
     public async Task<List<StrategyGeneralInfo>> GetUserStrategies(string userId, CancellationToken ct)

@@ -12,6 +12,10 @@
     </ItemGroup>
 
     <ItemGroup>
+      <None Include="Interfaces/Repositories/IUnitOfWork.cs" />
+    </ItemGroup>
+
+    <ItemGroup>
         <PackageReference Include="Grpc.Net.Client" Version="2.71.0" />
         <PackageReference Include="Microsoft.AspNetCore.App" Version="2.2.8" />
     </ItemGroup>

@@ -10,10 +10,7 @@ public class StrategyValidationService()
     {
         var stageIds = GetStageIds(stages);
 
-        var check = CheckNotEmptyModelExceptStartAndEnd(stages);
-        if (!check.IsValid) return check;
-
-        check = CheckEmptyness(stages, transitions);
+        var check = CheckEmptyness(stages, transitions);
         if (!check.IsValid) return check;
 
         check = CheckUnknownStagesInTransitions(stages, transitions);
@@ -124,21 +121,6 @@ public class StrategyValidationService()
 
         if (!transitions.Any(t => t.DestinationStageId == null))
             return (false, "There is no any transitions with empty end");
-
-        return (true, null);
-    }
-
-    private (bool IsValid, string? ErrorMessage) CheckNotEmptyModelExceptStartAndEnd(List<StrategyStage> stages)
-    {
-        foreach (var stage in stages)
-        {
-            bool isStartOrFinish = stage.StageType == StrategyStageType.Start || stage.StageType == StrategyStageType.Finish;
-
-            if (!isStartOrFinish && string.IsNullOrWhiteSpace(stage.StageModel))
-            {
-                return (false, $"Stage with Id {stage.Id} has empty ModelId but is not a start or finish node.");
-            }
-        }
 
         return (true, null);
     }
