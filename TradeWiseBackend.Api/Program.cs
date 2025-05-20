@@ -65,7 +65,6 @@ handler.ServerCertificateCustomValidationCallback =
     (_, actualCert, _, _) => actualCert?.Thumbprint == certThumbprint;
 
 
-//TODO: replace localhost with uri
 //TODO: move into extensions
 builder.Services.Configure<PythonBackend>(builder.Configuration.GetSection(nameof(PythonBackend)));
 var python_backend = builder.Configuration.GetRequiredSection("PythonBackend").Get<PythonBackend>()!;
