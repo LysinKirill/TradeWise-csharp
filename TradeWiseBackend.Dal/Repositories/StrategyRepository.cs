@@ -4,7 +4,6 @@ using TradeWiseBackend.Bll.Entities;
 using TradeWiseBackend.Dal.Entities;
 using TradeWiseBackend.Domain.Interfaces.Repositories;
 using TradeWiseBackend.Domain.Models;
-using Microsoft.AspNetCore.Mvc;
 
 using StrategyStage = TradeWiseBackend.Domain.RepositoryModels.StrategyStage;
 using StrategyTransition = TradeWiseBackend.Domain.RepositoryModels.StrategyTransition;
@@ -55,19 +54,32 @@ public class StrategyRepository(DatabaseContext dbContext) : IStrategyRepository
             .ToListAsync()).Adapt<List<StrategyInfo>>();
     }
 
-    public async Task<List<StrategyExecutionInfo>> GetActiveStrategies()
+    public async Task<List<StrategyExecutionInfo>> GetPendingAndRunningStrategies()
     {
         return (await dbContext.StrategyExecutions
         .Where(se => se.Status == StrategyExecutionStatus.Running || se.Status == StrategyExecutionStatus.Pending)
         .ToListAsync()).Adapt<List<StrategyExecutionInfo>>();
     }
 
-    public async Task<List<StageExecutionInfo>> GetStagesByStrategy(Guid strategyId)
+    public async Task<List<StageExecutionInfo>> GetPendingAndRunningStageExecutionsByStrategy(Guid strategyId)
     {
         return (await dbContext.StageExecutions
-                .Where(n => n.StrategyExecution.Id == strategyId)
+                .Where(n => n.StrategyExecution.Id == strategyId && (n.Status == Entities.StageExecutionStatus.Pending || n.Status == Entities.StageExecutionStatus.Running))
                 .ToListAsync()).Adapt<List<StageExecutionInfo>>();
     }
+
+    public async Task<StrategyTransition?> FetchTransitionByDestinationStage(Guid strategyId, Guid stageId)
+    {
+        return (await dbContext.StrategyTransitions
+                .SingleAsync(t => t.StageDestinationId == stageId && t.StrategyId == strategyId)).Adapt<StrategyTransition?>();
+    }
+
+    public async Task<StageExecutionInfo> FetchStageExecutionById(Guid stageId)
+    {
+        return (await dbContext.StageExecutions
+            .SingleAsync(se => se.StageId == stageId)).Adapt<StageExecutionInfo>();
+    }
+
     private static StatTypeEntity MapStatTypeEntity(StatType dtoValue)
     {
         return (StatTypeEntity)dtoValue;

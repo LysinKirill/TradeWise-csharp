@@ -10,6 +10,8 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.DependencyInjection;
 using Model;
 using TradeWiseBackend.Domain.Interfaces.Repositories;
+using TradeWiseBackend.Domain.RepositoryModels;
+using System.Linq;
 
 public class StrategyExecutionScheduler : BackgroundService
 {
@@ -31,65 +33,67 @@ public class StrategyExecutionScheduler : BackgroundService
         _strategyRepository = strategyRepository;
     }
 
-    private async Task<List<StageExecutionEntity>> GetExecutableNodesAsync(DatabaseContext dbContext, CancellationToken ct)
+    private async Task<List<StageExecutionInfo>> GetExecutableNodes(CancellationToken ct)
     {
-
-        var activeStrategyExecutions = await _strategyRepository.GetActiveStrategies();
-        var executableNodes = new List<StageExecutionEntity>();
+        var activeStrategyExecutions = await _strategyRepository.GetPendingAndRunningStrategies();
+        var executableNodes = new List<StageExecutionInfo>();
 
         foreach (var strategyExecution in activeStrategyExecutions)
         {
-            var nodes = await _strategyRepository.GetStagesByStrategy(strategyExecution.Id);
+            var strategyNodes = await _strategyRepository.GetPendingAndRunningStageExecutionsByStrategy(strategyExecution.StrategyId);
 
-            var nextNode = nodes
-                .Where(n => n.Status == ExecutionStatus.Pending)
-                .FirstOrDefault(n =>
-                {
-                    if (n.PreviousStageExecutionId == null)
-                        return true; // Начальная нода
-
-                    var prev = nodes.FirstOrDefault(p => p.Id == n.PreviousStageExecutionId);
-                    return prev != null && prev.Status == ExecutionStatus.Completed;
-                });
-
-            if (nextNode != null)
+            foreach (var node in strategyNodes)
             {
-                executableNodes.Add(nextNode);
+                var transitionsPrevStages = await _strategyRepository.FetchTransitionByDestinationStage(strategyExecution.StrategyId, node.Id);
+                if (transitionsPrevStages == null)
+                {
+                    executableNodes.Add(node);
+                    break;
+                }
+
+                var previousStageExecution = await _strategyRepository.FetchStageExecutionById(transitionsPrevStages.StageSourceId);
+
+                if (previousStageExecution.Status == StageExecutionStatus.Completed)
+                {
+                    executableNodes.Add(node);
+                }
             }
         }
 
         return executableNodes;
     }
 
-    protected override async Task ExecuteAsync(CancellationToken stoppingToken)
+    protected override async Task ExecuteAsync(CancellationToken ct)
     {
         _logger.LogInformation("StrategyExecutionScheduler started.");
 
-        while (!stoppingToken.IsCancellationRequested)
+        while (!ct.IsCancellationRequested)
         {
             try
             {
                 using var scope = _serviceProvider.CreateScope();
 
-                // получить следующую ноду для запуска
-                string nextNode = null;
+                var nextNodes = await GetExecutableNodes(ct);
 
-                if (nextNode != null)
+                if (nextNodes.Count != 0)
                 {
-                    _logger.LogInformation($"Found node {nextNode} to execute.");
+                    _logger.LogInformation($"Found nodes to execute.");
 
-                    // Отправляем на исполнение
-                    // меняем статус и updated_at
+                    foreach (var node in nextNodes)
+                    {
+                        _logger.LogInformation($"node={node.Id}, strategy={node.Status}, ");
+                        // отправить ноды
+                    }
 
-                    _logger.LogInformation($"Node {nextNode} sent for execution.");
+                    _logger.LogInformation($"Nodes sent for execution.");
                 }
 
-                await Task.Delay(TimeSpan.FromSeconds(5), stoppingToken);
+                await Task.Delay(TimeSpan.FromSeconds(5), ct);
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error occurred while scheduling strategy executions.");
-                await Task.Delay(TimeSpan.FromSeconds(10), stoppingToken);
+                await Task.Delay(TimeSpan.FromSeconds(10), ct);
             }
         }
 

@@ -17,7 +17,7 @@ public class StageExecutionEntity
     public Guid ExecutionId { get; set; }
     public required StrategyExecutionEntity StrategyExecution { get; set; }
 
-    public required string Status { get; set; }
+    public required StageExecutionStatus Status { get; set; }
 
     public DateTime CreatedAt { get; set; }
 

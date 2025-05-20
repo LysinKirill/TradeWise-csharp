@@ -7,15 +7,15 @@ namespace TradeWiseBackend.Bll.Entities;
 public class StrategyTransitionEntity
 {
     [Key] public Guid Id { get; set; }
-    public Guid? StageSourceId { get; set; }
-    public Guid? StageDestinationId { get; set; }
+    public Guid StageSourceId { get; set; }
+    public Guid StageDestinationId { get; set; }
     public Guid StrategyId { get; set; }
 
     [ForeignKey(nameof(StageSourceId))]
-    public StrategyStageEntity? StageSource { get; set; }
+    public StrategyStageEntity StageSource { get; set; }
 
     [ForeignKey(nameof(StageDestinationId))]
-    public StrategyStageEntity? StageDestination { get; set; }
+    public StrategyStageEntity StageDestination { get; set; }
 
     public StatTypeEntity StatType { get; set; }
     public OperationTypeEntity Operation { get; set; }

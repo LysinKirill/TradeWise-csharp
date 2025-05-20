@@ -4,8 +4,8 @@ namespace TradeWiseBackend.Domain.RepositoryModels;
 
 public record StrategyTransition(
     Guid Id,
-    Guid? StageSourceId,
-    Guid? StageDestinationId,
+    Guid StageSourceId,
+    Guid StageDestinationId,
     Guid StrategyId,
     StatType StatType,
     TransitionConditionType Operation,
