@@ -14,4 +14,6 @@ public interface IStrategyRepository
     Task<StrategyTransition?> FetchTransitionByDestinationStage(Guid strategyId, Guid stageId);
     Task<StageExecutionInfo> FetchStageExecutionByStageId(Guid stageIds);
     Task<StageInfo> FetchStageWithUserByStageId(Guid stageId);
+    Task UpdateStageExecutionStatusToRunning(Guid stageId, Guid strategyId, CancellationToken ct);
+    Task UpdateStrategyExecutionStatusToRunning(Guid stageId, Guid strategyId, CancellationToken ct);
 }

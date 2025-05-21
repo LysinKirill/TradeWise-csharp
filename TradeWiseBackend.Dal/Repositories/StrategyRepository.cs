@@ -95,6 +95,30 @@ public class StrategyRepository(DatabaseContext dbContext) : IStrategyRepository
         return query.Adapt<StageInfo>();
     }
 
+    public async Task UpdateStageExecutionStatusToRunning(Guid stageId, Guid strategyId, CancellationToken ct)
+    {
+        await dbContext.StageExecutions
+            .Where(se => se.StageId == stageId &&
+                        se.StrategyExecution.StrategyId == strategyId)
+            .ExecuteUpdateAsync(se => se
+                .SetProperty(x => x.Status, Entities.StageExecutionStatus.Running)
+                .SetProperty(x => x.UpdatedAt, DateTime.UtcNow), ct);
+
+    }
+
+    public async Task UpdateStrategyExecutionStatusToRunning(Guid stageId, Guid strategyId, CancellationToken ct)
+    {
+        await dbContext.StrategyExecutions
+            .Where(ex => dbContext.StageExecutions
+                .Any(se => se.ExecutionId == ex.Id
+                        && se.StageId == stageId))
+            .Where(ex => ex.StrategyId == strategyId && ex.Status != StrategyExecutionStatus.Running)
+            .ExecuteUpdateAsync(setters => setters
+                .SetProperty(e => e.Status, StrategyExecutionStatus.Running)
+                .SetProperty(e => e.UpdatedAt, DateTime.UtcNow), ct);
+
+    }
+
     private static StatTypeEntity MapStatTypeEntity(StatType dtoValue)
     {
         return (StatTypeEntity)dtoValue;

@@ -25,6 +25,7 @@ public class StrategyExecutionScheduler : BackgroundService
     private readonly IStrategyRepository _strategyRepository;
     private readonly UserService.UserServiceClient _userServiceClient;
     private readonly IHttpContextAccessor _httpContextAccessor;
+    private readonly IUnitOfWork _unitOfWork;
 
     private Metadata AuthMetadata
     {
@@ -46,7 +47,8 @@ public class StrategyExecutionScheduler : BackgroundService
         ModelService.ModelServiceClient modelServiceClient,
         IStrategyRepository strategyRepository,
         UserService.UserServiceClient userServiceClient,
-        IHttpContextAccessor httpContextAccessor)
+        IHttpContextAccessor httpContextAccessor,
+        IUnitOfWork unitOfWork)
     {
         _serviceProvider = serviceProvider;
         _logger = logger;
@@ -54,6 +56,7 @@ public class StrategyExecutionScheduler : BackgroundService
         _strategyRepository = strategyRepository;
         _userServiceClient = userServiceClient;
         _httpContextAccessor = httpContextAccessor;
+        _unitOfWork = unitOfWork;
     }
 
     private async Task<List<StageInfo>> GetExecutableNodes(CancellationToken ct)
@@ -130,6 +133,20 @@ public class StrategyExecutionScheduler : BackgroundService
                         };
                         var startExecutionResponse = await _modelServiceClient.StartExecutionAsync(request, headers: AuthMetadata, cancellationToken: ct);
                         _logger.LogInformation($"Node sent for execution. Status {startExecutionResponse.ExecutionId}");
+
+                        await _unitOfWork.BeginTransactionAsync();
+                        try
+                        {
+                            await _strategyRepository.UpdateStrategyExecutionStatusToRunning(node.Id, node.StrategyId, ct);
+                            await _strategyRepository.UpdateStageExecutionStatusToRunning(node.Id, node.StrategyId, ct);
+
+                            await _unitOfWork.CommitAsync();
+                        }
+                        catch
+                        {
+                            await _unitOfWork.RollbackAsync();
+                            throw;
+                        }
                     }
                 }
 
