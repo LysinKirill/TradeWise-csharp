@@ -12,10 +12,10 @@ public class StrategyTransitionEntity
     public Guid StrategyId { get; set; }
 
     [ForeignKey(nameof(StageSourceId))]
-    public StrategyStageEntity StageSource { get; set; }
+    public StrategyStageEntity? StageSource { get; set; }
 
     [ForeignKey(nameof(StageDestinationId))]
-    public StrategyStageEntity StageDestination { get; set; }
+    public StrategyStageEntity? StageDestination { get; set; }
 
     public StatTypeEntity StatType { get; set; }
     public OperationTypeEntity Operation { get; set; }

@@ -42,7 +42,7 @@ public class DatabaseContext : IdentityDbContext<AccountEntity>
         modelBuilder.Entity<StrategyStageEntity>(entity =>
         {
             entity.HasKey(e => e.Id);
-            entity.Property(e => e.ModelName).IsRequired();
+            entity.Property(e => e.StageModel).IsRequired();
             entity.HasOne(e => e.Strategy)
                 .WithMany()
                 .HasForeignKey(e => e.StrategyId)

@@ -10,7 +10,8 @@ public interface IStrategyRepository
     Task<List<StrategyInfo>> FetchUserStrategies(string userId);
     Task SaveStrategy(Strategy strategy);
     Task<List<StrategyExecutionInfo>> GetPendingAndRunningStrategies();
-    Task<List<StageExecutionInfo>> GetPendingAndRunningStageExecutionsByStrategy(Guid strategyId);
+    Task<List<StageExecutionInfo>> GetPendingStageExecutionsByStrategy(Guid strategyId);
     Task<StrategyTransition?> FetchTransitionByDestinationStage(Guid strategyId, Guid stageId);
-    Task<StageExecutionInfo> FetchStageExecutionById(Guid stageIds);
+    Task<StageExecutionInfo> FetchStageExecutionByStageId(Guid stageIds);
+    Task<StageInfo> FetchStageWithUserByStageId(Guid stageId);
 }

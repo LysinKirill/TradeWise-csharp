@@ -61,10 +61,10 @@ public class StrategyRepository(DatabaseContext dbContext) : IStrategyRepository
         .ToListAsync()).Adapt<List<StrategyExecutionInfo>>();
     }
 
-    public async Task<List<StageExecutionInfo>> GetPendingAndRunningStageExecutionsByStrategy(Guid strategyId)
+    public async Task<List<StageExecutionInfo>> GetPendingStageExecutionsByStrategy(Guid strategyId)
     {
         return (await dbContext.StageExecutions
-                .Where(n => n.StrategyExecution.Id == strategyId && (n.Status == Entities.StageExecutionStatus.Pending || n.Status == Entities.StageExecutionStatus.Running))
+                .Where(n => n.StrategyExecution.Id == strategyId && (n.Status == Entities.StageExecutionStatus.Pending))
                 .ToListAsync()).Adapt<List<StageExecutionInfo>>();
     }
 
@@ -74,10 +74,25 @@ public class StrategyRepository(DatabaseContext dbContext) : IStrategyRepository
                 .SingleAsync(t => t.StageDestinationId == stageId && t.StrategyId == strategyId)).Adapt<StrategyTransition?>();
     }
 
-    public async Task<StageExecutionInfo> FetchStageExecutionById(Guid stageId)
+    public async Task<StageExecutionInfo> FetchStageExecutionByStageId(Guid stageId)
     {
         return (await dbContext.StageExecutions
             .SingleAsync(se => se.StageId == stageId)).Adapt<StageExecutionInfo>();
+    }
+
+    public async Task<StageInfo> FetchStageWithUserByStageId(Guid stageId)
+    {
+        var query = await dbContext.StrategyStages
+        .Include(ss => ss.Strategy)
+        .Where(ss => ss.Id == stageId)
+        .Select(ss => new StageInfo(
+            ss.Id,
+            ss.StrategyId,
+            ss.StageModel,
+            ss.Strategy.UserId
+        )).SingleAsync();
+
+        return query.Adapt<StageInfo>();
     }
 
     private static StatTypeEntity MapStatTypeEntity(StatType dtoValue)

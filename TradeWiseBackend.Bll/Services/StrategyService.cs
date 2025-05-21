@@ -55,8 +55,8 @@ public class StrategyService(IStrategyRepository strategyRepository, IAccountRep
                 var entity = new StrategyTransition
                 (
                     Guid.NewGuid(),
-                    transition.SourceStageId.Value,
-                    transition.DestinationStageId.Value,
+                    stageIdMap[transition.SourceStageId.Value],
+                    stageIdMap[transition.DestinationStageId.Value],
                     strategyId,
                     condition.StatType,
                     condition.TransitionConditionType,
