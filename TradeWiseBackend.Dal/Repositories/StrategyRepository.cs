@@ -82,26 +82,40 @@ public class StrategyRepository(DatabaseContext dbContext) : IStrategyRepository
 
     public async Task<StageInfo> FetchStageWithUserByStageId(Guid stageId)
     {
-        var query = await dbContext.StrategyStages
-        .Include(ss => ss.Strategy)
-        .Where(ss => ss.Id == stageId)
-        .Select(ss => new StageInfo(
-            ss.Id,
-            ss.StrategyId,
-            ss.StageModel,
-            ss.Strategy.UserId
-        )).SingleAsync();
+        var query = await (
+            from stage in dbContext.StrategyStages
+            join execution in dbContext.StageExecutions
+                on stage.Id equals execution.StageId into executionsGroup
+            from exec in executionsGroup.DefaultIfEmpty()
+            where stage.Id == stageId
+            select new StageInfo(
+                stage.Id,
+                stage.StrategyId,
+                stage.StageModel,
+                stage.Strategy.UserId,
+                exec != null ? exec.ExternalExecutionId : null
+            )
+        ).SingleOrDefaultAsync();
 
         return query.Adapt<StageInfo>();
     }
 
-    public async Task UpdateStageExecutionStatusToRunning(Guid stageId, Guid strategyId, CancellationToken ct)
+    public async Task UpdateStageExecutionStatus(Guid stageId, Guid strategyId, Domain.RepositoryModels.StageExecutionStatus status, CancellationToken ct)
     {
+        var convertedStatus = status switch
+        {
+            Domain.RepositoryModels.StageExecutionStatus.Completed => Entities.StageExecutionStatus.Completed,
+            Domain.RepositoryModels.StageExecutionStatus.Failed => Entities.StageExecutionStatus.Failed,
+            Domain.RepositoryModels.StageExecutionStatus.Pending => Entities.StageExecutionStatus.Pending,
+            Domain.RepositoryModels.StageExecutionStatus.Running => Entities.StageExecutionStatus.Running,
+            _ => throw new NotImplementedException(),
+        };
+
         await dbContext.StageExecutions
             .Where(se => se.StageId == stageId &&
                         se.StrategyExecution.StrategyId == strategyId)
             .ExecuteUpdateAsync(se => se
-                .SetProperty(x => x.Status, Entities.StageExecutionStatus.Running)
+                .SetProperty(x => x.Status, convertedStatus)
                 .SetProperty(x => x.UpdatedAt, DateTime.UtcNow), ct);
 
     }
@@ -117,6 +131,23 @@ public class StrategyRepository(DatabaseContext dbContext) : IStrategyRepository
                 .SetProperty(e => e.Status, StrategyExecutionStatus.Running)
                 .SetProperty(e => e.UpdatedAt, DateTime.UtcNow), ct);
 
+    }
+
+    public async Task SaveExternalExecutionId(Guid stageId, long externalExecutionId, CancellationToken ct)
+    {
+        var stageExecution = await dbContext.StageExecutions
+            .Where(se => se.StageId == stageId)
+            .SingleAsync(ct);
+
+        if (stageExecution == null)
+        {
+            throw new KeyNotFoundException($"No StageExecution found with StageId {stageId}");
+        }
+
+        stageExecution.ExternalExecutionId = externalExecutionId;
+        stageExecution.UpdatedAt = DateTime.UtcNow;
+
+        await dbContext.SaveChangesAsync(ct);
     }
 
     private static StatTypeEntity MapStatTypeEntity(StatType dtoValue)

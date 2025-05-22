@@ -59,7 +59,44 @@ public class StrategyExecutionScheduler : BackgroundService
         _unitOfWork = unitOfWork;
     }
 
-    private async Task<List<StageInfo>> GetExecutableNodes(CancellationToken ct)
+    private async Task<List<StageInfo>> RemoveRunningNodesInSystem(List<StageInfo> nodes, Metadata metaData, CancellationToken ct)
+    {
+        var updatedNodes = new List<StageInfo>();
+        ;
+        foreach (var node in nodes)
+        {
+            if (!node.ExecutionId.HasValue)
+            {
+                continue;
+            }
+
+            var request = new GetExecutionStatusRequest
+            {
+                ExecutionId = node.ExecutionId.Value
+            };
+            var response = await _modelServiceClient.GetExecutionStatusAsync(request, headers: AuthMetadata, cancellationToken: ct);
+
+            if (response.Status == ExecutionStatus.Pending)
+            {
+                updatedNodes.Add(node);
+            }
+            else
+            {
+                var status = response.Status switch
+                {
+                    ExecutionStatus.Completed => StageExecutionStatus.Completed,
+                    ExecutionStatus.Failed => StageExecutionStatus.Failed,
+                    ExecutionStatus.Running => StageExecutionStatus.Running,
+                    _ => throw new NotImplementedException(),
+                };
+                await _strategyRepository.UpdateStageExecutionStatus(node.Id, node.StrategyId, status, ct);
+            }
+        }
+
+        return nodes;
+    }
+
+    private async Task<List<StageInfo>> GetExecutableNodes(Metadata metaData, CancellationToken ct)
     {
         var activeStrategyExecutions = await _strategyRepository.GetPendingAndRunningStrategies();
         _logger.LogInformation($"Active strategy executions started StrategyId->StrategyExecutionId:\n{string.Join(",", activeStrategyExecutions.Select(info => $"({info.StrategyId}->{info.Id}), "))}.\n\n");
@@ -94,7 +131,9 @@ public class StrategyExecutionScheduler : BackgroundService
             }
         }
 
-        return executableNodes;
+        var nodes = await RemoveRunningNodesInSystem(executableNodes, metaData, ct);
+
+        return nodes;
     }
 
     protected override async Task ExecuteAsync(CancellationToken ct)
@@ -106,7 +145,7 @@ public class StrategyExecutionScheduler : BackgroundService
             try
             {
                 using var scope = _serviceProvider.CreateScope();
-                var nextNodes = await GetExecutableNodes(ct);
+                var nextNodes = await GetExecutableNodes(AuthMetadata, ct);
                 var nodesGroupedByUsers = nextNodes.GroupBy(s => s.UserId)
                     .ToDictionary(g => g.Key, g => g.ToList());
 
@@ -137,8 +176,9 @@ public class StrategyExecutionScheduler : BackgroundService
                         await _unitOfWork.BeginTransactionAsync();
                         try
                         {
+                            await _strategyRepository.SaveExternalExecutionId(node.Id, startExecutionResponse.ExecutionId, ct);
+                            await _strategyRepository.UpdateStageExecutionStatus(node.Id, node.StrategyId, StageExecutionStatus.Running, ct);
                             await _strategyRepository.UpdateStrategyExecutionStatusToRunning(node.Id, node.StrategyId, ct);
-                            await _strategyRepository.UpdateStageExecutionStatusToRunning(node.Id, node.StrategyId, ct);
 
                             await _unitOfWork.CommitAsync();
                         }

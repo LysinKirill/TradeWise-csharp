@@ -4,5 +4,6 @@ public record class StageInfo(
     Guid Id,
     Guid StrategyId,
     long StageModel,
-    string UserId
+    string UserId,
+    long? ExecutionId
 );

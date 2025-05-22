@@ -18,8 +18,7 @@ public class StageExecutionEntity
     public required StrategyExecutionEntity StrategyExecution { get; set; }
 
     public required StageExecutionStatus Status { get; set; }
-
+    public long? ExternalExecutionId { get; set; }
     public DateTime CreatedAt { get; set; }
-
     public DateTime UpdatedAt { get; set; }
 }
