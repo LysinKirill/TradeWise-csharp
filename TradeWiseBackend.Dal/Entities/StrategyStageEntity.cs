@@ -7,5 +7,5 @@ public class StrategyStageEntity
     public Guid Id { get; set; }
     public Guid StrategyId { get; set; }
     public required StrategyEntity Strategy { get; set; }
-    public required string ModelName { get; set; }
+    public required long StageModel { get; set; }
 }

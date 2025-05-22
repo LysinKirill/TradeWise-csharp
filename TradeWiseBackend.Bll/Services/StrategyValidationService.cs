@@ -117,7 +117,7 @@ public class StrategyValidationService()
     private (bool IsValid, string? ErrorMessage) CheckCountNullStartEndTransitions(List<StrategyTransition> transitions)
     {
         if (transitions.Count(t => t.SourceStageId == null) != 1)
-            return (false, "Only one transition with an empty start is expected");
+            return (false, "Exactly one transition with an empty start is expected");
 
         if (!transitions.Any(t => t.DestinationStageId == null))
             return (false, "There is no any transitions with empty end");

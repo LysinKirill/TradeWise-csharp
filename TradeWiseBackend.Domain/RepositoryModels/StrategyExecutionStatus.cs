@@ -1,8 +1,7 @@
-namespace TradeWiseBackend.Dal.Entities;
+namespace TradeWiseBackend.Domain.RepositoryModels;
 
 public enum StrategyExecutionStatus
 {
-    // TODO: продумать статусную модель
     Pending,
     Running,
     Completed,

@@ -1,0 +1,221 @@
+using System;
+
+namespace TradeWiseBackend.Bll.Services;
+
+using System;
+using System.Threading;
+using System.Threading.Tasks;
+using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.DependencyInjection;
+using Model;
+using TradeWiseBackend.Domain.Interfaces.Repositories;
+using TradeWiseBackend.Domain.RepositoryModels;
+using System.Linq;
+using User;
+using Google.Protobuf.WellKnownTypes;
+using Grpc.Core;
+using Microsoft.AspNetCore.Http;
+
+public class StrategyStatusUpdateWorker(
+    IServiceProvider serviceProvider,
+    ILogger<StrategyStatusUpdateWorker> logger,
+    ModelService.ModelServiceClient modelServiceClient,
+    IStrategyRepository strategyRepository,
+    UserService.UserServiceClient userServiceClient,
+    IHttpContextAccessor httpContextAccessor,
+    IUnitOfWork unitOfWork) : BackgroundService
+{
+    private Metadata AuthMetadata
+    {
+        get
+        {
+            var token = httpContextAccessor.HttpContext?.Request.Headers["Authorization"].ToString();
+            if (token is null)
+                throw new RpcException(new Status(StatusCode.Unauthenticated, "No authorization header provided"));
+            return new Metadata
+            {
+                { "Authorization", token }
+            };
+        }
+    }
+
+    private StageExecutionStatus MapExecutionStatus(ExecutionStatus status)
+    {
+        return status switch
+        {
+            ExecutionStatus.Completed => StageExecutionStatus.Completed,
+            ExecutionStatus.Failed => StageExecutionStatus.Failed,
+            ExecutionStatus.Running => StageExecutionStatus.Running,
+            _ => throw new NotImplementedException(),
+        };
+    }
+
+    private async Task<List<StageInfo>> GetExecutableNodes(CancellationToken ct)
+    {
+        var activeStrategyExecutions = await strategyRepository.GetPendingAndRunningStrategies();
+        logger.LogInformation($"Active strategy executions started StrategyId->StrategyExecutionId:\n{string.Join(",", activeStrategyExecutions.Select(info => $"({info.StrategyId}->{info.Id}), "))}.\n\n");
+        var executableNodes = new List<StageInfo>();
+
+        foreach (var strategyExecution in activeStrategyExecutions)
+        {
+            var strategyStageExecutions = await strategyRepository.GetPendingStageExecutionsByStrategy(strategyExecution.StrategyId);
+            logger.LogInformation($"Active stage executions started StageExecutionId->StageId->Status:\n{string.Join(", ", strategyStageExecutions.Select(info => $"({info.Id}->{info.Status})->{info.StageId}, "))}.\n\n");
+
+            foreach (var stageExecution in strategyStageExecutions)
+            {
+                var transitionsPrevStage = await strategyRepository.FetchTransitionByDestinationStage(strategyExecution.StrategyId, stageExecution.StageId);
+                if (transitionsPrevStage == null)
+                {
+                    logger.LogInformation($"Stage execution: {stageExecution.Id}, stage {stageExecution.StageId}, transition null\n\n");
+                    var stageInfo = await strategyRepository.FetchStageWithUserByStageId(stageExecution.StageId);
+                    logger.LogInformation($"Stage: {stageInfo.Id}, model {stageInfo.StageModel}\n\n");
+                    executableNodes.Add(stageInfo);
+                    break;
+                }
+                logger.LogInformation($"Stage execution: {stageExecution.Id}, stage {stageExecution.StageId}, transition {transitionsPrevStage.Id}, sourceStage {transitionsPrevStage.StageSourceId}, destinationStage {transitionsPrevStage.StageDestinationId}\n\n");
+
+                var previousStageExecution = await strategyRepository.FetchStageExecutionByStageId(transitionsPrevStage.StageSourceId);
+                logger.LogInformation($"Previous stage: {previousStageExecution.StageId}, transition {transitionsPrevStage.Id}, sourceStage {transitionsPrevStage.StageSourceId}, destinationStage {transitionsPrevStage.StageDestinationId}\n\n");
+                if (previousStageExecution.Status == StageExecutionStatus.Completed || previousStageExecution.Status == StageExecutionStatus.Failed)
+                {
+                    var stageInfo = await strategyRepository.FetchStageWithUserByStageId(stageExecution.StageId);
+                    logger.LogInformation($"Stage: {stageInfo.Id}, model {stageInfo.StageModel}\n\n");
+                    executableNodes.Add(stageInfo);
+                }
+            }
+        }
+
+        return executableNodes;
+    }
+
+    private async void ProcessPendingNodes(CancellationToken ct)
+    {
+        logger.LogInformation("ProcessPendingNodes started.");
+
+        var nextNodes = await GetExecutableNodes(ct);
+        var nodesGroupedByUsers = nextNodes.GroupBy(s => s.UserId)
+            .ToDictionary(g => g.Key, g => g.ToList());
+
+        foreach (var nodesGroup in nodesGroupedByUsers)
+        {
+            var userId = nodesGroup.Key;
+            var userNodes = nodesGroup.Value;
+            int countNodes = userNodes.Count;
+            logger.LogInformation($"User={userId}, countNodes={countNodes}, userNodes={string.Join(", ", userNodes.Select(info => $"{info.Id}"))}");
+
+            var potfolioInfo = await userServiceClient.GetPortfolioAsync(new Empty(), headers: AuthMetadata, cancellationToken: ct);
+            double initialBalance = potfolioInfo.RubleBalance / countNodes;
+            logger.LogInformation($"Balance from python {potfolioInfo.RubleBalance}, initialBalance = {initialBalance}");
+
+            foreach (var node in userNodes)
+            {
+                logger.LogInformation($"node={node.Id}, model={node.StageModel}");
+                // TODO: поменять MaxExecutionDurationSeconds
+                var request = new StartExecutionRequest
+                {
+                    ModelId = node.StageModel,
+                    InitialBalance = initialBalance,
+                    MaxExecutionDurationSeconds = 300
+                };
+                // TODO: обрабатывать ошибки
+                var startExecutionResponse = await modelServiceClient.StartExecutionAsync(request, headers: AuthMetadata, cancellationToken: ct);
+                logger.LogInformation($"Node sent for execution. Status {startExecutionResponse.ExecutionId}");
+
+                await unitOfWork.BeginTransactionAsync();
+                try
+                {
+                    await strategyRepository.SaveExternalExecutionId(node.Id, startExecutionResponse.ExecutionId, ct);
+                    await strategyRepository.UpdateStageExecutionStatus(node.Id, StageExecutionStatus.Running, ct);
+                    await strategyRepository.UpdateStrategyExecutionStatusByStrategyId(node.StrategyId, StrategyExecutionStatus.Running, ct);
+
+                    await unitOfWork.CommitAsync();
+                }
+                catch
+                {
+                    await unitOfWork.RollbackAsync();
+                    throw;
+                }
+            }
+        }
+    }
+
+    private async void ProcessRunningNodes(CancellationToken ct)
+    {
+        logger.LogInformation("ProcessRunningNodes started.");
+
+        var runningStageExecutions = await strategyRepository.FetchRunningStageExecutions(ct);
+        logger.LogInformation($"{runningStageExecutions.Count} running stages");
+        foreach (var execution in runningStageExecutions)
+        {
+            if (!execution.ExternalExecutionId.HasValue)
+            {
+                throw new Exception($"Running stage {execution.StageId}, execution id {execution.Id} without ExternalExecutionId");
+            }
+
+            var request = new GetExecutionStatusRequest
+            {
+                ExecutionId = execution.ExternalExecutionId.Value
+            };
+            var response = await modelServiceClient.GetExecutionStatusAsync(request, headers: AuthMetadata, cancellationToken: ct);
+
+            if (MapExecutionStatus(response.Status) != execution.Status)
+            {
+                logger.LogInformation($"different statuses");
+                await unitOfWork.BeginTransactionAsync();
+                try
+                {
+                    // TODO: добавить логику с отменами
+                    if (response.Status == ExecutionStatus.Failed)
+                    {
+                        // TODO: нужно ли фейлить другие ноды?
+                    }
+                    if (response.Status == ExecutionStatus.Completed)
+                    {
+                        logger.LogInformation($"Change status to Completed");
+                        var strategyId = await strategyRepository.FetchStrategyByStage(execution.StageId, ct);
+                        var activeExecutions = await strategyRepository.FetchActiveStageExecutionsByStrategy(strategyId, ct);
+                        if (activeExecutions.Count == 0)
+                        {
+                            await strategyRepository.UpdateStrategyExecutionStatusByStrategyId(strategyId, StrategyExecutionStatus.Running, ct);
+                        }
+                    }
+                    await strategyRepository.UpdateStageExecutionStatus(execution.StageId, MapExecutionStatus(response.Status), ct);
+                }
+                catch
+                {
+                    await unitOfWork.RollbackAsync();
+                    throw;
+                }
+            }
+        }
+    }
+
+    protected override async Task ExecuteAsync(CancellationToken ct)
+    {
+        await Task.Delay(TimeSpan.FromHours(9999999), ct);
+        // TODO: проверять переходы по статусам на корректность
+        logger.LogInformation("StrategyExecutionScheduler started.");
+
+        while (!ct.IsCancellationRequested)
+        {
+            try
+            {
+                using var scope = serviceProvider.CreateScope();
+
+                ProcessRunningNodes(ct);
+                ProcessPendingNodes(ct);
+
+                await Task.Delay(TimeSpan.FromSeconds(5), ct);
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, "Error occurred while scheduling strategy executions.");
+                await Task.Delay(TimeSpan.FromSeconds(10), ct);
+            }
+        }
+
+        logger.LogInformation("StrategyExecutionScheduler stopping.");
+    }
+}
+

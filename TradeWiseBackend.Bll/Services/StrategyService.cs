@@ -44,13 +44,19 @@ public class StrategyService(IStrategyRepository strategyRepository, IAccountRep
         var transitionEntities = new List<StrategyTransition>();
 
         foreach (var transition in createStrategyPayload.StrategyTransitions)
+        {
+            if (transition.SourceStageId == null || transition.DestinationStageId == null)
+            {
+                continue;
+            }
+
             foreach (var condition in transition.TransitionConditions)
             {
                 var entity = new StrategyTransition
                 (
                     Guid.NewGuid(),
-                    transition.SourceStageId.HasValue ? stageIdMap[transition.SourceStageId.Value] : null,
-                    transition.DestinationStageId.HasValue ? stageIdMap[transition.DestinationStageId.Value] : null,
+                    stageIdMap[transition.SourceStageId.Value],
+                    stageIdMap[transition.DestinationStageId.Value],
                     strategyId,
                     condition.StatType,
                     condition.TransitionConditionType,
@@ -59,6 +65,7 @@ public class StrategyService(IStrategyRepository strategyRepository, IAccountRep
 
                 transitionEntities.Add(entity);
             }
+        }
 
         var strategy = new Strategy(
             strategyId,
