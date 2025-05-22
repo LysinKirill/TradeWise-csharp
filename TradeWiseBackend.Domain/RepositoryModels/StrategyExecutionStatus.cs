@@ -1,10 +1,10 @@
 namespace TradeWiseBackend.Domain.RepositoryModels;
 
-public enum StageExecutionStatus
+public enum StrategyExecutionStatus
 {
     Pending,
     Running,
     Completed,
-    Failed,
-    Cancelled
+    Cancelled,
+    Failed
 }

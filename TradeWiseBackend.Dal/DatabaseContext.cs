@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using TradeWiseBackend.Bll.Entities;
 using TradeWiseBackend.Dal.Entities;
 
@@ -21,8 +22,25 @@ public class DatabaseContext : IdentityDbContext<AccountEntity>
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
-        // TOOD: добавить маппинг enum к строкам
         base.OnModelCreating(modelBuilder);
+
+        var stageExecutionStatusConverter = new ValueConverter<StageExecutionStatus, string>(
+            v => v.ToString(),
+            v => (StageExecutionStatus)Enum.Parse(typeof(StageExecutionStatus), v));
+
+        var strategyExecutionStatusConverter = new ValueConverter<StrategyExecutionStatus, string>(
+            v => v.ToString(),
+            v => (StrategyExecutionStatus)Enum.Parse(typeof(StrategyExecutionStatus), v));
+
+        modelBuilder.Entity<StrategyExecutionEntity>()
+            .Property(e => e.Status)
+            .HasConversion(strategyExecutionStatusConverter)
+            .HasMaxLength(50);
+
+        modelBuilder.Entity<StageExecutionEntity>()
+            .Property(e => e.Status)
+            .HasConversion(stageExecutionStatusConverter)
+            .HasMaxLength(50);
 
         modelBuilder.Entity<StrategyEntity>(entity =>
         {
@@ -52,6 +70,12 @@ public class DatabaseContext : IdentityDbContext<AccountEntity>
 
         modelBuilder.Entity<StrategyTransitionEntity>(entity =>
         {
+            entity.Property(e => e.StatType)
+                .HasConversion<string>();
+
+            entity.Property(e => e.Operation)
+                .HasConversion<string>();
+
             entity.HasKey(e => e.Id);
 
             entity.HasOne(e => e.StageSource)

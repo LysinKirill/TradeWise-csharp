@@ -160,8 +160,9 @@ namespace TradeWiseBackend.Dal.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
-                    b.Property<int>("Operation")
-                        .HasColumnType("integer");
+                    b.Property<string>("Operation")
+                        .IsRequired()
+                        .HasColumnType("text");
 
                     b.Property<Guid>("StageDestinationId")
                         .HasColumnType("uuid");
@@ -169,8 +170,9 @@ namespace TradeWiseBackend.Dal.Migrations
                     b.Property<Guid>("StageSourceId")
                         .HasColumnType("uuid");
 
-                    b.Property<int>("StatType")
-                        .HasColumnType("integer");
+                    b.Property<string>("StatType")
+                        .IsRequired()
+                        .HasColumnType("text");
 
                     b.Property<Guid>("StrategyId")
                         .HasColumnType("uuid");
@@ -271,9 +273,10 @@ namespace TradeWiseBackend.Dal.Migrations
                     b.Property<Guid>("StageId")
                         .HasColumnType("uuid");
 
-                    b.Property<int>("Status")
+                    b.Property<string>("Status")
+                        .IsRequired()
                         .HasMaxLength(255)
-                        .HasColumnType("integer");
+                        .HasColumnType("character varying(255)");
 
                     b.Property<DateTime>("UpdatedAt")
                         .ValueGeneratedOnAdd()
@@ -330,9 +333,10 @@ namespace TradeWiseBackend.Dal.Migrations
                         .HasColumnType("timestamp with time zone")
                         .HasDefaultValueSql("NOW()");
 
-                    b.Property<int>("Status")
+                    b.Property<string>("Status")
+                        .IsRequired()
                         .HasMaxLength(255)
-                        .HasColumnType("integer");
+                        .HasColumnType("character varying(255)");
 
                     b.Property<Guid>("StrategyId")
                         .HasColumnType("uuid");

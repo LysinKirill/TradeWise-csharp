@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace TradeWiseBackend.Dal.Migrations
 {
     /// <inheritdoc />
-    public partial class RenameColumnsAndChangeTypes : Migration
+    public partial class EditNamesAndTypes : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -14,6 +14,14 @@ namespace TradeWiseBackend.Dal.Migrations
             migrationBuilder.DropColumn(
                 name: "ModelName",
                 table: "StrategyStages");
+
+            migrationBuilder.AlterColumn<string>(
+                name: "StatType",
+                table: "StrategyTransitions",
+                type: "text",
+                nullable: false,
+                oldClrType: typeof(int),
+                oldType: "integer");
 
             migrationBuilder.AlterColumn<Guid>(
                 name: "StageSourceId",
@@ -35,6 +43,14 @@ namespace TradeWiseBackend.Dal.Migrations
                 oldType: "uuid",
                 oldNullable: true);
 
+            migrationBuilder.AlterColumn<string>(
+                name: "Operation",
+                table: "StrategyTransitions",
+                type: "text",
+                nullable: false,
+                oldClrType: typeof(int),
+                oldType: "integer");
+
             migrationBuilder.AddColumn<long>(
                 name: "StageModel",
                 table: "StrategyStages",
@@ -42,25 +58,11 @@ namespace TradeWiseBackend.Dal.Migrations
                 nullable: false,
                 defaultValue: 0L);
 
-            migrationBuilder.AlterColumn<int>(
-                name: "Status",
-                table: "StrategyExecutions",
-                type: "integer",
-                maxLength: 255,
-                nullable: false,
-                oldClrType: typeof(string),
-                oldType: "character varying(255)",
-                oldMaxLength: 255);
-
-            migrationBuilder.AlterColumn<int>(
-                name: "Status",
+            migrationBuilder.AddColumn<long>(
+                name: "ExternalExecutionId",
                 table: "StageExecutions",
-                type: "integer",
-                maxLength: 255,
-                nullable: false,
-                oldClrType: typeof(string),
-                oldType: "character varying(255)",
-                oldMaxLength: 255);
+                type: "bigint",
+                nullable: true);
         }
 
         /// <inheritdoc />
@@ -70,6 +72,18 @@ namespace TradeWiseBackend.Dal.Migrations
                 name: "StageModel",
                 table: "StrategyStages");
 
+            migrationBuilder.DropColumn(
+                name: "ExternalExecutionId",
+                table: "StageExecutions");
+
+            migrationBuilder.AlterColumn<int>(
+                name: "StatType",
+                table: "StrategyTransitions",
+                type: "integer",
+                nullable: false,
+                oldClrType: typeof(string),
+                oldType: "text");
+
             migrationBuilder.AlterColumn<Guid>(
                 name: "StageSourceId",
                 table: "StrategyTransitions",
@@ -86,32 +100,20 @@ namespace TradeWiseBackend.Dal.Migrations
                 oldClrType: typeof(Guid),
                 oldType: "uuid");
 
+            migrationBuilder.AlterColumn<int>(
+                name: "Operation",
+                table: "StrategyTransitions",
+                type: "integer",
+                nullable: false,
+                oldClrType: typeof(string),
+                oldType: "text");
+
             migrationBuilder.AddColumn<string>(
                 name: "ModelName",
                 table: "StrategyStages",
                 type: "text",
                 nullable: false,
                 defaultValue: "");
-
-            migrationBuilder.AlterColumn<string>(
-                name: "Status",
-                table: "StrategyExecutions",
-                type: "character varying(255)",
-                maxLength: 255,
-                nullable: false,
-                oldClrType: typeof(int),
-                oldType: "integer",
-                oldMaxLength: 255);
-
-            migrationBuilder.AlterColumn<string>(
-                name: "Status",
-                table: "StageExecutions",
-                type: "character varying(255)",
-                maxLength: 255,
-                nullable: false,
-                oldClrType: typeof(int),
-                oldType: "integer",
-                oldMaxLength: 255);
         }
     }
 }

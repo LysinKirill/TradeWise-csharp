@@ -2,5 +2,5 @@ namespace TradeWiseBackend.Api.Requests.models;
 
 public record StrategyStage(
     Guid Id,
-    long StageModel
+    long ModelId
 );

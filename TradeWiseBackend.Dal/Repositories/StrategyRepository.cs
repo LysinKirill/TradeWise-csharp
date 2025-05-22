@@ -57,8 +57,8 @@ public class StrategyRepository(DatabaseContext dbContext) : IStrategyRepository
     public async Task<List<StrategyExecutionInfo>> GetPendingAndRunningStrategies()
     {
         return (await dbContext.StrategyExecutions
-        .Where(se => se.Status == StrategyExecutionStatus.Running || se.Status == StrategyExecutionStatus.Pending)
-        .ToListAsync()).Adapt<List<StrategyExecutionInfo>>();
+            .Where(se => se.Status == Entities.StrategyExecutionStatus.Running || se.Status == Entities.StrategyExecutionStatus.Pending)
+            .ToListAsync()).Adapt<List<StrategyExecutionInfo>>();
     }
 
     public async Task<List<StageExecutionInfo>> GetPendingStageExecutionsByStrategy(Guid strategyId)
@@ -100,7 +100,7 @@ public class StrategyRepository(DatabaseContext dbContext) : IStrategyRepository
         return query.Adapt<StageInfo>();
     }
 
-    public async Task UpdateStageExecutionStatus(Guid stageId, Guid strategyId, Domain.RepositoryModels.StageExecutionStatus status, CancellationToken ct)
+    public async Task UpdateStageExecutionStatus(Guid stageId, Domain.RepositoryModels.StageExecutionStatus status, CancellationToken ct)
     {
         var convertedStatus = status switch
         {
@@ -108,29 +108,38 @@ public class StrategyRepository(DatabaseContext dbContext) : IStrategyRepository
             Domain.RepositoryModels.StageExecutionStatus.Failed => Entities.StageExecutionStatus.Failed,
             Domain.RepositoryModels.StageExecutionStatus.Pending => Entities.StageExecutionStatus.Pending,
             Domain.RepositoryModels.StageExecutionStatus.Running => Entities.StageExecutionStatus.Running,
+            Domain.RepositoryModels.StageExecutionStatus.Cancelled => Entities.StageExecutionStatus.Cancelled,
             _ => throw new NotImplementedException(),
         };
 
         await dbContext.StageExecutions
-            .Where(se => se.StageId == stageId &&
-                        se.StrategyExecution.StrategyId == strategyId)
+            .Where(se => se.StageId == stageId)
             .ExecuteUpdateAsync(se => se
                 .SetProperty(x => x.Status, convertedStatus)
                 .SetProperty(x => x.UpdatedAt, DateTime.UtcNow), ct);
 
     }
 
-    public async Task UpdateStrategyExecutionStatusToRunning(Guid stageId, Guid strategyId, CancellationToken ct)
+    public async Task UpdateStrategyExecutionStatusByStrategyId(Guid stageId, Domain.RepositoryModels.StrategyExecutionStatus status, CancellationToken ct)
     {
+        var convertedStatus = status switch
+        {
+            Domain.RepositoryModels.StrategyExecutionStatus.Completed => Entities.StrategyExecutionStatus.Completed,
+            Domain.RepositoryModels.StrategyExecutionStatus.Failed => Entities.StrategyExecutionStatus.Failed,
+            Domain.RepositoryModels.StrategyExecutionStatus.Pending => Entities.StrategyExecutionStatus.Pending,
+            Domain.RepositoryModels.StrategyExecutionStatus.Running => Entities.StrategyExecutionStatus.Running,
+            Domain.RepositoryModels.StrategyExecutionStatus.Cancelled => Entities.StrategyExecutionStatus.Cancelled,
+            _ => throw new NotImplementedException(),
+        };
+
         await dbContext.StrategyExecutions
             .Where(ex => dbContext.StageExecutions
                 .Any(se => se.ExecutionId == ex.Id
                         && se.StageId == stageId))
-            .Where(ex => ex.StrategyId == strategyId && ex.Status != StrategyExecutionStatus.Running)
+            .Where(ex => ex.Status != convertedStatus)
             .ExecuteUpdateAsync(setters => setters
-                .SetProperty(e => e.Status, StrategyExecutionStatus.Running)
+                .SetProperty(e => e.Status, convertedStatus)
                 .SetProperty(e => e.UpdatedAt, DateTime.UtcNow), ct);
-
     }
 
     public async Task SaveExternalExecutionId(Guid stageId, long externalExecutionId, CancellationToken ct)
@@ -148,6 +157,28 @@ public class StrategyRepository(DatabaseContext dbContext) : IStrategyRepository
         stageExecution.UpdatedAt = DateTime.UtcNow;
 
         await dbContext.SaveChangesAsync(ct);
+    }
+
+    public async Task<List<StageExecutionInfo>> FetchRunningStageExecutions(CancellationToken ct)
+    {
+        return (await dbContext.StageExecutions
+            .Where(se => se.Status == Entities.StageExecutionStatus.Running)
+            .ToListAsync(ct)).Adapt<List<StageExecutionInfo>>();
+    }
+
+    public async Task<List<StageExecutionInfo>> FetchActiveStageExecutionsByStrategy(Guid strategyId, CancellationToken ct)
+    {
+        return (await dbContext.StageExecutions
+            .Where(se => se.Status == Entities.StageExecutionStatus.Running || se.Status == Entities.StageExecutionStatus.Pending)
+            .ToListAsync(ct)).Adapt<List<StageExecutionInfo>>();
+    }
+
+    public async Task<Guid> FetchStrategyByStage(Guid stageId, CancellationToken ct)
+    {
+        return await dbContext.StrategyStages
+            .Where(stage => stage.Id == stageId)
+            .Select(stage => stage.StrategyId)
+            .SingleAsync(ct);
     }
 
     private static StatTypeEntity MapStatTypeEntity(StatType dtoValue)
