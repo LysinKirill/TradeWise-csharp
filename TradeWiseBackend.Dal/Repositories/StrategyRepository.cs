@@ -134,7 +134,7 @@ public class StrategyRepository(DatabaseContext dbContext) : IStrategyRepository
 
         await dbContext.StrategyExecutions
             .Where(ex => dbContext.StageExecutions
-                .Any(se => se.ExecutionId == ex.Id
+                .Any(se => se.StrategyExecutionId == ex.Id
                         && se.StageId == stageId))
             .Where(ex => ex.Status != convertedStatus)
             .ExecuteUpdateAsync(setters => setters
@@ -179,6 +179,16 @@ public class StrategyRepository(DatabaseContext dbContext) : IStrategyRepository
             .Where(stage => stage.Id == stageId)
             .Select(stage => stage.StrategyId)
             .SingleAsync(ct);
+    }
+
+    public Task SaveStrategyExecution(StrategyExecutionModel strategyExecution, CancellationToken ct)
+    {
+        throw new NotImplementedException();
+    }
+
+    public Task SaveStageExecution(StageExecutionModel stageExecution, CancellationToken ct)
+    {
+        throw new NotImplementedException();
     }
 
     private static StatTypeEntity MapStatTypeEntity(StatType dtoValue)

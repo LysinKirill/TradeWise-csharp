@@ -14,7 +14,7 @@ public class StageExecutionEntity
     public required StrategyStageEntity Stage { get; set; }
 
     [ForeignKey(nameof(StrategyExecution))]
-    public Guid ExecutionId { get; set; }
+    public Guid StrategyExecutionId { get; set; }
     public required StrategyExecutionEntity StrategyExecution { get; set; }
 
     public required StageExecutionStatus Status { get; set; }

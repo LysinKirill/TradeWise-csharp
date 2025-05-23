@@ -110,4 +110,9 @@ public class StrategyService(IStrategyRepository strategyRepository, IAccountRep
 
         return Task.CompletedTask;
     }
+
+    public Task RunStrategy(RunStrategyPayload runStrategyPayload, CancellationToken ct)
+    {
+        return Task.CompletedTask;
+    }
 }

@@ -138,7 +138,7 @@ public class DatabaseContext : IdentityDbContext<AccountEntity>
 
             entity.HasOne(e => e.StrategyExecution)
                 .WithMany()
-                .HasForeignKey(e => e.ExecutionId)
+                .HasForeignKey(e => e.StrategyExecutionId)
                 .OnDelete(DeleteBehavior.Cascade);
         });
     }
