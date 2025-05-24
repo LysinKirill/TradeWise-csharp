@@ -1,5 +1,6 @@
 ﻿using System.Security.Cryptography.X509Certificates;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using DotNetEnv;
 using Google.Protobuf.WellKnownTypes;
 using Hellang.Middleware.ProblemDetails;
@@ -26,7 +27,13 @@ Env.Load();
 
 builder.Services.AddExceptionHandlingMiddleware(builder.Configuration);
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddControllers();
+builder.Services.AddControllers()
+    .AddJsonOptions(options =>
+    {
+        options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
+        options.JsonSerializerOptions.DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull;
+        options.JsonSerializerOptions.WriteIndented = true;
+    });
 builder.Services.AddSwagger();
 builder.Services.AddIdentityServices(builder.Configuration);
 builder.Services.AddBllServices();
