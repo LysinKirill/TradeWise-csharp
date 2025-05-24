@@ -17,5 +17,5 @@ public class StrategyExecutionEntity
 
     [ForeignKey(nameof(Strategy))]
     public Guid StrategyId { get; set; }
-    public required StrategyEntity Strategy { get; set; }
+    public StrategyEntity? Strategy { get; set; }
 }

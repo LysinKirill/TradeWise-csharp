@@ -110,4 +110,39 @@ public class StrategyService(IStrategyRepository strategyRepository, IAccountRep
 
         return Task.CompletedTask;
     }
+
+    public async Task RunStrategy(RunStrategyPayload runStrategyPayload, CancellationToken ct)
+    {
+        var strategyStages = await strategyRepository.FetchStagesByStrategyId(runStrategyPayload.StrategyId, ct);
+        var strategyExecution = new StrategyExecutionModel(
+            Guid.NewGuid(),
+            DateTime.UtcNow,
+            DateTime.UtcNow,
+            StrategyExecutionStatus.Pending,
+            runStrategyPayload.StrategyId
+        );
+        var stageExecutionEntities = strategyStages.Select(stageId => new StageExecutionModel
+        (
+            Guid.NewGuid(),
+            stageId,
+            strategyExecution.Id,
+            StageExecutionStatus.Pending,
+            DateTime.UtcNow,
+            DateTime.UtcNow
+        )).ToList();
+
+        await unitOfWork.BeginTransactionAsync();
+        try
+        {
+            await strategyRepository.SaveStrategyExecution(strategyExecution, ct);
+            await strategyRepository.SaveStageExecutions(stageExecutionEntities, ct);
+
+            await unitOfWork.CommitAsync();
+        }
+        catch
+        {
+            await unitOfWork.RollbackAsync();
+            throw;
+        }
+    }
 }
