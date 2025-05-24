@@ -16,26 +16,14 @@ using User;
 using Google.Protobuf.WellKnownTypes;
 using Grpc.Core;
 using Microsoft.AspNetCore.Http;
+using TradeWiseBackend.Domain.Interfaces.Services;
+using TradeWiseBackend.Domain.Models;
 
 public class StrategyStatusUpdateWorker(
     IServiceProvider serviceProvider,
-    ILogger<StrategyStatusUpdateWorker> logger,
-    IHttpContextAccessor httpContextAccessor
+    ILogger<StrategyStatusUpdateWorker> logger
     ) : BackgroundService
 {
-    private Metadata AuthMetadata
-    {
-        get
-        {
-            var token = httpContextAccessor.HttpContext?.Request.Headers["Authorization"].ToString();
-            if (token is null)
-                throw new RpcException(new Status(StatusCode.Unauthenticated, "No authorization header provided"));
-            return new Metadata
-            {
-                { "Authorization", token }
-            };
-        }
-    }
 
     private StageExecutionStatus MapExecutionStatus(ExecutionStatus status)
     {
@@ -86,7 +74,7 @@ public class StrategyStatusUpdateWorker(
         return executableNodes;
     }
 
-    private async Task ProcessPendingNodes(IStrategyRepository strategyRepository, ModelService.ModelServiceClient modelServiceClient, UserService.UserServiceClient userServiceClient, IUnitOfWork unitOfWork, CancellationToken ct)
+    private async Task ProcessPendingNodes(IStrategyRepository strategyRepository, ModelService.ModelServiceClient modelServiceClient, UserService.UserServiceClient userServiceClient, IUnitOfWork unitOfWork, ITokenService tokenService, IAccountRepository accountRepository, CancellationToken ct)
     {
         logger.LogInformation("ProcessPendingNodes started.");
 
@@ -101,7 +89,16 @@ public class StrategyStatusUpdateWorker(
             int countNodes = userNodes.Count;
             logger.LogInformation($"User={userId}, countNodes={countNodes}, userNodes={string.Join(", ", userNodes.Select(info => $"{info.Id}"))}");
 
-            var potfolioInfo = await userServiceClient.GetPortfolioAsync(new Empty(), headers: AuthMetadata, cancellationToken: ct);
+            var user = await accountRepository.GetUserById(userId);
+            var token = await tokenService.GenerateToken(new AccountEntityModel
+            {
+                Id = userId,
+                Email = user!.Email
+            });
+
+            var meta = new Metadata { { "Authorization", token } };
+
+            var potfolioInfo = await userServiceClient.GetPortfolioAsync(new Empty(), headers: meta, cancellationToken: ct);
             double initialBalance = potfolioInfo.RubleBalance / countNodes;
             logger.LogInformation($"Balance from python {potfolioInfo.RubleBalance}, initialBalance = {initialBalance}");
 
@@ -115,8 +112,8 @@ public class StrategyStatusUpdateWorker(
                     InitialBalance = initialBalance,
                     MaxExecutionDurationSeconds = 300
                 };
-                // TODO: обрабатывать ошибки
-                var startExecutionResponse = await modelServiceClient.StartExecutionAsync(request, headers: AuthMetadata, cancellationToken: ct);
+                // TODO: обрабатывать ошибки;
+                var startExecutionResponse = await modelServiceClient.StartExecutionAsync(request, headers: meta, cancellationToken: ct);
                 logger.LogInformation($"Node sent for execution. Status {startExecutionResponse.ExecutionId}");
 
                 await unitOfWork.BeginTransactionAsync();
@@ -154,7 +151,16 @@ public class StrategyStatusUpdateWorker(
             {
                 ExecutionId = execution.ExternalExecutionId.Value
             };
-            var response = await modelServiceClient.GetExecutionStatusAsync(request, headers: AuthMetadata, cancellationToken: ct);
+
+            // var user = await accountRepository.GetUserById(userId);
+            // var token = await tokenService.GenerateToken(new AccountEntityModel
+            // {
+            //     Id = userId,
+            //     Email = user!.Email!
+            // });
+
+            var meta = new Metadata { { "Authorization", "" } };
+            var response = await modelServiceClient.GetExecutionStatusAsync(request, headers: meta, cancellationToken: ct);
 
             if (MapExecutionStatus(response.Status) != execution.Status)
             {
@@ -200,12 +206,14 @@ public class StrategyStatusUpdateWorker(
                 using var scope = serviceProvider.CreateScope();
 
                 var strategyRepository = scope.ServiceProvider.GetRequiredService<IStrategyRepository>();
+                var accountRepository = scope.ServiceProvider.GetRequiredService<IAccountRepository>();
                 var userServiceClient = scope.ServiceProvider.GetRequiredService<UserService.UserServiceClient>();
                 var modelServiceClient = scope.ServiceProvider.GetRequiredService<ModelService.ModelServiceClient>();
                 var unitOfWork = scope.ServiceProvider.GetRequiredService<IUnitOfWork>();
+                var tockenService = scope.ServiceProvider.GetRequiredService<ITokenService>();
 
                 await ProcessRunningNodes(strategyRepository, modelServiceClient, unitOfWork, ct);
-                await ProcessPendingNodes(strategyRepository, modelServiceClient, userServiceClient, unitOfWork, ct);
+                await ProcessPendingNodes(strategyRepository, modelServiceClient, userServiceClient, unitOfWork, tockenService, accountRepository, ct);
 
                 await Task.Delay(TimeSpan.FromSeconds(180), ct);
             }
