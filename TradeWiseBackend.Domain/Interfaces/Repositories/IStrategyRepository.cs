@@ -9,7 +9,7 @@ public interface IStrategyRepository
     Task SaveStrategyTransitions(List<StrategyTransition> transitions);
     Task<List<StrategyInfo>> FetchUserStrategies(string userId);
     Task SaveStrategy(Strategy strategy);
-    Task<List<StrategyExecutionInfo>> GetPendingAndRunningStrategies();
+    Task<List<RepositoryModels.StrategyExecutionInfo>> GetPendingAndRunningStrategies();
     Task<List<StageExecutionInfo>> GetPendingStageExecutionsByStrategy(Guid strategyId);
     Task<StrategyTransition?> FetchTransitionByDestinationStage(Guid strategyId, Guid stageId);
     Task<StageExecutionInfo> FetchStageExecutionByStageId(Guid stageIds);
@@ -23,4 +23,5 @@ public interface IStrategyRepository
     Task SaveStrategyExecution(StrategyExecutionModel strategyExecution, CancellationToken ct);
     Task<Guid> FetchStrategyByStage(Guid stageId, CancellationToken ct);
     Task<List<Guid>> FetchStagesByStrategyId(Guid strategyId, CancellationToken ct);
+    Task<List<StrategyExecutionModel>> FetchStrategyExecutionsByUser(string userId, CancellationToken ct);
 }
