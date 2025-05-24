@@ -64,14 +64,14 @@ public class StrategyRepository(DatabaseContext dbContext) : IStrategyRepository
     public async Task<List<StageExecutionInfo>> GetPendingStageExecutionsByStrategy(Guid strategyId)
     {
         return (await dbContext.StageExecutions
-                .Where(n => n.StrategyExecution.Id == strategyId && (n.Status == Entities.StageExecutionStatus.Pending))
+                .Where(n => n.StrategyExecution != null && n.StrategyExecution.StrategyId == strategyId && (n.Status == Entities.StageExecutionStatus.Pending))
                 .ToListAsync()).Adapt<List<StageExecutionInfo>>();
     }
 
     public async Task<StrategyTransition?> FetchTransitionByDestinationStage(Guid strategyId, Guid stageId)
     {
         return (await dbContext.StrategyTransitions
-                .SingleAsync(t => t.StageDestinationId == stageId && t.StrategyId == strategyId)).Adapt<StrategyTransition?>();
+                .SingleOrDefaultAsync(t => t.StageDestinationId == stageId && t.StrategyId == strategyId)).Adapt<StrategyTransition?>();
     }
 
     public async Task<StageExecutionInfo> FetchStageExecutionByStageId(Guid stageId)

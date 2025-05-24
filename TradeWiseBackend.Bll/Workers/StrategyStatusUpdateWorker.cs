@@ -20,11 +20,8 @@ using Microsoft.AspNetCore.Http;
 public class StrategyStatusUpdateWorker(
     IServiceProvider serviceProvider,
     ILogger<StrategyStatusUpdateWorker> logger,
-    ModelService.ModelServiceClient modelServiceClient,
-    IStrategyRepository strategyRepository,
-    UserService.UserServiceClient userServiceClient,
-    IHttpContextAccessor httpContextAccessor,
-    IUnitOfWork unitOfWork) : BackgroundService
+    IHttpContextAccessor httpContextAccessor
+    ) : BackgroundService
 {
     private Metadata AuthMetadata
     {
@@ -51,7 +48,7 @@ public class StrategyStatusUpdateWorker(
         };
     }
 
-    private async Task<List<StageInfo>> GetExecutableNodes(CancellationToken ct)
+    private async Task<List<StageInfo>> GetExecutableNodes(IStrategyRepository strategyRepository, CancellationToken ct)
     {
         var activeStrategyExecutions = await strategyRepository.GetPendingAndRunningStrategies();
         logger.LogInformation($"Active strategy executions started StrategyId->StrategyExecutionId:\n{string.Join(",", activeStrategyExecutions.Select(info => $"({info.StrategyId}->{info.Id}), "))}.\n\n");
@@ -89,11 +86,11 @@ public class StrategyStatusUpdateWorker(
         return executableNodes;
     }
 
-    private async void ProcessPendingNodes(CancellationToken ct)
+    private async Task ProcessPendingNodes(IStrategyRepository strategyRepository, ModelService.ModelServiceClient modelServiceClient, UserService.UserServiceClient userServiceClient, IUnitOfWork unitOfWork, CancellationToken ct)
     {
         logger.LogInformation("ProcessPendingNodes started.");
 
-        var nextNodes = await GetExecutableNodes(ct);
+        var nextNodes = await GetExecutableNodes(strategyRepository, ct);
         var nodesGroupedByUsers = nextNodes.GroupBy(s => s.UserId)
             .ToDictionary(g => g.Key, g => g.ToList());
 
@@ -140,7 +137,7 @@ public class StrategyStatusUpdateWorker(
         }
     }
 
-    private async void ProcessRunningNodes(CancellationToken ct)
+    private async Task ProcessRunningNodes(IStrategyRepository strategyRepository, ModelService.ModelServiceClient modelServiceClient, IUnitOfWork unitOfWork, CancellationToken ct)
     {
         logger.LogInformation("ProcessRunningNodes started.");
 
@@ -193,7 +190,6 @@ public class StrategyStatusUpdateWorker(
 
     protected override async Task ExecuteAsync(CancellationToken ct)
     {
-        await Task.Delay(TimeSpan.FromHours(9999999), ct);
         // TODO: проверять переходы по статусам на корректность
         logger.LogInformation("StrategyExecutionScheduler started.");
 
@@ -203,10 +199,15 @@ public class StrategyStatusUpdateWorker(
             {
                 using var scope = serviceProvider.CreateScope();
 
-                ProcessRunningNodes(ct);
-                ProcessPendingNodes(ct);
+                var strategyRepository = scope.ServiceProvider.GetRequiredService<IStrategyRepository>();
+                var userServiceClient = scope.ServiceProvider.GetRequiredService<UserService.UserServiceClient>();
+                var modelServiceClient = scope.ServiceProvider.GetRequiredService<ModelService.ModelServiceClient>();
+                var unitOfWork = scope.ServiceProvider.GetRequiredService<IUnitOfWork>();
 
-                await Task.Delay(TimeSpan.FromSeconds(5), ct);
+                await ProcessRunningNodes(strategyRepository, modelServiceClient, unitOfWork, ct);
+                await ProcessPendingNodes(strategyRepository, modelServiceClient, userServiceClient, unitOfWork, ct);
+
+                await Task.Delay(TimeSpan.FromSeconds(180), ct);
             }
             catch (Exception ex)
             {
