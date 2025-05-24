@@ -54,11 +54,11 @@ public class StrategyRepository(DatabaseContext dbContext) : IStrategyRepository
             .ToListAsync()).Adapt<List<StrategyInfo>>();
     }
 
-    public async Task<List<StrategyExecutionInfo>> GetPendingAndRunningStrategies()
+    public async Task<List<Domain.RepositoryModels.StrategyExecutionInfo>> GetPendingAndRunningStrategies()
     {
         return (await dbContext.StrategyExecutions
             .Where(se => se.Status == Entities.StrategyExecutionStatus.Running || se.Status == Entities.StrategyExecutionStatus.Pending)
-            .ToListAsync()).Adapt<List<StrategyExecutionInfo>>();
+            .ToListAsync()).Adapt<List<Domain.RepositoryModels.StrategyExecutionInfo>>();
     }
 
     public async Task<List<StageExecutionInfo>> GetPendingStageExecutionsByStrategy(Guid strategyId)
@@ -231,6 +231,21 @@ public class StrategyRepository(DatabaseContext dbContext) : IStrategyRepository
         await dbContext.SaveChangesAsync(ct);
     }
 
+    public async Task<List<StrategyExecutionModel>> FetchStrategyExecutionsByUser(string userId, CancellationToken ct)
+    {
+        var strategyExecutions = await dbContext.StrategyExecutions
+            .Where(se => se.Strategy!.UserId == userId)
+            .Select(se => new StrategyExecutionModel(
+                se.Id,
+                se.CreatedAt,
+                se.UpdatedAt,
+                MapStrategyExecutionStatus(se.Status),
+                se.StrategyId))
+            .ToListAsync(ct);
+
+        return strategyExecutions;
+        }
+
     private static StatTypeEntity MapStatTypeEntity(StatType dtoValue)
     {
         return (StatTypeEntity)dtoValue;
@@ -249,7 +264,10 @@ public class StrategyRepository(DatabaseContext dbContext) : IStrategyRepository
     {
         return (Entities.StrategyExecutionStatus)status;
     }
-
+    private static Domain.RepositoryModels.StrategyExecutionStatus MapStrategyExecutionStatus(Entities.StrategyExecutionStatus status)
+    {
+        return (Domain.RepositoryModels.StrategyExecutionStatus)status;
+    }
 
     private static OperationTypeEntity MapOperationTypeEntity(TransitionConditionType dtoValue)
     {

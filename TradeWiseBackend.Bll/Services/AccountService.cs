@@ -44,4 +44,32 @@ public class AccountService(IStrategyRepository strategyRepository,
             totalPnl
         );
     }
+
+    public async Task<List<StrategyExecutionInfo>> GetUserExecutions(string userId, CancellationToken ct)
+    {
+        var userExecutions = await strategyRepository.FetchStrategyExecutionsByUser(userId, ct);
+
+        var result = userExecutions.Select(s => new StrategyExecutionInfo(
+            s.Id,
+            s.CreatedAt,
+            s.UpdatedAt,
+            ConvertStatus(s.Status),
+            s.StrategyId)).ToList();
+
+        return result;
+    }
+
+    private static StrategyExecutionStatus ConvertStatus(Domain.RepositoryModels.StrategyExecutionStatus status)
+    {
+        return status switch
+        {
+            Domain.RepositoryModels.StrategyExecutionStatus.Pending => StrategyExecutionStatus.Pending,
+            Domain.RepositoryModels.StrategyExecutionStatus.Running => StrategyExecutionStatus.Running,
+            Domain.RepositoryModels.StrategyExecutionStatus.Completed => StrategyExecutionStatus.Completed,
+            Domain.RepositoryModels.StrategyExecutionStatus.Cancelled => StrategyExecutionStatus.Cancelled,
+            Domain.RepositoryModels.StrategyExecutionStatus.Failed => StrategyExecutionStatus.Failed,
+            _ => throw new ArgumentOutOfRangeException(nameof(status), status, null)
+        };
+    }
+
 }

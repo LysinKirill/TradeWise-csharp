@@ -122,7 +122,7 @@ public class StrategyStatusUpdateWorker(
                 {
                     await strategyRepository.SaveExternalExecutionId(node.Id, startExecutionResponse.ExecutionId, ct);
                     await strategyRepository.UpdateStageExecutionStatus(node.Id, StageExecutionStatus.Running, ct);
-                    await strategyRepository.UpdateStrategyExecutionStatusByStrategyId(node.StrategyId, StrategyExecutionStatus.Running, ct);
+                    await strategyRepository.UpdateStrategyExecutionStatusByStrategyId(node.StrategyId, Domain.RepositoryModels.StrategyExecutionStatus.Running, ct);
 
                     await unitOfWork.CommitAsync();
                 }
@@ -180,7 +180,7 @@ public class StrategyStatusUpdateWorker(
                         var activeExecutions = await strategyRepository.FetchActiveStageExecutionsByStrategy(strategyId, ct);
                         if (activeExecutions.Count == 0)
                         {
-                            await strategyRepository.UpdateStrategyExecutionStatusByStrategyId(strategyId, StrategyExecutionStatus.Completed, ct);
+                            await strategyRepository.UpdateStrategyExecutionStatusByStrategyId(strategyId, Domain.RepositoryModels.StrategyExecutionStatus.Completed, ct);
                         }
                     }
                     await strategyRepository.UpdateStageExecutionStatus(execution.StageId, MapExecutionStatus(response.Status), ct);
