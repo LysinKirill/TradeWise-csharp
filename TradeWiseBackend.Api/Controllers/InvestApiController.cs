@@ -56,4 +56,13 @@ public class InvestApiController(IInvestApiService investApiService) : Controlle
 
         return new GetCandlesByInstrumentResponse(candlesProtoList);
     }
+
+    [HttpGet("get-supported-models")]
+    [ProducesResponseType<GetSupportedModelsResponse>(StatusCodes.Status200OK)]
+    public async Task<GetSupportedModelsResponse> GetSupportedModels(CancellationToken ct)
+    {
+        var models = await investApiService.GetSupportedModels(ct);
+
+        return new GetSupportedModelsResponse(models.Adapt<List<Responses.models.Model>>());
+    }
 }

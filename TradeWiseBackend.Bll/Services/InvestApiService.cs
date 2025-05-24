@@ -2,6 +2,7 @@ using Google.Protobuf.WellKnownTypes;
 using Grpc.Core;
 using Mapster;
 using Microsoft.AspNetCore.Http;
+using Model;
 using TradeWiseBackend.Domain.Interfaces.Services;
 using TradeWiseBackend.Domain.Models;
 using TradeWiseBackend.Domain.ServiceModels;
@@ -12,6 +13,7 @@ namespace TradeWiseBackend.Bll.Services;
 public class InvestApiService(
     UserService.UserServiceClient userServiceClient,
     Invest.InvestService.InvestServiceClient investServiceClient,
+    ModelService.ModelServiceClient modelServiceClient,
     IHttpContextAccessor httpContextAccessor
 ) : IInvestApiService
 {
@@ -85,5 +87,13 @@ public class InvestApiService(
             await investServiceClient.GetCandlesAsync(request, headers: AuthMetadata, cancellationToken: ct);
 
         return candles.Candles.Adapt<List<CandleInfo>>();
+    }
+
+    public async Task<List<SupportedModel>> GetSupportedModels(CancellationToken ct)
+    {
+        var models =
+            await modelServiceClient.GetAllModelsAsync(new Empty(), headers: AuthMetadata, cancellationToken: ct);
+
+        return models.Models.Adapt<List<SupportedModel>>();
     }
 }
