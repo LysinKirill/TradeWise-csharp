@@ -57,4 +57,14 @@ public class StrategyController(IStrategyService strategyService) : ControllerBa
 
         return Ok(userStrategies);
     }
+
+    [HttpPost("run")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    public async Task<IActionResult> RunStrategy(RunStrategyRequest request, CancellationToken ct)
+    {
+        var runStrategyPayload = request.Adapt<RunStrategyPayload>();
+        await strategyService.RunStrategy(runStrategyPayload, ct);
+
+        return Ok();
+    }
 }

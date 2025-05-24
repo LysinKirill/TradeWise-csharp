@@ -181,19 +181,58 @@ public class StrategyRepository(DatabaseContext dbContext) : IStrategyRepository
             .SingleAsync(ct);
     }
 
-    public Task SaveStrategyExecution(StrategyExecutionModel strategyExecution, CancellationToken ct)
+    public async Task<List<Guid>> FetchStagesByStrategyId(Guid strategyId, CancellationToken ct)
     {
-        throw new NotImplementedException();
+        return await dbContext.StrategyStages
+            .Where(s => s.StrategyId == strategyId)
+            .Select(s => s.Id)
+            .ToListAsync(ct);
     }
 
-    public Task SaveStageExecution(StageExecutionModel stageExecution, CancellationToken ct)
+    public async Task SaveStrategyExecution(StrategyExecutionModel strategyExecution, CancellationToken ct)
     {
-        throw new NotImplementedException();
+        var entity = new StrategyExecutionEntity
+        {
+            Id = strategyExecution.Id,
+            StrategyId = strategyExecution.StrategyId,
+            Status = MapStrategyExecutionStatus(strategyExecution.Status),
+            CreatedAt = strategyExecution.CreatedAt,
+            UpdatedAt = strategyExecution.UpdatedAt
+        };
+
+        dbContext.StrategyExecutions.Add(entity);
+        await dbContext.SaveChangesAsync(ct);
+    }
+
+    public async Task SaveStageExecutions(List<StageExecutionModel> stageExecutions, CancellationToken ct)
+    {
+        var entities = stageExecutions.Select(se => new StageExecutionEntity
+        {
+            Id = se.Id,
+            StageId = se.StageId,
+            StrategyExecutionId = se.StrategyExecutionId,
+            Status = MapStageExecutionStatus(se.Status),
+            CreatedAt = se.CreatedAt,
+            UpdatedAt = se.UpdatedAt
+        }).ToList();
+
+        dbContext.StageExecutions.AddRange(entities);
+        await dbContext.SaveChangesAsync(ct);
     }
 
     private static StatTypeEntity MapStatTypeEntity(StatType dtoValue)
     {
         return (StatTypeEntity)dtoValue;
+    }
+
+    private static Entities.StageExecutionStatus MapStageExecutionStatus(Domain.RepositoryModels.StageExecutionStatus status)
+    {
+        return (Entities.StageExecutionStatus)status;
+    }
+
+    private static Entities.StrategyExecutionStatus MapStrategyExecutionStatus(Domain.RepositoryModels.StrategyExecutionStatus status)
+    {
+        return (Entities.StrategyExecutionStatus)status;
     }
 
     private static OperationTypeEntity MapOperationTypeEntity(TransitionConditionType dtoValue)
