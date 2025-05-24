@@ -96,11 +96,12 @@ public class StrategyStatusUpdateWorker(
                 Email = user!.Email
             });
 
-            var meta = new Metadata { { "Authorization", token } };
+            var meta = new Metadata { { "Authorization", $"Bearer {token}" } };
 
             var potfolioInfo = await userServiceClient.GetPortfolioAsync(new Empty(), headers: meta, cancellationToken: ct);
             double initialBalance = potfolioInfo.RubleBalance / countNodes;
             logger.LogInformation($"Balance from python {potfolioInfo.RubleBalance}, initialBalance = {initialBalance}");
+            initialBalance = 1;
 
             foreach (var node in userNodes)
             {
@@ -134,11 +135,11 @@ public class StrategyStatusUpdateWorker(
         }
     }
 
-    private async Task ProcessRunningNodes(IStrategyRepository strategyRepository, ModelService.ModelServiceClient modelServiceClient, IUnitOfWork unitOfWork, CancellationToken ct)
+    private async Task ProcessRunningNodes(IStrategyRepository strategyRepository, ModelService.ModelServiceClient modelServiceClient, IUnitOfWork unitOfWork, ITokenService tokenService, CancellationToken ct)
     {
         logger.LogInformation("ProcessRunningNodes started.");
 
-        var runningStageExecutions = await strategyRepository.FetchRunningStageExecutions(ct);
+        var runningStageExecutions = await strategyRepository.FetchRunningStageExecutionsWithUserInfo(ct);
         logger.LogInformation($"{runningStageExecutions.Count} running stages");
         foreach (var execution in runningStageExecutions)
         {
@@ -152,14 +153,13 @@ public class StrategyStatusUpdateWorker(
                 ExecutionId = execution.ExternalExecutionId.Value
             };
 
-            // var user = await accountRepository.GetUserById(userId);
-            // var token = await tokenService.GenerateToken(new AccountEntityModel
-            // {
-            //     Id = userId,
-            //     Email = user!.Email!
-            // });
+            var token = await tokenService.GenerateToken(new AccountEntityModel
+            {
+                Id = execution.UserId,
+                Email = execution.Email
+            });
 
-            var meta = new Metadata { { "Authorization", "" } };
+            var meta = new Metadata { { "Authorization", $"Bearer {token}" } };
             var response = await modelServiceClient.GetExecutionStatusAsync(request, headers: meta, cancellationToken: ct);
 
             if (MapExecutionStatus(response.Status) != execution.Status)
@@ -210,10 +210,10 @@ public class StrategyStatusUpdateWorker(
                 var userServiceClient = scope.ServiceProvider.GetRequiredService<UserService.UserServiceClient>();
                 var modelServiceClient = scope.ServiceProvider.GetRequiredService<ModelService.ModelServiceClient>();
                 var unitOfWork = scope.ServiceProvider.GetRequiredService<IUnitOfWork>();
-                var tockenService = scope.ServiceProvider.GetRequiredService<ITokenService>();
+                var tokenService = scope.ServiceProvider.GetRequiredService<ITokenService>();
 
-                await ProcessRunningNodes(strategyRepository, modelServiceClient, unitOfWork, ct);
-                await ProcessPendingNodes(strategyRepository, modelServiceClient, userServiceClient, unitOfWork, tockenService, accountRepository, ct);
+                await ProcessRunningNodes(strategyRepository, modelServiceClient, unitOfWork, tokenService, ct);
+                await ProcessPendingNodes(strategyRepository, modelServiceClient, userServiceClient, unitOfWork, tokenService, accountRepository, ct);
 
                 await Task.Delay(TimeSpan.FromSeconds(180), ct);
             }
