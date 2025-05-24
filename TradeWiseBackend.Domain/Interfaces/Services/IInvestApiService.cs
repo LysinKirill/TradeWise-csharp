@@ -10,4 +10,5 @@ public interface IInvestApiService
     Task<InstrumentStat> GetInstrumentStat(GetInstrumentStatPayload instrumentStatPayloadCancellationToken,
         CancellationToken ct);
     Task<List<CandleInfo>> GetCandlesByInstrument(GetCandlesByInstrumentPayload payload, CancellationToken ct);
+    Task<List<SupportedModel>> GetSupportedModels(CancellationToken ct);
 }
