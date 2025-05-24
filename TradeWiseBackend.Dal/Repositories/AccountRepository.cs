@@ -9,7 +9,7 @@ public class AccountRepository(DatabaseContext dbContext) : IAccountRepository
 {
     public async Task<Account?> GetUserById(string userId)
     {
-        var user = await dbContext.Accounts.FirstOrDefaultAsync(u => u.Id == userId);
+        var user = await dbContext.Accounts.SingleAsync(u => u.Id == userId);
 
         return user?.Adapt<Account>();
     }

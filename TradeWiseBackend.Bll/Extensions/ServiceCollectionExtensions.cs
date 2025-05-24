@@ -13,6 +13,7 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IStrategyService, StrategyService>();
         services.AddScoped<IAccountService, AccountService>();
         services.AddScoped<StrategyValidationService>();
+        services.AddHostedService<StrategyStatusUpdateWorker>();
 
         return services;
     }

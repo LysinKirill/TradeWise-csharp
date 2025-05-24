@@ -17,7 +17,7 @@ public interface IStrategyRepository
     Task UpdateStageExecutionStatus(Guid stageId, StageExecutionStatus status, CancellationToken ct);
     Task UpdateStrategyExecutionStatusByStrategyId(Guid stageId, StrategyExecutionStatus status, CancellationToken ct);
     Task SaveExternalExecutionId(Guid stageId, long externalExecutionId, CancellationToken ct);
-    Task<List<StageExecutionInfo>> FetchRunningStageExecutions(CancellationToken ct);
+    Task<List<StageExecutionWithUserInfo>> FetchRunningStageExecutionsWithUserInfo(CancellationToken ct);
     Task<List<StageExecutionInfo>> FetchActiveStageExecutionsByStrategy(Guid strategyId, CancellationToken ct);
     Task SaveStageExecutions(List<StageExecutionModel> stageExecution, CancellationToken ct);
     Task SaveStrategyExecution(StrategyExecutionModel strategyExecution, CancellationToken ct);

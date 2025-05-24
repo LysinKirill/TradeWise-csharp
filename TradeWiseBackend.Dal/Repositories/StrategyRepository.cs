@@ -64,14 +64,14 @@ public class StrategyRepository(DatabaseContext dbContext) : IStrategyRepository
     public async Task<List<StageExecutionInfo>> GetPendingStageExecutionsByStrategy(Guid strategyId)
     {
         return (await dbContext.StageExecutions
-                .Where(n => n.StrategyExecution.Id == strategyId && (n.Status == Entities.StageExecutionStatus.Pending))
+                .Where(n => n.StrategyExecution != null && n.StrategyExecution.StrategyId == strategyId && (n.Status == Entities.StageExecutionStatus.Pending))
                 .ToListAsync()).Adapt<List<StageExecutionInfo>>();
     }
 
     public async Task<StrategyTransition?> FetchTransitionByDestinationStage(Guid strategyId, Guid stageId)
     {
         return (await dbContext.StrategyTransitions
-                .SingleAsync(t => t.StageDestinationId == stageId && t.StrategyId == strategyId)).Adapt<StrategyTransition?>();
+                .SingleOrDefaultAsync(t => t.StageDestinationId == stageId && t.StrategyId == strategyId)).Adapt<StrategyTransition?>();
     }
 
     public async Task<StageExecutionInfo> FetchStageExecutionByStageId(Guid stageId)
@@ -159,11 +159,22 @@ public class StrategyRepository(DatabaseContext dbContext) : IStrategyRepository
         await dbContext.SaveChangesAsync(ct);
     }
 
-    public async Task<List<StageExecutionInfo>> FetchRunningStageExecutions(CancellationToken ct)
+    public async Task<List<StageExecutionWithUserInfo>> FetchRunningStageExecutionsWithUserInfo(CancellationToken ct)
     {
-        return (await dbContext.StageExecutions
-            .Where(se => se.Status == Entities.StageExecutionStatus.Running)
-            .ToListAsync(ct)).Adapt<List<StageExecutionInfo>>();
+        var query = from se in dbContext.StageExecutions
+            join st in dbContext.StrategyStages on se.StageId equals st.Id
+            join s in dbContext.Strategies on st.StrategyId equals s.Id
+            join u in dbContext.Users on s.UserId equals u.Id
+            where se.Status == Entities.StageExecutionStatus.Running
+            select new StageExecutionWithUserInfo(
+                se.Id,
+                se.StageId,
+                MapStageExecutionStatus(se.Status),
+                se.ExternalExecutionId,
+                s.UserId,
+                u.Email!);
+
+        return await query.ToListAsync(ct);
     }
 
     public async Task<List<StageExecutionInfo>> FetchActiveStageExecutionsByStrategy(Guid strategyId, CancellationToken ct)
@@ -229,11 +240,16 @@ public class StrategyRepository(DatabaseContext dbContext) : IStrategyRepository
     {
         return (Entities.StageExecutionStatus)status;
     }
+    private static Domain.RepositoryModels.StageExecutionStatus MapStageExecutionStatus(Entities.StageExecutionStatus status)
+    {
+        return (Domain.RepositoryModels.StageExecutionStatus)status;
+    }
 
     private static Entities.StrategyExecutionStatus MapStrategyExecutionStatus(Domain.RepositoryModels.StrategyExecutionStatus status)
     {
         return (Entities.StrategyExecutionStatus)status;
     }
+
 
     private static OperationTypeEntity MapOperationTypeEntity(TransitionConditionType dtoValue)
     {
