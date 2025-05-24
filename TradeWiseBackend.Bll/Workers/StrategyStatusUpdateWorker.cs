@@ -180,10 +180,12 @@ public class StrategyStatusUpdateWorker(
                         var activeExecutions = await strategyRepository.FetchActiveStageExecutionsByStrategy(strategyId, ct);
                         if (activeExecutions.Count == 0)
                         {
-                            await strategyRepository.UpdateStrategyExecutionStatusByStrategyId(strategyId, StrategyExecutionStatus.Running, ct);
+                            await strategyRepository.UpdateStrategyExecutionStatusByStrategyId(strategyId, StrategyExecutionStatus.Completed, ct);
                         }
                     }
                     await strategyRepository.UpdateStageExecutionStatus(execution.StageId, MapExecutionStatus(response.Status), ct);
+
+                    await unitOfWork.CommitAsync();
                 }
                 catch
                 {
@@ -215,7 +217,7 @@ public class StrategyStatusUpdateWorker(
                 await ProcessRunningNodes(strategyRepository, modelServiceClient, unitOfWork, tokenService, ct);
                 await ProcessPendingNodes(strategyRepository, modelServiceClient, userServiceClient, unitOfWork, tokenService, accountRepository, ct);
 
-                await Task.Delay(TimeSpan.FromSeconds(180), ct);
+                await Task.Delay(TimeSpan.FromSeconds(10), ct);
             }
             catch (Exception ex)
             {

@@ -38,7 +38,7 @@ public class StrategyService(IStrategyRepository strategyRepository, IAccountRep
         (
             stageIdMap[stage.Id],
             strategyId,
-            stage.StageModel
+            stage.ModelId
         )).ToList();
 
         var transitionEntities = new List<StrategyTransition>();
