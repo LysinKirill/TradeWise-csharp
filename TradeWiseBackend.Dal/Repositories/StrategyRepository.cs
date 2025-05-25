@@ -169,7 +169,8 @@ public class StrategyRepository(DatabaseContext dbContext) : IStrategyRepository
                 se.ExternalExecutionId,
                 s.UserId,
                 u.Email!,
-                se.StrategyExecutionId
+                se.StrategyExecutionId,
+                s.Id
             );
 
 
@@ -259,6 +260,28 @@ public class StrategyRepository(DatabaseContext dbContext) : IStrategyRepository
             .ToListAsync(ct);
 
         return executions;
+    }
+
+    public async Task<List<StrategyTransition>> FetchTransitionByStrategyId(Guid strategyId, CancellationToken ct)
+    {
+        return (await dbContext.StrategyTransitions
+            .Where(t => t.StrategyId == strategyId)
+            .ToListAsync(ct)).Adapt<List<StrategyTransition>>();
+    }
+
+    public async Task UpdateStageExecutionStatusOnFailedBulk(List<Guid> stageIds, Guid strategyExecutionId, CancellationToken ct)
+    {
+        var executions = await dbContext.StageExecutions
+            .Where(se => se.StrategyExecutionId == strategyExecutionId && stageIds.Contains(se.StageId))
+            .ToListAsync(ct);
+
+        foreach (var se in executions)
+        {
+            se.Status = Entities.StageExecutionStatus.Failed;
+            se.UpdatedAt = DateTime.UtcNow;
+        }
+
+        await dbContext.SaveChangesAsync(ct);
     }
 
     private static StatTypeEntity MapStatTypeEntity(StatType dtoValue)

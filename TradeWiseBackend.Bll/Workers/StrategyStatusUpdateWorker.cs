@@ -75,6 +75,40 @@ public class StrategyStatusUpdateWorker(
         return executableNodes;
     }
 
+    private async Task FailStage(IStrategyRepository strategyRepository, Guid stageId, Guid strategyId, Guid strategyExecutionId, CancellationToken ct)
+    {
+        var strategyStages = await strategyRepository.FetchStagesByStrategyId(strategyId, ct);
+        var strategyTransitions = await strategyRepository.FetchTransitionByStrategyId(strategyId, ct);
+
+        var transitionsLookup = strategyTransitions.ToLookup(t => t.StageSourceId, t => t.StageDestinationId);
+
+        var descendants = new HashSet<Guid>();
+
+        void TraverseDescendants(Guid currentStageId)
+        {
+            if (!transitionsLookup.Contains(currentStageId))
+                return;
+
+            foreach (var childStageId in transitionsLookup[currentStageId])
+            {
+                if (descendants.Add(childStageId))
+                {
+                    TraverseDescendants(childStageId);
+                }
+            }
+        }
+
+        TraverseDescendants(stageId);
+        descendants.Add(stageId);
+
+        await strategyRepository.UpdateStageExecutionStatusOnFailedBulk(descendants.ToList(), strategyExecutionId, ct);
+        var activeExecutions = await strategyRepository.FetchActiveStageExecutions(strategyExecutionId, ct);
+        if (activeExecutions.Count == 0)
+        {
+            await strategyRepository.UpdateStrategyExecutionStatus(strategyExecutionId, Domain.RepositoryModels.StrategyExecutionStatus.Failed, ct);
+        }
+    }
+
     private async Task ProcessPendingNodes(IStrategyRepository strategyRepository, ModelService.ModelServiceClient modelServiceClient, UserService.UserServiceClient userServiceClient, IUnitOfWork unitOfWork, ITokenService tokenService, IAccountRepository accountRepository, CancellationToken ct)
     {
         logger.LogInformation("ProcessPendingNodes started.");
@@ -112,10 +146,21 @@ public class StrategyStatusUpdateWorker(
                 {
                     ModelId = node.StageModel,
                     InitialBalance = initialBalance,
-                    MaxExecutionDurationSeconds = 1
+                    MaxExecutionDurationSeconds = 4
                 };
-                // TODO: обрабатывать ошибки;
-                var startExecutionResponse = await modelServiceClient.StartExecutionAsync(request, headers: meta, cancellationToken: ct);
+                
+                var startExecutionResponse = new StartExecutionResponse();
+                try
+                {
+                    startExecutionResponse = await modelServiceClient.StartExecutionAsync(request, headers: meta, cancellationToken: ct);
+                }
+                catch (RpcException ex)
+                {
+                    logger.LogError($"Failed to run stage {node.Id} execution {node.StageExecutionId}\n{ex.Message}");
+                    await FailStage(strategyRepository, node.Id, node.StrategyId, node.StrategyExecutionId, ct);
+                    continue;
+                }
+
                 logger.LogInformation($"Node sent for execution. ExecutionId {startExecutionResponse.ExecutionId}");
 
                 await unitOfWork.BeginTransactionAsync();
@@ -169,10 +214,9 @@ public class StrategyStatusUpdateWorker(
                 await unitOfWork.BeginTransactionAsync();
                 try
                 {
-                    // TODO: добавить логику с отменами
                     if (response.Status == ExecutionStatus.Failed)
                     {
-                        // TODO: нужно ли фейлить другие ноды?
+                        await FailStage(strategyRepository, execution.StageId, execution.StrategyId, execution.StrategyExecutionId, ct);
                     }
                     if (response.Status == ExecutionStatus.Completed)
                     {
