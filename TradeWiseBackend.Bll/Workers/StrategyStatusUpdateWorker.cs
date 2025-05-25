@@ -32,6 +32,7 @@ public class StrategyStatusUpdateWorker(
             ExecutionStatus.Completed => StageExecutionStatus.Completed,
             ExecutionStatus.Failed => StageExecutionStatus.Failed,
             ExecutionStatus.Running => StageExecutionStatus.Running,
+            ExecutionStatus.Pending => StageExecutionStatus.Pending,
             _ => throw new NotImplementedException(),
         };
     }
@@ -53,18 +54,18 @@ public class StrategyStatusUpdateWorker(
                 if (transitionsPrevStage == null)
                 {
                     logger.LogInformation($"Stage execution: {stageExecution.Id}, stage {stageExecution.StageId}, transition null\n\n");
-                    var stageInfo = await strategyRepository.FetchStageWithUserByStageId(stageExecution.StageId);
+                    var stageInfo = await strategyRepository.FetchStageWithUserByStageId(stageExecution.StageId, stageExecution.Id);
                     logger.LogInformation($"Stage: {stageInfo.Id}, model {stageInfo.StageModel}\n\n");
                     executableNodes.Add(stageInfo);
                     break;
                 }
                 logger.LogInformation($"Stage execution: {stageExecution.Id}, stage {stageExecution.StageId}, transition {transitionsPrevStage.Id}, sourceStage {transitionsPrevStage.StageSourceId}, destinationStage {transitionsPrevStage.StageDestinationId}\n\n");
 
-                var previousStageExecution = await strategyRepository.FetchStageExecutionByStageId(transitionsPrevStage.StageSourceId);
+                var previousStageExecution = await strategyRepository.FetchStageExecutionByStageId(transitionsPrevStage.StageSourceId, strategyExecution.Id);
                 logger.LogInformation($"Previous stage: {previousStageExecution.StageId}, transition {transitionsPrevStage.Id}, sourceStage {transitionsPrevStage.StageSourceId}, destinationStage {transitionsPrevStage.StageDestinationId}\n\n");
                 if (previousStageExecution.Status == StageExecutionStatus.Completed || previousStageExecution.Status == StageExecutionStatus.Failed)
                 {
-                    var stageInfo = await strategyRepository.FetchStageWithUserByStageId(stageExecution.StageId);
+                    var stageInfo = await strategyRepository.FetchStageWithUserByStageId(stageExecution.StageId, stageExecution.Id);
                     logger.LogInformation($"Stage: {stageInfo.Id}, model {stageInfo.StageModel}\n\n");
                     executableNodes.Add(stageInfo);
                 }
@@ -111,18 +112,18 @@ public class StrategyStatusUpdateWorker(
                 {
                     ModelId = node.StageModel,
                     InitialBalance = initialBalance,
-                    MaxExecutionDurationSeconds = 300
+                    MaxExecutionDurationSeconds = 1
                 };
                 // TODO: обрабатывать ошибки;
                 var startExecutionResponse = await modelServiceClient.StartExecutionAsync(request, headers: meta, cancellationToken: ct);
-                logger.LogInformation($"Node sent for execution. Status {startExecutionResponse.ExecutionId}");
+                logger.LogInformation($"Node sent for execution. ExecutionId {startExecutionResponse.ExecutionId}");
 
                 await unitOfWork.BeginTransactionAsync();
                 try
                 {
-                    await strategyRepository.SaveExternalExecutionId(node.Id, startExecutionResponse.ExecutionId, ct);
-                    await strategyRepository.UpdateStageExecutionStatus(node.Id, StageExecutionStatus.Running, ct);
-                    await strategyRepository.UpdateStrategyExecutionStatusByStrategyId(node.StrategyId, Domain.RepositoryModels.StrategyExecutionStatus.Running, ct);
+                    await strategyRepository.SaveExternalExecutionId(node.StageExecutionId, startExecutionResponse.ExecutionId, ct);
+                    await strategyRepository.UpdateStageExecutionStatus(node.StageExecutionId, StageExecutionStatus.Running, ct);
+                    await strategyRepository.UpdateStrategyExecutionStatus(node.StrategyExecutionId, Domain.RepositoryModels.StrategyExecutionStatus.Running, ct);
 
                     await unitOfWork.CommitAsync();
                 }
@@ -176,15 +177,14 @@ public class StrategyStatusUpdateWorker(
                     if (response.Status == ExecutionStatus.Completed)
                     {
                         logger.LogInformation($"Change status to Completed");
-                        var strategyId = await strategyRepository.FetchStrategyByStage(execution.StageId, ct);
-                        var activeExecutions = await strategyRepository.FetchActiveStageExecutionsByStrategy(strategyId, ct);
-                        if (activeExecutions.Count == 0)
+                        var activeExecutions = await strategyRepository.FetchActiveStageExecutions(execution.StrategyExecutionId, ct);
+                        logger.LogInformation($"Active counts {activeExecutions.Count}");
+                        if (activeExecutions.Count == 1)
                         {
-                            await strategyRepository.UpdateStrategyExecutionStatusByStrategyId(strategyId, Domain.RepositoryModels.StrategyExecutionStatus.Completed, ct);
+                            await strategyRepository.UpdateStrategyExecutionStatus(execution.StrategyExecutionId, Domain.RepositoryModels.StrategyExecutionStatus.Completed, ct);
                         }
+                        await strategyRepository.UpdateStageExecutionStatus(execution.Id, MapExecutionStatus(response.Status), ct);
                     }
-                    await strategyRepository.UpdateStageExecutionStatus(execution.StageId, MapExecutionStatus(response.Status), ct);
-
                     await unitOfWork.CommitAsync();
                 }
                 catch
