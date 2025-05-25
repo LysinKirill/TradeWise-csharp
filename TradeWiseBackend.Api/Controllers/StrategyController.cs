@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using TradeWiseBackend.Api.Requests.v1;
 using TradeWiseBackend.Domain.Interfaces.Services;
+using TradeWiseBackend.Domain.RepositoryModels;
 using TradeWiseBackend.Domain.ServiceModels;
 
 namespace TradeWiseBackend.Api.Controllers;
@@ -64,6 +65,16 @@ public class StrategyController(IStrategyService strategyService) : ControllerBa
     {
         var runStrategyPayload = request.Adapt<RunStrategyPayload>();
         await strategyService.RunStrategy(runStrategyPayload, ct);
+
+        return Ok();
+    }
+
+    [HttpPost("cancel")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    public async Task<IActionResult> CancelStrategy(CancelStrategyRequest request, CancellationToken ct)
+    {
+        var cancelStrategyPayload = request.Adapt<CancelStrategyPayload>();
+        await strategyService.CancelStrategy(cancelStrategyPayload, ct);
 
         return Ok();
     }

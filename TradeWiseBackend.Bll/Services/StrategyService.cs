@@ -1,7 +1,10 @@
 using System.ComponentModel.DataAnnotations;
+using Grpc.Core;
 using Mapster;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
+using Model;
 using TradeWiseBackend.Domain.Interfaces.Repositories;
 using TradeWiseBackend.Domain.Interfaces.Services;
 using TradeWiseBackend.Domain.RepositoryModels;
@@ -9,9 +12,28 @@ using TradeWiseBackend.Domain.ServiceModels;
 
 namespace TradeWiseBackend.Bll.Services;
 
-public class StrategyService(IStrategyRepository strategyRepository, IAccountRepository accountRepository, StrategyValidationService validator, IUnitOfWork unitOfWork)
+public class StrategyService(IStrategyRepository strategyRepository,
+    IAccountRepository accountRepository,
+    StrategyValidationService validator,
+    IUnitOfWork unitOfWork,
+    IHttpContextAccessor httpContextAccessor,
+    ModelService.ModelServiceClient modelServiceClient)
     : IStrategyService
 {
+    private Metadata AuthMetadata
+    {
+        get
+        {
+            var token = httpContextAccessor.HttpContext?.Request.Headers["Authorization"].ToString();
+            if (token is null)
+                throw new RpcException(new Status(StatusCode.Unauthenticated, "No authorization header provided"));
+            return new Metadata
+            {
+                { "Authorization", token }
+            };
+        }
+    }
+
     public async Task CreateStrategy(CreateStrategyPayload createStrategyPayload, CancellationToken ct)
     {
         // TODO: декомпозировать
@@ -144,5 +166,21 @@ public class StrategyService(IStrategyRepository strategyRepository, IAccountRep
             await unitOfWork.RollbackAsync();
             throw;
         }
+    }
+
+    public async Task CancelStrategy(CancelStrategyPayload cancelStrategyPayload, CancellationToken ct)
+    {
+        var externalExecutionIds = await strategyRepository.FetchExternalExecutionId(cancelStrategyPayload.StrategyExecutionId, ct);
+        foreach (var execution in externalExecutionIds)
+        {
+            var request = new StopExecutionRequest
+            {
+                ExecutionId = 0
+            };
+
+            await modelServiceClient.StopExecutionAsync(request, headers: AuthMetadata, cancellationToken: ct);
+        }
+
+        await strategyRepository.CancelActiveStagesAndStrategyExecution(cancelStrategyPayload.StrategyExecutionId, ct);
     }
 }
