@@ -134,13 +134,13 @@ public class StrategyRepository(DatabaseContext dbContext) : IStrategyRepository
             _ => throw new NotImplementedException(),
         };
 
-         await dbContext.StrategyExecutions
-        .Where(ex => ex.Id == strategyExecutionId)
-        .Where(ex => ex.Status != convertedStatus)
-        .ExecuteUpdateAsync(setters => setters
-            .SetProperty(e => e.Status, convertedStatus)
-            .SetProperty(e => e.UpdatedAt, DateTime.UtcNow),
-            ct);
+        await dbContext.StrategyExecutions
+       .Where(ex => ex.Id == strategyExecutionId)
+       .Where(ex => ex.Status != convertedStatus)
+       .ExecuteUpdateAsync(setters => setters
+           .SetProperty(e => e.Status, convertedStatus)
+           .SetProperty(e => e.UpdatedAt, DateTime.UtcNow),
+           ct);
     }
 
     public async Task SaveExternalExecutionId(Guid stageExecutionId, long externalExecutionId, CancellationToken ct)
@@ -158,20 +158,20 @@ public class StrategyRepository(DatabaseContext dbContext) : IStrategyRepository
     public async Task<List<StageExecutionWithUserInfo>> FetchRunningStageExecutionsWithUserInfo(CancellationToken ct)
     {
         var query = from se in dbContext.StageExecutions
-            join st in dbContext.StrategyStages on se.StageId equals st.Id
-            join s in dbContext.Strategies on st.StrategyId equals s.Id
-            join u in dbContext.Users on s.UserId equals u.Id
-            where se.Status == Entities.StageExecutionStatus.Running
-            select new StageExecutionWithUserInfo(
-                se.Id,
-                se.StageId,
-                MapStageExecutionStatus(se.Status),
-                se.ExternalExecutionId,
-                s.UserId,
-                u.Email!,
-                se.StrategyExecutionId,
-                s.Id
-            );
+                    join st in dbContext.StrategyStages on se.StageId equals st.Id
+                    join s in dbContext.Strategies on st.StrategyId equals s.Id
+                    join u in dbContext.Users on s.UserId equals u.Id
+                    where se.Status == Entities.StageExecutionStatus.Running
+                    select new StageExecutionWithUserInfo(
+                        se.Id,
+                        se.StageId,
+                        MapStageExecutionStatus(se.Status),
+                        se.ExternalExecutionId,
+                        s.UserId,
+                        u.Email!,
+                        se.StrategyExecutionId,
+                        s.Id
+                    );
 
 
         return await query.ToListAsync(ct);
@@ -269,7 +269,7 @@ public class StrategyRepository(DatabaseContext dbContext) : IStrategyRepository
             .ToListAsync(ct)).Adapt<List<StrategyTransition>>();
     }
 
-    public async Task UpdateStageExecutionStatusOnFailedBulk(List<Guid> stageIds, Guid strategyExecutionId, CancellationToken ct)
+    public async Task FailStageExecutionsBulk(List<Guid> stageIds, Guid strategyExecutionId, CancellationToken ct)
     {
         var executions = await dbContext.StageExecutions
             .Where(se => se.StrategyExecutionId == strategyExecutionId && stageIds.Contains(se.StageId))
@@ -282,6 +282,31 @@ public class StrategyRepository(DatabaseContext dbContext) : IStrategyRepository
         }
 
         await dbContext.SaveChangesAsync(ct);
+    }
+
+    public async Task CancelActiveStagesAndStrategyExecution(Guid strategyExecutionId, CancellationToken ct)
+    {
+        await dbContext.StrategyExecutions
+            .Where(se => se.Id == strategyExecutionId && se.Status != Entities.StrategyExecutionStatus.Cancelled)
+            .ExecuteUpdateAsync(setters => setters
+                .SetProperty(se => se.Status, Entities.StrategyExecutionStatus.Cancelled)
+                .SetProperty(se => se.UpdatedAt, DateTime.UtcNow),
+                ct);
+
+        await dbContext.StageExecutions
+            .Where(se => se.StrategyExecutionId == strategyExecutionId && se.Status != Entities.StageExecutionStatus.Cancelled)
+            .ExecuteUpdateAsync(setters => setters
+                .SetProperty(se => se.Status, Entities.StageExecutionStatus.Cancelled)
+                .SetProperty(se => se.UpdatedAt, DateTime.UtcNow),
+                ct);
+    }
+
+    public async Task<List<long>> FetchExternalExecutionId(Guid strategyExecutionId, CancellationToken ct)
+    {
+        return await dbContext.StageExecutions
+        .Where(se => se.StrategyExecutionId == strategyExecutionId && se.ExternalExecutionId != null)
+        .Select(se => se.ExternalExecutionId!.Value)
+        .ToListAsync(ct);
     }
 
     private static StatTypeEntity MapStatTypeEntity(StatType dtoValue)

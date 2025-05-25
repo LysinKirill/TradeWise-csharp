@@ -101,7 +101,7 @@ public class StrategyStatusUpdateWorker(
         TraverseDescendants(stageId);
         descendants.Add(stageId);
 
-        await strategyRepository.UpdateStageExecutionStatusOnFailedBulk(descendants.ToList(), strategyExecutionId, ct);
+        await strategyRepository.FailStageExecutionsBulk(descendants.ToList(), strategyExecutionId, ct);
         var activeExecutions = await strategyRepository.FetchActiveStageExecutions(strategyExecutionId, ct);
         if (activeExecutions.Count == 0)
         {
@@ -148,7 +148,7 @@ public class StrategyStatusUpdateWorker(
                     InitialBalance = initialBalance,
                     MaxExecutionDurationSeconds = 4
                 };
-                
+
                 var startExecutionResponse = new StartExecutionResponse();
                 try
                 {
