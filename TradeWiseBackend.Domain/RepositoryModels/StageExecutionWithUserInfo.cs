@@ -6,5 +6,6 @@ public record StageExecutionWithUserInfo(
     StageExecutionStatus Status,
     long? ExternalExecutionId,
     string UserId,
-    string Email
+    string Email,
+    Guid StrategyExecutionId
 );

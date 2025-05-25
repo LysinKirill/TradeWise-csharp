@@ -5,5 +5,7 @@ public record class StageInfo(
     Guid StrategyId,
     long StageModel,
     string UserId,
-    long? ExternalExecutionId
+    long? ExternalExecutionId,
+    Guid StageExecutionId,
+    Guid StrategyExecutionId
 );
