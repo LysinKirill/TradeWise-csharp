@@ -25,4 +25,6 @@ public interface IStrategyRepository
     Task<List<Guid>> FetchStagesByStrategyId(Guid strategyId, CancellationToken ct);
     Task<List<StrategyExecutionModel>> FetchStrategyExecutionsByUser(string userId, CancellationToken ct);
     Task<List<StrategyExecutionModel>> FetchStrategyExecutionsByStrategyId(Guid strategyId, CancellationToken ct);
+    Task<List<StrategyTransition>> FetchTransitionByStrategyId(Guid strategyId, CancellationToken ct);
+    Task UpdateStageExecutionStatusOnFailedBulk(List<Guid> stageIds, Guid strategyExecutionId, CancellationToken ct);
 }
