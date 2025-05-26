@@ -20,4 +20,5 @@ public class StrategyTransitionEntity
     public StatTypeEntity StatType { get; set; }
     public OperationTypeEntity Operation { get; set; }
     public double Value { get; set; }
+    public required string InstrumentId { get; set; }
 }

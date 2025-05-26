@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using Google.Protobuf.WellKnownTypes;
 using Grpc.Core;
 using Mapster;
 using Microsoft.AspNetCore.Http;
@@ -9,6 +10,7 @@ using TradeWiseBackend.Domain.Interfaces.Repositories;
 using TradeWiseBackend.Domain.Interfaces.Services;
 using TradeWiseBackend.Domain.RepositoryModels;
 using TradeWiseBackend.Domain.ServiceModels;
+using User;
 
 namespace TradeWiseBackend.Bll.Services;
 
@@ -17,7 +19,8 @@ public class StrategyService(IStrategyRepository strategyRepository,
     StrategyValidationService validator,
     IUnitOfWork unitOfWork,
     IHttpContextAccessor httpContextAccessor,
-    ModelService.ModelServiceClient modelServiceClient)
+    ModelService.ModelServiceClient modelServiceClient,
+    UserService.UserServiceClient userServiceClient)
     : IStrategyService
 {
     private Metadata AuthMetadata
@@ -83,7 +86,8 @@ public class StrategyService(IStrategyRepository strategyRepository,
                     strategyId,
                     condition.StatType,
                     condition.TransitionConditionType,
-                    condition.Value
+                    condition.Value,
+                    condition.InstrumentId
                 );
 
                 transitionEntities.Add(entity);
@@ -260,7 +264,8 @@ public class StrategyService(IStrategyRepository strategyRepository,
                         editStrategyPayload.StrategyId,
                         condition.StatType,
                         condition.TransitionConditionType,
-                        condition.Value
+                        condition.Value,
+                        condition.InstrumentId
                     );
                     newTransitions.Add(entity);
                 }
@@ -290,7 +295,8 @@ public class StrategyService(IStrategyRepository strategyRepository,
                 TransitionConditions: g.Select(t => new Domain.Models.TransitionCondition(
                     (Domain.Models.TransitionConditionType)t.StatType,
                     (Domain.Models.StatType)t.Operation,
-                    t.Value
+                    t.Value,
+                    t.InstrumentId
                 )).ToList()
             ))
             .ToList();
@@ -346,6 +352,8 @@ public class StrategyService(IStrategyRepository strategyRepository,
     {
         var activeUserExecutions = await strategyRepository.FetchActiveStrategyExecutionsByUser(userId, ct);
         var alreadyAllocatedBudget = activeUserExecutions.Sum(se => se.AllocatedBudget);
-        return alreadyAllocatedBudget < payload.AllocatedBudget;
+        var potfolioInfo = await userServiceClient.GetPortfolioAsync(new Empty(), headers: AuthMetadata, cancellationToken: ct);
+
+        return alreadyAllocatedBudget + payload.AllocatedBudget <= potfolioInfo.RubleBalance;
     }
 }

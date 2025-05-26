@@ -159,7 +159,8 @@ public class StrategyController(IStrategyService strategyService) : ControllerBa
                         StatType.RelativeStrengthIndex => Domain.Models.StatType.RelativeStrengthIndex,
                         _ => throw new InvalidCastException($"Unknown StatType {t.StatType}")
                     },
-                    t.Value!.Value
+                    t.Value!.Value,
+                    t.InstrumentId!
                 )).ToList()
             )).ToList();
 

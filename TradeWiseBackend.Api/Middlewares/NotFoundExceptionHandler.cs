@@ -20,19 +20,22 @@ internal sealed class NotFoundExceptionHandler : IExceptionHandler
         Exception exception,
         CancellationToken cancellationToken)
     {
-        if (exception is not RpcException notFoundException ||
-            notFoundException.StatusCode != StatusCode.NotFound) return false;
+        if (!(exception is RpcException notFoundException &&
+            notFoundException.StatusCode == StatusCode.NotFound) && !(exception is KeyNotFoundException))
+        {
+            return false;
+        }
 
         _logger.LogError(
-            notFoundException,
+            exception,
             "Exception occurred: {Message}",
-            notFoundException.Message);
+            exception.Message);
 
         var problemDetails = new ProblemDetails
         {
             Status = StatusCodes.Status404NotFound,
             Title = "Not Found",
-            Detail = notFoundException.Message
+            Detail = exception.Message
         };
 
         httpContext.Response.StatusCode = problemDetails.Status.Value;
