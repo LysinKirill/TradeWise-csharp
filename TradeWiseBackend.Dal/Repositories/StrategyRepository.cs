@@ -384,7 +384,7 @@ public class StrategyRepository(DatabaseContext dbContext) : IStrategyRepository
         var execution = await dbContext.StrategyExecutions
             .SingleAsync(se => se.Id == strategyExecutionId);
 
-        execution.UsedBudget = newUsedBudget;
+        execution.UsedBudget += newUsedBudget;
         execution.UpdatedAt = DateTime.UtcNow; 
 
         await dbContext.SaveChangesAsync();
