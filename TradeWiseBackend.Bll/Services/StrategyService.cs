@@ -175,12 +175,23 @@ public class StrategyService(IStrategyRepository strategyRepository,
         {
             var request = new StopExecutionRequest
             {
-                ExecutionId = 0
+                ExecutionId = execution
             };
 
             await modelServiceClient.StopExecutionAsync(request, headers: AuthMetadata, cancellationToken: ct);
         }
 
         await strategyRepository.CancelActiveStagesAndStrategyExecution(cancelStrategyPayload.StrategyExecutionId, ct);
+    }
+
+    public async Task DeleteStrategy(DeleteStrategyPayload deleteStrategyPayload, CancellationToken ct)
+    {
+        var activeStrategyExecutions = await strategyRepository.FetchActiveStrategyExecutions(deleteStrategyPayload.StrategyId, ct);
+        if (activeStrategyExecutions.Count != 0)
+        {
+            throw new InvalidOperationException($"The strategy cannot be deleted: there are active executions ({activeStrategyExecutions.Count}).");
+        }
+
+        await strategyRepository.DeleteStrategy(deleteStrategyPayload.StrategyId, ct);
     }
 }

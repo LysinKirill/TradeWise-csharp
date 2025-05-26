@@ -90,13 +90,15 @@ public class StrategyController(IStrategyService strategyService) : ControllerBa
     [ProducesResponseType(StatusCodes.Status200OK)]
     public async Task<IActionResult> DeleteStrategy(DeleteStrategyRequest request, CancellationToken ct)
     {
-        return Ok();
-    }
-
-    [HttpPost("backtest")]
-    [ProducesResponseType(StatusCodes.Status200OK)]
-    public async Task<IActionResult> StartStrategyBacktesting(BacktestRequest request, CancellationToken ct)
-    {
+        var deleteStrategyPayload = request.Adapt<DeleteStrategyPayload>();
+        try
+        {
+            await strategyService.DeleteStrategy(deleteStrategyPayload, ct);
+        }
+        catch (InvalidOperationException ex)
+        {
+            return Conflict(ex.Message);
+        }
         return Ok();
     }
 }

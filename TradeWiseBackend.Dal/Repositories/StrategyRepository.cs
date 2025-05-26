@@ -308,6 +308,23 @@ public class StrategyRepository(DatabaseContext dbContext) : IStrategyRepository
         .Select(se => se.ExternalExecutionId!.Value)
         .ToListAsync(ct);
     }
+    public async Task DeleteStrategy(Guid strategyId, CancellationToken ct)
+    {
+        var strategy = await dbContext.Strategies
+            .SingleAsync(s => s.Id == strategyId && s.IsActive, ct);
+
+        strategy.IsActive = false;
+        strategy.UpdatedAt = DateTime.UtcNow;
+        await dbContext.SaveChangesAsync(ct);
+    }
+    public async Task<List<Guid>> FetchActiveStrategyExecutions(Guid strategyId, CancellationToken ct)
+    {
+        return await dbContext.StrategyExecutions
+            .Where(se => se.StrategyId == strategyId
+                && (se.Status == Entities.StrategyExecutionStatus.Pending || se.Status == Entities.StrategyExecutionStatus.Running))
+            .Select(se => se.Id)
+            .ToListAsync(ct); ;
+    }
 
     private static StatTypeEntity MapStatTypeEntity(StatType dtoValue)
     {

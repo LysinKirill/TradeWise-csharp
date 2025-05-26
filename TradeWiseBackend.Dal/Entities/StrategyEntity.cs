@@ -14,4 +14,5 @@ public class StrategyEntity
     public AccountEntity? User { get; set; }
     public required DateTime CreatedAt { get; set; }
     public required DateTime UpdatedAt { get; set; }
+    public required bool IsActive { get; set; } = true;
 }
