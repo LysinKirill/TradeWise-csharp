@@ -3,10 +3,10 @@ using Mapster;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using TradeWiseBackend.Api.Requests.models;
 using TradeWiseBackend.Api.Requests.v1;
 using TradeWiseBackend.Api.Responses.v1;
 using TradeWiseBackend.Domain.Interfaces.Services;
-using TradeWiseBackend.Domain.RepositoryModels;
 using TradeWiseBackend.Domain.ServiceModels;
 
 namespace TradeWiseBackend.Api.Controllers;
@@ -27,7 +27,16 @@ public class StrategyController(IStrategyService strategyService) : ControllerBa
         if (string.IsNullOrEmpty(userId))
             return Unauthorized();
 
-        var createPayload = request.Adapt<CreateStrategyPayload>() with { UserId = userId };
+        CreateStrategyPayload createPayload;
+        try
+        {
+            createPayload = MapCreateRequest(request, userId, ct);
+        }
+        catch (InvalidCastException ex)
+        {
+            return BadRequest(ex.Message);
+        }
+        
         await strategyService.CreateStrategy(
             createPayload, ct);
 
@@ -112,5 +121,48 @@ public class StrategyController(IStrategyService strategyService) : ControllerBa
         var getStrategyPayload = request.Adapt<GetStrategyPayload>();
         var strategy = await strategyService.GetStrategy(getStrategyPayload, ct);
         return strategy.Adapt<GetStrategyResponse>();
+    }
+
+    private CreateStrategyPayload MapCreateRequest(CreateStrategyRequest request, string userId,
+        CancellationToken ct)
+    {
+        var convertedStages = request.StrategyStages.Select(s => new Domain.Models.StrategyStage(
+                s.Id,
+                s.ModelId
+            )).ToList();
+        
+        var convertedTransitions = request.StrategyTransitions.Select(s => new Domain.Models.StrategyTransition(
+                s.SourceStageId,
+                s.DestinationStageId,
+                s.TransitionConditions.Select(t => new Domain.Models.TransitionCondition(
+                    t.TransitionConditionType switch
+                    {
+                        TransitionConditionType.EqualTo => Domain.Models.TransitionConditionType.EqualTo,
+                        TransitionConditionType.GreaterThan => Domain.Models.TransitionConditionType.GreaterThan,
+                        TransitionConditionType.LessThan => Domain.Models.TransitionConditionType.LessThan,
+                        _ => throw new InvalidCastException($"Unknown operation type {t.TransitionConditionType}")
+                    },
+                    t.StatType switch
+                    {
+                        StatType.BollingerBandLower => Domain.Models.StatType.BollingerBandLower,
+                        StatType.BollingerBandMiddle => Domain.Models.StatType.BollingerBandMiddle,
+                        StatType.BollingerBandUpper => Domain.Models.StatType.BollingerBandUpper,
+                        StatType.ExponentialMovingAverage => Domain.Models.StatType.ExponentialMovingAverage,
+                        StatType.MovingAverage => Domain.Models.StatType.MovingAverage,
+                        StatType.MovingAverageConvergenceDivergence => Domain.Models.StatType.MovingAverageConvergenceDivergence,
+                        StatType.RelativeStrengthIndex => Domain.Models.StatType.RelativeStrengthIndex,
+                        _ => throw new InvalidCastException($"Unknown StatType {t.StatType}")
+                    },
+                    t.Value
+                )).ToList()
+            )).ToList();
+
+        return new CreateStrategyPayload(
+            request.Title,
+            request.Description,
+            convertedStages,
+            convertedTransitions,
+            userId
+        );
     }
 }

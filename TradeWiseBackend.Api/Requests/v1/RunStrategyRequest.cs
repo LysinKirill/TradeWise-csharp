@@ -1,5 +1,7 @@
+using System.ComponentModel.DataAnnotations;
+
 namespace TradeWiseBackend.Api.Requests.v1;
 
 public record class RunStrategyRequest(
-    Guid StrategyId
+   [property: Required(ErrorMessage = "StrategyId required")] Guid StrategyId
 );

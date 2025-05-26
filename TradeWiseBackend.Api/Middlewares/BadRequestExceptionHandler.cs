@@ -20,19 +20,22 @@ internal sealed class BadRequestExceptionHandler : IExceptionHandler
         Exception exception,
         CancellationToken cancellationToken)
     {
-        if (exception is not RpcException badRequestException ||
-            badRequestException.StatusCode != StatusCode.InvalidArgument) return false;
+        if (!(exception is RpcException badRequestException &&
+            badRequestException.StatusCode == StatusCode.InvalidArgument) && !(exception is InvalidOperationException))
+        {
+            return false;
+        }
 
         _logger.LogError(
-            badRequestException,
+            exception,
             "Exception occurred: {Message}",
-            badRequestException.Message);
+            exception.Message);
 
         var problemDetails = new ProblemDetails
         {
             Status = StatusCodes.Status400BadRequest,
             Title = "Bad Request",
-            Detail = badRequestException.Message
+            Detail = exception.Message
         };
 
         httpContext.Response.StatusCode = problemDetails.Status.Value;

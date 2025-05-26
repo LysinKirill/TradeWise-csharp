@@ -60,7 +60,7 @@ public class InvestApiService(
             StatType.MovingAverage => Invest.StatType.MovingAverage,
             StatType.MovingAverageConvergenceDivergence => Invest.StatType.MovingAverageConvergenceDivergence,
             StatType.RelativeStrengthIndex => Invest.StatType.RelativeStrengthIndex,
-            _ => Invest.StatType.Unknown
+            _ => throw new InvalidCastException($"Unknown StatType {payload.StatType}")
         };
 
         var request = new Invest.GetInstrumentStatRequest
