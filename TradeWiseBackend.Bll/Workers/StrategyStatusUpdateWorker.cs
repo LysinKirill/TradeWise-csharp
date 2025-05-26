@@ -52,7 +52,7 @@ public class StrategyStatusUpdateWorker(
                 var transitionsPrevStage = await strategyRepository.FetchTransitionByDestinationStage(strategyExecution.StrategyId, stageExecution.StageId);
                 if (transitionsPrevStage == null)
                 {
-                    var stageInfo = await strategyRepository.FetchStageWithUserByStageId(stageExecution.StageId, stageExecution.Id);
+                    var stageInfo = await strategyRepository.FetchStageWithUserByStageId(stageExecution.Id);
                     executableNodes.Add(stageInfo);
                     break;
                 }
@@ -60,7 +60,7 @@ public class StrategyStatusUpdateWorker(
                 var previousStageExecution = await strategyRepository.FetchStageExecutionByStageId(transitionsPrevStage.StageSourceId, strategyExecution.Id);
                 if (previousStageExecution.Status == StageExecutionStatus.Completed || previousStageExecution.Status == StageExecutionStatus.Failed)
                 {
-                    var stageInfo = await strategyRepository.FetchStageWithUserByStageId(stageExecution.StageId, stageExecution.Id);
+                    var stageInfo = await strategyRepository.FetchStageWithUserByStageId(stageExecution.Id);
                     executableNodes.Add(stageInfo);
                 }
             }

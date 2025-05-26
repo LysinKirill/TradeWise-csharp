@@ -79,7 +79,7 @@ public class StrategyRepository(DatabaseContext dbContext) : IStrategyRepository
             .SingleAsync(se => se.StageId == stageId && se.StrategyExecutionId == strategyExecutionId)).Adapt<StageExecutionInfo>();
     }
 
-    public async Task<StageInfo> FetchStageWithUserByStageId(Guid stageId, Guid stageExecutionId)
+    public async Task<StageInfo> FetchStageWithUserByStageId(Guid stageExecutionId)
     {
         var query = await (
             from stage in dbContext.StrategyStages
@@ -87,7 +87,7 @@ public class StrategyRepository(DatabaseContext dbContext) : IStrategyRepository
                 on stage.Id equals exec.StageId
             join se in dbContext.StrategyExecutions
                 on exec.StrategyExecutionId equals se.Id
-            where stage.Id == stageId && exec.Id == stageExecutionId
+            where exec.Id == stageExecutionId
             select new StageInfo(
                 stage.Id,
                 stage.StrategyId,
