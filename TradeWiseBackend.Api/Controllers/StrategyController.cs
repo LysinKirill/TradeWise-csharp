@@ -78,4 +78,25 @@ public class StrategyController(IStrategyService strategyService) : ControllerBa
 
         return Ok();
     }
+
+    [HttpPost("edit")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    public async Task<IActionResult> EditStrategy(EditStrategyRequest request, CancellationToken ct)
+    {
+        return Ok();
+    }
+
+    [HttpPost("delete")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    public async Task<IActionResult> DeleteStrategy(DeleteStrategyRequest request, CancellationToken ct)
+    {
+        return Ok();
+    }
+
+    [HttpPost("backtest")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    public async Task<IActionResult> StartStrategyBacktesting(BacktestRequest request, CancellationToken ct)
+    {
+        return Ok();
+    }
 }
