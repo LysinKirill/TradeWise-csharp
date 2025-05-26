@@ -19,6 +19,7 @@ public class DatabaseContext : IdentityDbContext<AccountEntity>
     public DbSet<StrategyTransitionEntity> StrategyTransitions { get; set; }
     public DbSet<StrategyExecutionEntity> StrategyExecutions { get; set; }
     public DbSet<StageExecutionEntity> StageExecutions { get; set; }
+    public DbSet<BacktestExecutionEntity> BacktestExecutions { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -141,5 +142,28 @@ public class DatabaseContext : IdentityDbContext<AccountEntity>
                 .HasForeignKey(e => e.StrategyExecutionId)
                 .OnDelete(DeleteBehavior.Cascade);
         });
+
+        modelBuilder.Entity<BacktestExecutionEntity>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+
+            entity.Property(e => e.ExternalExecutionId)
+                .IsRequired();
+
+            entity.Property(e => e.UserId)
+                .IsRequired();
+
+            entity.HasOne(e => e.User)
+                .WithMany()
+                .HasForeignKey(e => e.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.Property(e => e.CreatedAt)
+                .IsRequired();
+
+            entity.Property(e => e.UpdatedAt)
+                .IsRequired();
+        });
+
     }
 }
