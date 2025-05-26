@@ -36,5 +36,7 @@ public interface IStrategyRepository
     Task UpdateStrategy(Strategy strategy);
     Task DeleteStrategyStagesByStrategyId(Guid strategyId);
     Task<Strategy> FetchStrategyById(Guid strategyId, CancellationToken ct);
-    Task UpdateUsedBudget(Guid strategyExecutionId, double newUsedBudget, CancellationToken ct);
+    Task BorrowMoneyFromAllocatedBudget(Guid strategyExecutionId, double borrowedMoney, CancellationToken ct);
+    Task RefundMoneyIntoAllocatedBudget(Guid strategyExecutionId, double refund, CancellationToken ct);
+    Task<List<StrategyExecutionModel>> FetchActiveStrategyExecutionsByUser(string userId, CancellationToken ct);
 }

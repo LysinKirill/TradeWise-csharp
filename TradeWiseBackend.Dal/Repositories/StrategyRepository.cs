@@ -98,8 +98,7 @@ public class StrategyRepository(DatabaseContext dbContext) : IStrategyRepository
                 exec.StrategyExecutionId,
                 se.IsPaperTrade,
                 stage.MaxExecutionDurationSeconds,
-                stage.Strategy.AllocatedBudget,
-                se.UsedBudget
+                se.AllocatedBudget
             )
         ).SingleOrDefaultAsync();
 
@@ -218,7 +217,8 @@ public class StrategyRepository(DatabaseContext dbContext) : IStrategyRepository
             Status = MapStrategyExecutionStatus(strategyExecution.Status),
             CreatedAt = strategyExecution.CreatedAt,
             UpdatedAt = strategyExecution.UpdatedAt,
-            IsPaperTrade = strategyExecution.IsPaperTrade
+            IsPaperTrade = strategyExecution.IsPaperTrade,
+            AllocatedBudget = strategyExecution.AllocatedBudget
         };
 
         dbContext.StrategyExecutions.Add(entity);
@@ -251,7 +251,8 @@ public class StrategyRepository(DatabaseContext dbContext) : IStrategyRepository
                 se.UpdatedAt,
                 MapStrategyExecutionStatus(se.Status),
                 se.StrategyId,
-                se.IsPaperTrade))
+                se.IsPaperTrade,
+                se.AllocatedBudget))
             .ToListAsync(ct);
 
         return strategyExecutions;
@@ -267,7 +268,8 @@ public class StrategyRepository(DatabaseContext dbContext) : IStrategyRepository
                 se.UpdatedAt,
                 MapStrategyExecutionStatus(se.Status),
                 se.StrategyId,
-                se.IsPaperTrade))
+                se.IsPaperTrade,
+                se.AllocatedBudget))
             .ToListAsync(ct);
 
         return executions;
@@ -334,7 +336,7 @@ public class StrategyRepository(DatabaseContext dbContext) : IStrategyRepository
             .Where(se => se.StrategyId == strategyId
                 && (se.Status == Entities.StrategyExecutionStatus.Pending || se.Status == Entities.StrategyExecutionStatus.Running))
             .Select(se => se.Id)
-            .ToListAsync(ct); ;
+            .ToListAsync(ct);
     }
 
     public async Task DeleteStrategyStagesByStrategyId(Guid strategyId)
@@ -365,8 +367,7 @@ public class StrategyRepository(DatabaseContext dbContext) : IStrategyRepository
             UserId = strategy.UserId,
             CreatedAt = strategy.CreatedAt,
             UpdatedAt = strategy.UpdatedAt,
-            IsActive = true,
-            AllocatedBudget = strategy.AllocatedBudget
+            IsActive = true
         };
         dbContext.Strategies.Update(convertedEntity);
 
@@ -380,15 +381,43 @@ public class StrategyRepository(DatabaseContext dbContext) : IStrategyRepository
             .SingleAsync(s => s.Id == strategyId, ct)).Adapt<Strategy>();
     }
 
-    public async Task UpdateUsedBudget(Guid strategyExecutionId, double newUsedBudget, CancellationToken ct)
+    public async Task BorrowMoneyFromAllocatedBudget(Guid strategyExecutionId, double borrowedMoney, CancellationToken ct)
     {
         var execution = await dbContext.StrategyExecutions
             .SingleAsync(se => se.Id == strategyExecutionId);
 
-        execution.UsedBudget += newUsedBudget;
-        execution.UpdatedAt = DateTime.UtcNow; 
+        execution.AllocatedBudget -= borrowedMoney;
+        execution.UpdatedAt = DateTime.UtcNow;
 
         await dbContext.SaveChangesAsync();
+    }
+
+    public async Task RefundMoneyIntoAllocatedBudget(Guid strategyExecutionId, double refund, CancellationToken ct)
+    {
+        var execution = await dbContext.StrategyExecutions
+            .SingleAsync(se => se.Id == strategyExecutionId);
+
+        execution.AllocatedBudget += refund;
+        execution.UpdatedAt = DateTime.UtcNow;
+
+        await dbContext.SaveChangesAsync();
+    }
+
+    public async Task<List<StrategyExecutionModel>> FetchActiveStrategyExecutionsByUser(string userId, CancellationToken ct)
+    {
+        return await dbContext.StrategyExecutions
+            .Where(se => se.Strategy!.UserId == userId
+                && (se.Status == Entities.StrategyExecutionStatus.Pending || se.Status == Entities.StrategyExecutionStatus.Running))
+            .Select(se => new StrategyExecutionModel(
+                se.Id,
+                se.CreatedAt,
+                se.UpdatedAt,
+                MapStrategyExecutionStatus(se.Status),
+                se.StrategyId,
+                se.IsPaperTrade,
+                se.AllocatedBudget
+            ))
+            .ToListAsync(ct);
     }
 
     private static StatTypeEntity MapStatTypeEntity(StatType dtoValue)

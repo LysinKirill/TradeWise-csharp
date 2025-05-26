@@ -73,8 +73,13 @@ public class StrategyController(IStrategyService strategyService) : ControllerBa
     [ProducesResponseType(StatusCodes.Status200OK)]
     public async Task<IActionResult> RunStrategy(RunStrategyRequest request, CancellationToken ct)
     {
+        var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+        if (string.IsNullOrEmpty(userId))
+            return Unauthorized();
+
         var runStrategyPayload = request.Adapt<RunStrategyPayload>();
-        await strategyService.RunStrategy(runStrategyPayload, ct);
+        await strategyService.RunStrategy(runStrategyPayload, userId, ct);
 
         return Ok();
     }
@@ -163,8 +168,7 @@ public class StrategyController(IStrategyService strategyService) : ControllerBa
             request.Description,
             convertedStages,
             convertedTransitions,
-            userId,
-            request.AllocatedBudget!.Value
+            userId
         );
     }
 }

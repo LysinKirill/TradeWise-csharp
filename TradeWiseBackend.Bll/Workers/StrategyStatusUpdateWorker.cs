@@ -116,10 +116,7 @@ public class StrategyStatusUpdateWorker(
             var strategyNodes = nodesGroup.Value;
             int countNodes = strategyNodes.Count;
             var userId = strategyNodes[0].UserId;
-            var strategyAllocatedBudget = strategyNodes[0].AllocatedBudget;
-            var usedBudget = strategyNodes[0].UsedBudget;
-            logger.LogInformation($"strategyId={strategyId}, countNodes={countNodes}, userNodes={string.Join(", ", strategyNodes.Select(info => $"{info.Id}"))}");
-
+            var allocatedBudget = strategyNodes[0].AllocatedBudget;
             var user = await accountRepository.GetUserById(userId);
             var token = await tokenService.GenerateToken(new AccountEntityModel
             {
@@ -131,8 +128,8 @@ public class StrategyStatusUpdateWorker(
 
             var potfolioInfo = await userServiceClient.GetPortfolioAsync(new Empty(), headers: meta, cancellationToken: ct);
             double balance = potfolioInfo.RubleBalance;
-            var initialBalance = Math.Min(balance, strategyAllocatedBudget - usedBudget) / countNodes;
-            logger.LogInformation($"Balance from python {potfolioInfo.RubleBalance}, initialBalance = {initialBalance}, ");
+            var initialBalance = Math.Min(balance, allocatedBudget) / countNodes;
+            logger.LogInformation($"Balance from python {potfolioInfo.RubleBalance}, initialBalance = {initialBalance}, count = {countNodes}");
             initialBalance = 1;
 
             foreach (var node in strategyNodes)
@@ -163,7 +160,7 @@ public class StrategyStatusUpdateWorker(
                     await strategyRepository.SaveExternalExecutionId(node.StageExecutionId, startExecutionResponse.ExecutionId, ct);
                     await strategyRepository.UpdateStageExecutionStatus(node.StageExecutionId, StageExecutionStatus.Running, ct);
                     await strategyRepository.UpdateStrategyExecutionStatus(node.StrategyExecutionId, Domain.RepositoryModels.StrategyExecutionStatus.Running, ct);
-                    await strategyRepository.UpdateUsedBudget(node.StrategyExecutionId, initialBalance, ct);
+                    await strategyRepository.BorrowMoneyFromAllocatedBudget(node.StrategyExecutionId, initialBalance, ct);
                     await unitOfWork.CommitAsync();
                 }
                 catch
@@ -188,7 +185,7 @@ public class StrategyStatusUpdateWorker(
                 throw new Exception($"Running stage {execution.StageId}, execution id {execution.Id} without ExternalExecutionId");
             }
 
-            var request = new GetExecutionStatusRequest
+            var request = new GetExecutionInfoRequest
             {
                 ExecutionId = execution.ExternalExecutionId.Value
             };
@@ -200,7 +197,7 @@ public class StrategyStatusUpdateWorker(
             });
 
             var meta = new Metadata { { "Authorization", $"Bearer {token}" } };
-            var response = await modelServiceClient.GetExecutionStatusAsync(request, headers: meta, cancellationToken: ct);
+            var response = await modelServiceClient.GetExecutionInfoAsync(request, headers: meta, cancellationToken: ct);
 
             if (MapExecutionStatus(response.Status) != execution.Status)
             {
@@ -218,6 +215,7 @@ public class StrategyStatusUpdateWorker(
                         {
                             await strategyRepository.UpdateStrategyExecutionStatus(execution.StrategyExecutionId, Domain.RepositoryModels.StrategyExecutionStatus.Completed, ct);
                         }
+                        await strategyRepository.RefundMoneyIntoAllocatedBudget(execution.StrategyExecutionId, response.MaxBudget, ct);
                         await strategyRepository.UpdateStageExecutionStatus(execution.Id, MapExecutionStatus(response.Status), ct);
                     }
                     await unitOfWork.CommitAsync();

@@ -6,6 +6,5 @@ public record class StrategyInfo(
     string? Description,
     DateTime CreatedAt,
     DateTime UpdatedAt,
-    bool IsPaperTrade,
-    double AllocatedBudget
+    bool IsPaperTrade
 );

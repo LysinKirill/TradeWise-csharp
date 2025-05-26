@@ -20,5 +20,5 @@ public class StrategyExecutionEntity
     public StrategyEntity? Strategy { get; set; }
 
     public bool IsPaperTrade { get; set; }
-    public double UsedBudget { get; set; }
+    public double AllocatedBudget { get; set; }
 }
