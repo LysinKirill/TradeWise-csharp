@@ -78,4 +78,27 @@ public class StrategyController(IStrategyService strategyService) : ControllerBa
 
         return Ok();
     }
+
+    [HttpPost("edit")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    public async Task<IActionResult> EditStrategy(EditStrategyRequest request, CancellationToken ct)
+    {
+        return Ok();
+    }
+
+    [HttpPost("delete")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    public async Task<IActionResult> DeleteStrategy(DeleteStrategyRequest request, CancellationToken ct)
+    {
+        var deleteStrategyPayload = request.Adapt<DeleteStrategyPayload>();
+        try
+        {
+            await strategyService.DeleteStrategy(deleteStrategyPayload, ct);
+        }
+        catch (InvalidOperationException ex)
+        {
+            return Conflict(ex.Message);
+        }
+        return Ok();
+    }
 }

@@ -90,6 +90,11 @@ builder.Services.AddGrpcClient<Model.ModelService.ModelServiceClient>(options =>
         options.Address = new Uri(python_backend.Url);
     })
     .ConfigurePrimaryHttpMessageHandler(() => handler);
+builder.Services.AddGrpcClient<Backtest.BacktestService.BacktestServiceClient>(options =>
+    {
+        options.Address = new Uri(python_backend.Url);
+    })
+    .ConfigurePrimaryHttpMessageHandler(() => handler);
 
 var environment = builder.Environment;
 builder.Configuration.AddJsonFile("appsettings.json", false, true)

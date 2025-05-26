@@ -10,4 +10,5 @@ public interface IStrategyService
     Task<List<StrategyGeneralInfo>> GetUserStrategies(string userId, CancellationToken ct);
     Task RunStrategy(RunStrategyPayload runStrategyPayload, CancellationToken ct);
     Task CancelStrategy(CancelStrategyPayload cancelStrategyPayload, CancellationToken ct);
+    Task DeleteStrategy(DeleteStrategyPayload deleteStrategyPayload, CancellationToken ct);
 }
