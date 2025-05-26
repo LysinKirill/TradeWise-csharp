@@ -85,6 +85,8 @@ public class StrategyRepository(DatabaseContext dbContext) : IStrategyRepository
             from stage in dbContext.StrategyStages
             join exec in dbContext.StageExecutions
                 on stage.Id equals exec.StageId
+            join se in dbContext.StrategyExecutions
+                on exec.StrategyExecutionId equals se.Id
             where stage.Id == stageId && exec.Id == stageExecutionId
             select new StageInfo(
                 stage.Id,
@@ -93,10 +95,11 @@ public class StrategyRepository(DatabaseContext dbContext) : IStrategyRepository
                 stage.Strategy.UserId,
                 exec.ExternalExecutionId,
                 exec.Id,
-                exec.StrategyExecutionId
+                exec.StrategyExecutionId,
+                se.IsPaperTrade,
+                stage.MaxExecutionDurationSeconds
             )
         ).SingleOrDefaultAsync();
-
 
         return query.Adapt<StageInfo>();
     }
@@ -198,7 +201,8 @@ public class StrategyRepository(DatabaseContext dbContext) : IStrategyRepository
             .Where(s => s.StrategyId == strategyId)
             .Select(s => new StageInfoCut(
                 s.Id,
-                s.StageModel
+                s.StageModel,
+                s.MaxExecutionDurationSeconds
             ))
             .ToListAsync(ct);
     }
@@ -211,7 +215,8 @@ public class StrategyRepository(DatabaseContext dbContext) : IStrategyRepository
             StrategyId = strategyExecution.StrategyId,
             Status = MapStrategyExecutionStatus(strategyExecution.Status),
             CreatedAt = strategyExecution.CreatedAt,
-            UpdatedAt = strategyExecution.UpdatedAt
+            UpdatedAt = strategyExecution.UpdatedAt,
+            IsPaperTrade = strategyExecution.IsPaperTrade
         };
 
         dbContext.StrategyExecutions.Add(entity);
@@ -243,7 +248,8 @@ public class StrategyRepository(DatabaseContext dbContext) : IStrategyRepository
                 se.CreatedAt,
                 se.UpdatedAt,
                 MapStrategyExecutionStatus(se.Status),
-                se.StrategyId))
+                se.StrategyId,
+                se.IsPaperTrade))
             .ToListAsync(ct);
 
         return strategyExecutions;
@@ -258,7 +264,8 @@ public class StrategyRepository(DatabaseContext dbContext) : IStrategyRepository
                 se.CreatedAt,
                 se.UpdatedAt,
                 MapStrategyExecutionStatus(se.Status),
-                se.StrategyId))
+                se.StrategyId,
+                se.IsPaperTrade))
             .ToListAsync(ct);
 
         return executions;

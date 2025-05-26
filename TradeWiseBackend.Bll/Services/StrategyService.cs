@@ -59,7 +59,8 @@ public class StrategyService(IStrategyRepository strategyRepository,
         (
             stageIdMap[stage.Id],
             strategyId,
-            stage.ModelId
+            stage.ModelId,
+            stage.MaxExecutionDurationSeconds
         )).ToList();
 
         var transitionEntities = new List<StrategyTransition>();
@@ -140,7 +141,8 @@ public class StrategyService(IStrategyRepository strategyRepository,
             DateTime.UtcNow,
             DateTime.UtcNow,
             StrategyExecutionStatus.Pending,
-            runStrategyPayload.StrategyId
+            runStrategyPayload.StrategyId,
+            runStrategyPayload.IsPaperTrade
         );
         var stageExecutionEntities = strategyStages.Select(stage => new StageExecutionModel
         (
@@ -232,7 +234,8 @@ public class StrategyService(IStrategyRepository strategyRepository,
             var newStages = editStrategyPayload.StrategyStages.Select(stage => new StrategyStage(
                 stageIdMap[stage.Id],
                 editStrategyPayload.StrategyId,
-                stage.ModelId
+                stage.ModelId,
+                stage.MaxExecutionDurationSeconds
             )).ToList();
             await strategyRepository.SaveStrategyStages(newStages);
 
@@ -292,7 +295,8 @@ public class StrategyService(IStrategyRepository strategyRepository,
         var convertedStages = stages.Select(se => new Domain.Models.StrategyStage
         (
             se.Id,
-            se.ModelId
+            se.ModelId,
+            se.MaxExecutionDurationSeconds
         )).ToList();
 
         var allDestinationStageIds = groupedTransitions.Select(t => t.DestinationStageId).ToHashSet();

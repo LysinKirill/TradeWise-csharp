@@ -3,5 +3,6 @@ using System.ComponentModel.DataAnnotations;
 namespace TradeWiseBackend.Api.Requests.v1;
 
 public record class RunStrategyRequest(
-   [property: Required(ErrorMessage = "StrategyId required")] Guid StrategyId
+    [param: Required(ErrorMessage = "StrategyId required")] Guid? StrategyId,
+    [param: Required(ErrorMessage = "IsPaperTrade required")] bool? IsPaperTrade
 );

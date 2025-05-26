@@ -4,9 +4,9 @@ using TradeWiseBackend.Api.Requests.models;
 namespace TradeWiseBackend.Api.Requests.v1;
 
 public record class EditStrategyRequest(
-    [property: Required(ErrorMessage = "StrategyId required")] Guid StrategyId,
-    [property: Required(ErrorMessage = "Title required")] string Title,
+    [param: Required(ErrorMessage = "StrategyId required")] Guid? StrategyId,
+    [param: Required(ErrorMessage = "Title required")] string? Title,
     string? Description,
-    [property: Required(ErrorMessage = "StrategyStages required")] List<StrategyStage> StrategyStages,
-    [property: Required(ErrorMessage = "StrategyTransitions required")] List<StrategyTransition> StrategyTransitions
+    [param: Required(ErrorMessage = "StrategyStages required")] List<StrategyStage> StrategyStages,
+    [param: Required(ErrorMessage = "StrategyTransitions required")] List<StrategyTransition> StrategyTransitions
 );

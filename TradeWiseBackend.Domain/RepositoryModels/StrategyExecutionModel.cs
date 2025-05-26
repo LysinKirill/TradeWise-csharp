@@ -8,5 +8,6 @@ public record StrategyExecutionModel
     DateTime CreatedAt,
     DateTime UpdatedAt,
     StrategyExecutionStatus Status,
-    Guid StrategyId
+    Guid StrategyId,
+    bool IsPaperTrade
 );

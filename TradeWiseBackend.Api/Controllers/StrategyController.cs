@@ -127,8 +127,9 @@ public class StrategyController(IStrategyService strategyService) : ControllerBa
         CancellationToken ct)
     {
         var convertedStages = request.StrategyStages.Select(s => new Domain.Models.StrategyStage(
-                s.Id,
-                s.ModelId
+                s.Id!.Value,
+                s.ModelId!.Value,
+                s.MaxExecutionDurationSeconds!.Value
             )).ToList();
         
         var convertedTransitions = request.StrategyTransitions.Select(s => new Domain.Models.StrategyTransition(
@@ -153,12 +154,12 @@ public class StrategyController(IStrategyService strategyService) : ControllerBa
                         StatType.RelativeStrengthIndex => Domain.Models.StatType.RelativeStrengthIndex,
                         _ => throw new InvalidCastException($"Unknown StatType {t.StatType}")
                     },
-                    t.Value
+                    t.Value!.Value
                 )).ToList()
             )).ToList();
 
         return new CreateStrategyPayload(
-            request.Title,
+            request.Title!,
             request.Description,
             convertedStages,
             convertedTransitions,
