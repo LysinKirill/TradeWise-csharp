@@ -6,6 +6,5 @@ public record class Strategy(
     string? Description,
     string UserId,
     DateTime CreatedAt,
-    DateTime UpdatedAt,
-    double AllocatedBudget
+    DateTime UpdatedAt
 );

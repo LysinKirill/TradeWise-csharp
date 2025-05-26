@@ -2,6 +2,7 @@ using System.ComponentModel.DataAnnotations;
 using Grpc.Core;
 using Mapster;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc.TagHelpers;
 using Model;
 using TradeWiseBackend.Domain.Interfaces.Repositories;
@@ -95,8 +96,7 @@ public class StrategyService(IStrategyRepository strategyRepository,
             createStrategyPayload.Description,
             createStrategyPayload.UserId,
             DateTime.Now.ToUniversalTime(),
-            DateTime.Now.ToUniversalTime(),
-            createStrategyPayload.AllocatedBudget
+            DateTime.Now.ToUniversalTime()
         );
 
         await unitOfWork.BeginTransactionAsync();
@@ -134,8 +134,12 @@ public class StrategyService(IStrategyRepository strategyRepository,
         return Task.CompletedTask;
     }
 
-    public async Task RunStrategy(RunStrategyPayload runStrategyPayload, CancellationToken ct)
+    public async Task RunStrategy(RunStrategyPayload runStrategyPayload, string userId, CancellationToken ct)
     {
+        if (!await RunStrategyValidationPassed(runStrategyPayload, userId, ct))
+        {
+            throw new InvalidOperationException($"Impossible to allocate {runStrategyPayload.AllocatedBudget}");
+        }
         var strategyStages = await strategyRepository.FetchStagesByStrategyId(runStrategyPayload.StrategyId, ct);
         var strategyExecution = new StrategyExecutionModel(
             Guid.NewGuid(),
@@ -143,7 +147,8 @@ public class StrategyService(IStrategyRepository strategyRepository,
             DateTime.UtcNow,
             StrategyExecutionStatus.Pending,
             runStrategyPayload.StrategyId,
-            runStrategyPayload.IsPaperTrade
+            runStrategyPayload.IsPaperTrade,
+            runStrategyPayload.AllocatedBudget
         );
         var stageExecutionEntities = strategyStages.Select(stage => new StageExecutionModel
         (
@@ -218,8 +223,7 @@ public class StrategyService(IStrategyRepository strategyRepository,
             {
                 Title = editStrategyPayload.Title,
                 Description = editStrategyPayload.Description,
-                UpdatedAt = DateTime.UtcNow,
-                AllocatedBudget = editStrategyPayload.AllocatedBudget
+                UpdatedAt = DateTime.UtcNow
             };
 
             await strategyRepository.UpdateStrategy(updatedStrategy);
@@ -336,5 +340,12 @@ public class StrategyService(IStrategyRepository strategyRepository,
         );
 
         return strategyInfo;
+    }
+
+    private async Task<bool> RunStrategyValidationPassed(RunStrategyPayload payload, string userId, CancellationToken ct)
+    {
+        var activeUserExecutions = await strategyRepository.FetchActiveStrategyExecutionsByUser(userId, ct);
+        var alreadyAllocatedBudget = activeUserExecutions.Sum(se => se.AllocatedBudget);
+        return alreadyAllocatedBudget < payload.AllocatedBudget;
     }
 }

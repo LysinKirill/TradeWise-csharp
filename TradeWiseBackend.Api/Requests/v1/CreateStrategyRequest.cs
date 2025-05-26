@@ -7,6 +7,5 @@ public record CreateStrategyRequest(
     [param: Required(ErrorMessage = "Title required")] string? Title,
     string? Description,
     List<StrategyStage> StrategyStages,
-    List<StrategyTransition> StrategyTransitions,
-    [param: Required(ErrorMessage = "AllocatedBudget required")] double? AllocatedBudget
+    List<StrategyTransition> StrategyTransitions
 );

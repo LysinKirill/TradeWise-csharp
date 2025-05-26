@@ -9,5 +9,6 @@ public record StrategyExecutionModel
     DateTime UpdatedAt,
     StrategyExecutionStatus Status,
     Guid StrategyId,
-    bool IsPaperTrade
+    bool IsPaperTrade,
+    double AllocatedBudget
 );
