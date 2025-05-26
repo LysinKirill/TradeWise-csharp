@@ -98,7 +98,8 @@ public class StrategyRepository(DatabaseContext dbContext) : IStrategyRepository
                 exec.StrategyExecutionId,
                 se.IsPaperTrade,
                 stage.MaxExecutionDurationSeconds,
-                stage.Strategy.AllocatedBudget
+                stage.Strategy.AllocatedBudget,
+                se.UsedBudget
             )
         ).SingleOrDefaultAsync();
 
@@ -379,7 +380,7 @@ public class StrategyRepository(DatabaseContext dbContext) : IStrategyRepository
             .SingleAsync(s => s.Id == strategyId, ct)).Adapt<Strategy>();
     }
 
-    public async Task UpdateUsedBudgetAsync(Guid strategyExecutionId, double newUsedBudget, CancellationToken ct)
+    public async Task UpdateUsedBudget(Guid strategyExecutionId, double newUsedBudget, CancellationToken ct)
     {
         var execution = await dbContext.StrategyExecutions
             .SingleAsync(se => se.Id == strategyExecutionId);

@@ -10,5 +10,6 @@ public record class StageInfo(
     Guid StrategyExecutionId,
     bool IsPaperTrade,
     int MaxExecutionDurationSeconds,
-    double AllocatedBudget
+    double AllocatedBudget,
+    double UsedBudget
 );

@@ -117,6 +117,7 @@ public class StrategyStatusUpdateWorker(
             int countNodes = strategyNodes.Count;
             var userId = strategyNodes[0].UserId;
             var strategyAllocatedBudget = strategyNodes[0].AllocatedBudget;
+            var usedBudget = strategyNodes[0].UsedBudget;
             logger.LogInformation($"strategyId={strategyId}, countNodes={countNodes}, userNodes={string.Join(", ", strategyNodes.Select(info => $"{info.Id}"))}");
 
             var user = await accountRepository.GetUserById(userId);
@@ -130,7 +131,7 @@ public class StrategyStatusUpdateWorker(
 
             var potfolioInfo = await userServiceClient.GetPortfolioAsync(new Empty(), headers: meta, cancellationToken: ct);
             double balance = potfolioInfo.RubleBalance;
-            var initialBalance = Math.Min(balance, strategyAllocatedBudget) / countNodes;
+            var initialBalance = Math.Min(balance, strategyAllocatedBudget - usedBudget) / countNodes;
             logger.LogInformation($"Balance from python {potfolioInfo.RubleBalance}, initialBalance = {initialBalance}, ");
             initialBalance = 1;
 
@@ -162,7 +163,7 @@ public class StrategyStatusUpdateWorker(
                     await strategyRepository.SaveExternalExecutionId(node.StageExecutionId, startExecutionResponse.ExecutionId, ct);
                     await strategyRepository.UpdateStageExecutionStatus(node.StageExecutionId, StageExecutionStatus.Running, ct);
                     await strategyRepository.UpdateStrategyExecutionStatus(node.StrategyExecutionId, Domain.RepositoryModels.StrategyExecutionStatus.Running, ct);
-                    await strategyRepository.UpdateUsedBudgetAsync(node.StrategyExecutionId, initialBalance, ct);
+                    await strategyRepository.UpdateUsedBudget(node.StrategyExecutionId, initialBalance, ct);
                     await unitOfWork.CommitAsync();
                 }
                 catch
