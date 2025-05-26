@@ -1,11 +1,12 @@
+using System.ComponentModel.DataAnnotations;
 using TradeWiseBackend.Api.Requests.models;
 
 namespace TradeWiseBackend.Api.Requests.v1;
 
 public record class EditStrategyRequest(
-    Guid StrategyId,
-    string Title,
+    [property: Required(ErrorMessage = "StrategyId required")] Guid StrategyId,
+    [property: Required(ErrorMessage = "Title required")] string Title,
     string? Description,
-    List<StrategyStage> StrategyStages,
-    List<StrategyTransition> StrategyTransitions
+    [property: Required(ErrorMessage = "StrategyStages required")] List<StrategyStage> StrategyStages,
+    [property: Required(ErrorMessage = "StrategyTransitions required")] List<StrategyTransition> StrategyTransitions
 );

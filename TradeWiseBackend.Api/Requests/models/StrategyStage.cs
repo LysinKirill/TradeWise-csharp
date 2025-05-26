@@ -1,6 +1,8 @@
+using System.ComponentModel.DataAnnotations;
+
 namespace TradeWiseBackend.Api.Requests.models;
 
 public record StrategyStage(
-    Guid Id,
-    long ModelId
+    [property: Required(ErrorMessage = "Id required")] Guid Id,
+    [property: Required(ErrorMessage = "ModelId required")] long ModelId
 );

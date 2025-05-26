@@ -1,7 +1,9 @@
+using System.ComponentModel.DataAnnotations;
+
 namespace TradeWiseBackend.Api.Requests.v1;
 
 public record class GetCandlesByInstrumentRequest(
-    string InstrumentId,
-    DateTime From,
-    DateTime To
+    [property: Required(ErrorMessage = "InstrumentId required")] string InstrumentId,
+    [property: Required(ErrorMessage = "From required")] DateTime From,
+    [property: Required(ErrorMessage = "To required")] DateTime To
 );
