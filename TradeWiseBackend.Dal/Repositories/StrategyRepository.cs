@@ -326,6 +326,48 @@ public class StrategyRepository(DatabaseContext dbContext) : IStrategyRepository
             .ToListAsync(ct); ;
     }
 
+    public async Task DeleteStrategyStagesByStrategyId(Guid strategyId)
+    {
+        var stages = dbContext.StrategyStages.Where(s => s.StrategyId == strategyId);
+
+        dbContext.StrategyStages.RemoveRange(stages);
+
+        await Task.CompletedTask;
+    }
+
+    public async Task DeleteStrategyTransitionsByStrategyId(Guid strategyId)
+    {
+        var transitions = dbContext.StrategyTransitions.Where(t => t.StrategyId == strategyId);
+
+        dbContext.StrategyTransitions.RemoveRange(transitions);
+
+        await Task.CompletedTask;
+    }
+
+    public async Task UpdateStrategy(Strategy strategy)
+    {
+        var convertedEntity = new StrategyEntity
+        {
+            Id = strategy.Id,
+            Title = strategy.Title,
+            Description = strategy.Description,
+            UserId = strategy.UserId,
+            CreatedAt = strategy.CreatedAt,
+            UpdatedAt = strategy.UpdatedAt,
+            IsActive = true
+        };
+        dbContext.Strategies.Update(convertedEntity);
+
+        await Task.CompletedTask;
+    }
+
+    public async Task<Strategy> FetchStrategyById(Guid strategyId, CancellationToken ct)
+    {
+        return (await dbContext.Strategies
+            .AsNoTracking()
+            .SingleAsync(s => s.Id == strategyId, ct)).Adapt<Strategy>();
+    }
+
     private static StatTypeEntity MapStatTypeEntity(StatType dtoValue)
     {
         return (StatTypeEntity)dtoValue;

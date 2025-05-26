@@ -2,8 +2,6 @@ using System.ComponentModel.DataAnnotations;
 using Grpc.Core;
 using Mapster;
 using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Http.HttpResults;
-using Microsoft.AspNetCore.Mvc;
 using Model;
 using TradeWiseBackend.Domain.Interfaces.Repositories;
 using TradeWiseBackend.Domain.Interfaces.Services;
@@ -193,5 +191,78 @@ public class StrategyService(IStrategyRepository strategyRepository,
         }
 
         await strategyRepository.DeleteStrategy(deleteStrategyPayload.StrategyId, ct);
+    }
+
+    public async Task EditStrategyStrategy(EditStrategyPayload editStrategyPayload, CancellationToken ct)
+    {
+        var existingStrategy = await strategyRepository.FetchStrategyById(editStrategyPayload.StrategyId, ct);
+        if (existingStrategy == null)
+        {
+            throw new Exception("Strategy not found");
+        }
+
+        var (isValid, error) = validator.Validate(editStrategyPayload.StrategyStages, editStrategyPayload.StrategyTransitions);
+        if (!isValid)
+        {
+            throw new ValidationException(error!);
+        }
+
+        await unitOfWork.BeginTransactionAsync();
+        try
+        {
+            var updatedStrategy = existingStrategy with
+            {
+                Title = editStrategyPayload.Title,
+                Description = editStrategyPayload.Description,
+                UpdatedAt = DateTime.UtcNow
+            };
+
+            await strategyRepository.UpdateStrategy(updatedStrategy);
+
+            await strategyRepository.DeleteStrategyStagesByStrategyId(editStrategyPayload.StrategyId);
+            await strategyRepository.DeleteStrategyTransitionsByStrategyId(editStrategyPayload.StrategyId);
+
+            var stageIdMap = new Dictionary<Guid, Guid>();
+            foreach (var stage in editStrategyPayload.StrategyStages)
+            {
+                stageIdMap[stage.Id] = Guid.NewGuid();
+            }
+
+            var newStages = editStrategyPayload.StrategyStages.Select(stage => new StrategyStage(
+                stageIdMap[stage.Id],
+                editStrategyPayload.StrategyId,
+                stage.ModelId
+            )).ToList();
+            await strategyRepository.SaveStrategyStages(newStages);
+
+            var newTransitions = new List<StrategyTransition>();
+            foreach (var transition in editStrategyPayload.StrategyTransitions)
+            {
+                if (transition.SourceStageId == null || transition.DestinationStageId == null)
+                    continue;
+
+                foreach (var condition in transition.TransitionConditions)
+                {
+                    var entity = new StrategyTransition(
+                        Guid.NewGuid(),
+                        stageIdMap[transition.SourceStageId.Value],
+                        stageIdMap[transition.DestinationStageId.Value],
+                        editStrategyPayload.StrategyId,
+                        condition.StatType,
+                        condition.TransitionConditionType,
+                        condition.Value
+                    );
+                    newTransitions.Add(entity);
+                }
+            }
+            await strategyRepository.SaveStrategyTransitions(newTransitions);
+
+            await unitOfWork.CommitAsync();
+        }
+        catch
+        {
+            await unitOfWork.RollbackAsync();
+            throw;
+        }
     }
 }
