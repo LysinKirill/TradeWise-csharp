@@ -7,5 +7,5 @@ public interface IBacktestService
 {
     Task RunBacktest(RunBacktestPayload payload, CancellationToken ct);
     Task CancelBacktest(CancelBacktestPayload payload, CancellationToken ct);
-    Task<List<BacktestInfo>> GetAllBacktests(string userId, CancellationToken ct);
+    Task<List<BacktestInfo>> GetAllBacktests(CancellationToken ct);
 }

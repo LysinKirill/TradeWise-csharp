@@ -15,5 +15,4 @@ public class BacktestExecutionEntity
     public AccountEntity? User { get; set; }
 
     public DateTime CreatedAt { get; set; }
-    public DateTime UpdatedAt { get; set; }
 }

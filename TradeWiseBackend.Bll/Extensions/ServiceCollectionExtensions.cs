@@ -12,6 +12,7 @@ public static class ServiceCollectionExtensions
         services.AddScoped<ITokenService, TokenService>();
         services.AddScoped<IStrategyService, StrategyService>();
         services.AddScoped<IAccountService, AccountService>();
+        services.AddScoped<IBacktestService, BacktestService>();
         services.AddScoped<StrategyValidationService>();
         services.AddHostedService<StrategyStatusUpdateWorker>();
 

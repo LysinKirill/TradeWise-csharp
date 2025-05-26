@@ -20,7 +20,12 @@ namespace TradeWiseBackend.Api.Controllers
         [ProducesResponseType(StatusCodes.Status200OK)]
         public async Task<IActionResult> RunBacktest(RunBacktestRequest request, CancellationToken ct)
         {
-            var payload = request.Adapt<RunBacktestPayload>();
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+            if (string.IsNullOrEmpty(userId))
+                return Unauthorized();
+
+            var payload = request.Adapt<RunBacktestPayload>() with {UserId = userId};
             await backtestService.RunBacktest(payload, ct);
             return Ok();
         }
@@ -38,12 +43,7 @@ namespace TradeWiseBackend.Api.Controllers
         [ProducesResponseType(StatusCodes.Status200OK)]
         public async Task<IActionResult> GetAllBacktestsBacktest(CancellationToken ct)
         {
-            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-
-            if (string.IsNullOrEmpty(userId))
-                return Unauthorized();
-
-            var backtests = await backtestService.GetAllBacktests(userId, ct);
+            var backtests = await backtestService.GetAllBacktests(ct);
             return Ok(new GetAllBacktestsResponse(backtests.Adapt<List<Responses.models.BacktestInfo>>()));
         }
     }

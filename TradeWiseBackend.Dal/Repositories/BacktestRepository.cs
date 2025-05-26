@@ -14,6 +14,8 @@ public class BacktestRepository(DatabaseContext dbContext) : IBacktestRepository
         var convertedEntity = new BacktestExecutionEntity
         {
             Id = execution.Id,
+            ExternalExecutionId = execution.ExternalExecutionId,
+            CreatedAt = DateTime.Now.ToUniversalTime(),
             UserId = execution.UserId
         };
         await dbContext.BacktestExecutions.AddAsync(convertedEntity, ct);
@@ -22,9 +24,9 @@ public class BacktestRepository(DatabaseContext dbContext) : IBacktestRepository
 
     public async Task<long> GetExternalExecutionId(Guid executionId, CancellationToken ct)
     {
-        return (await dbContext.StageExecutions
+        return await dbContext.BacktestExecutions
             .Where(se => se.Id == executionId)
             .Select(se => se.ExternalExecutionId)
-            .SingleAsync(ct)).Value;
+            .SingleAsync(ct);
     }
 }

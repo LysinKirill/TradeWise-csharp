@@ -32,8 +32,8 @@ public class BacktestService(Backtest.BacktestService.BacktestServiceClient back
         var request = new StartBacktestRequest
         {
             ModelId = payload.ModelId,
-            From = Timestamp.FromDateTime(payload.From),
-            To = Timestamp.FromDateTime(payload.To),
+            From = Timestamp.FromDateTime(payload.From.ToUniversalTime()),
+            To = Timestamp.FromDateTime(payload.To.ToUniversalTime()),
             InitialBalance = payload.InitialBalance
         };
         var response = await backtestClient.StartBacktestAsync(request, headers: AuthMetadata, cancellationToken: ct);
@@ -49,7 +49,6 @@ public class BacktestService(Backtest.BacktestService.BacktestServiceClient back
     public async Task CancelBacktest(CancelBacktestPayload payload, CancellationToken ct)
     {
         var externalExecutionId = await backtestRepository.GetExternalExecutionId(payload.BacktestExecutionId, ct);
-
         var request = new CancelBacktestRequest
         {
             BacktestId = externalExecutionId
@@ -57,7 +56,7 @@ public class BacktestService(Backtest.BacktestService.BacktestServiceClient back
         await backtestClient.CancelBacktestAsync(request, headers: AuthMetadata, cancellationToken: ct);
     }
 
-    public async Task<List<Domain.ServiceModels.BacktestInfo>> GetAllBacktests(string userId, CancellationToken ct)
+    public async Task<List<Domain.ServiceModels.BacktestInfo>> GetAllBacktests(CancellationToken ct)
     {
         var backtests = await backtestClient.GetAllUserBacktestsAsync(new Empty(), headers: AuthMetadata, cancellationToken: ct);
         return backtests.Adapt<List<Domain.ServiceModels.BacktestInfo>>();

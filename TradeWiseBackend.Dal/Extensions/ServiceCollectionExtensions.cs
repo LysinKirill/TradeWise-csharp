@@ -13,6 +13,7 @@ public static class ServiceCollectionExtensions
     {
         services.AddScoped<IStrategyRepository, StrategyRepository>();
         services.AddScoped<IAccountRepository, AccountRepository>();
+        services.AddScoped<IBacktestRepository, BacktestRepository>();
         services.AddScoped<IUnitOfWork, UnitOfWork>();
         return services;
     }
