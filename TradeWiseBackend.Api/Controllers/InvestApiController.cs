@@ -42,7 +42,18 @@ public class InvestApiController(IInvestApiService investApiService) : Controlle
     [ProducesResponseType<GetInstrumentStatResponse>(StatusCodes.Status200OK)]
     public async Task<IActionResult> GetInstrumentStat(GetInstrumentStatRequest request, CancellationToken ct)
     {
-        var instrumentStat = await investApiService.GetInstrumentStat(request.Adapt<GetInstrumentStatPayload>(), ct);
+        if (!Enum.TryParse<Domain.Models.StatType>(request.StatType.ToString(), out var statType))
+        {
+            return BadRequest($"Invalid value of StatType: {request.StatType}");
+        }
+
+        var payload = new GetInstrumentStatPayload(
+            request.InstrumentId,
+            statType,
+            request.From,
+            request.To
+        );
+        var instrumentStat = await investApiService.GetInstrumentStat(payload, ct);
 
         return Ok(instrumentStat.Adapt<GetInstrumentStatResponse>());
     }

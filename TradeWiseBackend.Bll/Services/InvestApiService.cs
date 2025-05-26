@@ -62,6 +62,7 @@ public class InvestApiService(
             StatType.RelativeStrengthIndex => Invest.StatType.RelativeStrengthIndex,
             _ => Invest.StatType.Unknown
         };
+
         var request = new Invest.GetInstrumentStatRequest
         {
             InstrumentId = payload.InstrumentId,
