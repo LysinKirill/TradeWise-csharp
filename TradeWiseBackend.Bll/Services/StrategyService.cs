@@ -2,6 +2,7 @@ using System.ComponentModel.DataAnnotations;
 using Grpc.Core;
 using Mapster;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc.TagHelpers;
 using Model;
 using TradeWiseBackend.Domain.Interfaces.Repositories;
 using TradeWiseBackend.Domain.Interfaces.Services;
@@ -141,10 +142,10 @@ public class StrategyService(IStrategyRepository strategyRepository,
             StrategyExecutionStatus.Pending,
             runStrategyPayload.StrategyId
         );
-        var stageExecutionEntities = strategyStages.Select(stageId => new StageExecutionModel
+        var stageExecutionEntities = strategyStages.Select(stage => new StageExecutionModel
         (
             Guid.NewGuid(),
-            stageId,
+            stage.Id,
             strategyExecution.Id,
             StageExecutionStatus.Pending,
             DateTime.UtcNow,
@@ -193,7 +194,7 @@ public class StrategyService(IStrategyRepository strategyRepository,
         await strategyRepository.DeleteStrategy(deleteStrategyPayload.StrategyId, ct);
     }
 
-    public async Task EditStrategyStrategy(EditStrategyPayload editStrategyPayload, CancellationToken ct)
+    public async Task EditStrategy(EditStrategyPayload editStrategyPayload, CancellationToken ct)
     {
         var existingStrategy = await strategyRepository.FetchStrategyById(editStrategyPayload.StrategyId, ct);
         if (existingStrategy == null)
@@ -264,5 +265,70 @@ public class StrategyService(IStrategyRepository strategyRepository,
             await unitOfWork.RollbackAsync();
             throw;
         }
+    }
+
+    public async Task<FullStrategyInfo> GetStrategy(GetStrategyPayload payload, CancellationToken ct)
+    {
+        var strategy = await strategyRepository.FetchStrategyById(payload.StrategyId, ct);
+        var stages = await strategyRepository.FetchStagesByStrategyId(payload.StrategyId, ct);
+        var transitions = await strategyRepository.FetchTransitionByStrategyId(payload.StrategyId, ct);
+
+        var groupedTransitions = transitions
+            .GroupBy(t => new { t.StageSourceId, t.StageDestinationId })
+            .Select(g => new Domain.Models.StrategyTransition(
+                SourceStageId: g.Key.StageSourceId,
+                DestinationStageId: g.Key.StageDestinationId,
+                TransitionConditions: g.Select(t => new Domain.Models.TransitionCondition(
+                    (Domain.Models.TransitionConditionType)t.StatType,
+                    (Domain.Models.StatType)t.Operation,
+                    t.Value
+                )).ToList()
+            ))
+            .ToList();
+
+        if (strategy == null)
+            throw new Exception("Strategy not found");
+
+        var convertedStages = stages.Select(se => new Domain.Models.StrategyStage
+        (
+            se.Id,
+            se.ModelId
+        )).ToList();
+
+        var allDestinationStageIds = groupedTransitions.Select(t => t.DestinationStageId).ToHashSet();
+        var rootStage = stages.Where(s => !allDestinationStageIds.Contains(s.Id)).ToList().Single();
+
+        var allSourceStageIds = transitions.Select(t => t.StageSourceId).ToHashSet();
+        var leafStages = stages.Where(s => !allSourceStageIds.Contains(s.Id)).ToList();
+
+        groupedTransitions.Add(new Domain.Models.StrategyTransition
+        (
+            null,
+            rootStage.Id,
+            []
+        ));
+
+        foreach (var leaf in leafStages)
+        {
+            groupedTransitions.Add(new Domain.Models.StrategyTransition
+            (
+                leaf.Id,
+                null,
+                []
+            ));
+        }
+
+        var strategyInfo = new FullStrategyInfo
+        (
+            strategy.Id,
+            strategy.Title,
+            strategy.Description,
+            strategy.CreatedAt,
+            strategy.UpdatedAt,
+            convertedStages,
+            groupedTransitions
+        );
+
+        return strategyInfo;
     }
 }

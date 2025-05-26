@@ -70,7 +70,6 @@ public class StrategyStatusUpdateWorker(
 
     private async Task FailStage(IStrategyRepository strategyRepository, Guid stageId, Guid strategyId, Guid strategyExecutionId, CancellationToken ct)
     {
-        var strategyStages = await strategyRepository.FetchStagesByStrategyId(strategyId, ct);
         var strategyTransitions = await strategyRepository.FetchTransitionByStrategyId(strategyId, ct);
 
         var transitionsLookup = strategyTransitions.ToLookup(t => t.StageSourceId, t => t.StageDestinationId);
