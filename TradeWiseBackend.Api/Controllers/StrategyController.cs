@@ -83,6 +83,8 @@ public class StrategyController(IStrategyService strategyService) : ControllerBa
     [ProducesResponseType(StatusCodes.Status200OK)]
     public async Task<IActionResult> EditStrategy(EditStrategyRequest request, CancellationToken ct)
     {
+        var editStrategyPayload = request.Adapt<EditStrategyPayload>();
+        await strategyService.EditStrategyStrategy(editStrategyPayload, ct);
         return Ok();
     }
 

@@ -31,4 +31,8 @@ public interface IStrategyRepository
     Task DeleteStrategy(Guid strategyId, CancellationToken ct);
     Task<List<long>> FetchExternalExecutionId(Guid strategyExecutionId, CancellationToken ct);
     Task<List<Guid>> FetchActiveStrategyExecutions(Guid strategyId, CancellationToken ct);
+    Task DeleteStrategyTransitionsByStrategyId(Guid strategyId);
+    Task UpdateStrategy(Strategy strategy);
+    Task DeleteStrategyStagesByStrategyId(Guid strategyId);
+    Task<Strategy> FetchStrategyById(Guid strategyId, CancellationToken ct);
 }
