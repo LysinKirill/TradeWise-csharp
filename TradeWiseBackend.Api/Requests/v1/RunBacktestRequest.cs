@@ -1,7 +1,6 @@
 namespace TradeWiseBackend.Api.Requests.v1;
 
-public record class BacktestRequest(
-   Guid StrategyId,
+public record class RunBacktestRequest(
    long ModelId,
    DateTime From,
    DateTime To,
