@@ -163,7 +163,8 @@ public class StrategyController(IStrategyService strategyService) : ControllerBa
             request.Description,
             convertedStages,
             convertedTransitions,
-            userId
+            userId,
+            request.AllocatedBudget!.Value
         );
     }
 }

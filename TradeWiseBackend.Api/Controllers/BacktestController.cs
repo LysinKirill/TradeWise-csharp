@@ -41,10 +41,10 @@ namespace TradeWiseBackend.Api.Controllers
 
         [HttpPost("all-backtests")]
         [ProducesResponseType(StatusCodes.Status200OK)]
-        public async Task<IActionResult> GetAllBacktestsBacktest(CancellationToken ct)
+        public async Task<GetAllBacktestsResponse> GetAllBacktestsBacktest(CancellationToken ct)
         {
             var backtests = await backtestService.GetAllBacktests(ct);
-            return Ok(new GetAllBacktestsResponse(backtests.Adapt<List<Responses.models.BacktestInfo>>()));
+            return new GetAllBacktestsResponse(backtests.Adapt<List<Responses.models.BacktestInfo>>());
         }
     }
 }

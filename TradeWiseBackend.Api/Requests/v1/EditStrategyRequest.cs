@@ -8,5 +8,6 @@ public record class EditStrategyRequest(
     [param: Required(ErrorMessage = "Title required")] string? Title,
     string? Description,
     [param: Required(ErrorMessage = "StrategyStages required")] List<StrategyStage> StrategyStages,
-    [param: Required(ErrorMessage = "StrategyTransitions required")] List<StrategyTransition> StrategyTransitions
+    [param: Required(ErrorMessage = "StrategyTransitions required")] List<StrategyTransition> StrategyTransitions,
+    [param: Required(ErrorMessage = "AllocatedBudget required")] double? AllocatedBudget
 );

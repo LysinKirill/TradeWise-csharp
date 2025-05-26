@@ -97,7 +97,8 @@ public class StrategyRepository(DatabaseContext dbContext) : IStrategyRepository
                 exec.Id,
                 exec.StrategyExecutionId,
                 se.IsPaperTrade,
-                stage.MaxExecutionDurationSeconds
+                stage.MaxExecutionDurationSeconds,
+                stage.Strategy.AllocatedBudget
             )
         ).SingleOrDefaultAsync();
 
@@ -363,7 +364,8 @@ public class StrategyRepository(DatabaseContext dbContext) : IStrategyRepository
             UserId = strategy.UserId,
             CreatedAt = strategy.CreatedAt,
             UpdatedAt = strategy.UpdatedAt,
-            IsActive = true
+            IsActive = true,
+            AllocatedBudget = strategy.AllocatedBudget
         };
         dbContext.Strategies.Update(convertedEntity);
 
@@ -375,6 +377,17 @@ public class StrategyRepository(DatabaseContext dbContext) : IStrategyRepository
         return (await dbContext.Strategies
             .AsNoTracking()
             .SingleAsync(s => s.Id == strategyId, ct)).Adapt<Strategy>();
+    }
+
+    public async Task UpdateUsedBudgetAsync(Guid strategyExecutionId, double newUsedBudget, CancellationToken ct)
+    {
+        var execution = await dbContext.StrategyExecutions
+            .SingleAsync(se => se.Id == strategyExecutionId);
+
+        execution.UsedBudget = newUsedBudget;
+        execution.UpdatedAt = DateTime.UtcNow; 
+
+        await dbContext.SaveChangesAsync();
     }
 
     private static StatTypeEntity MapStatTypeEntity(StatType dtoValue)
