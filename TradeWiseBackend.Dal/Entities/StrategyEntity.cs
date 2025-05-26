@@ -15,4 +15,5 @@ public class StrategyEntity
     public required DateTime CreatedAt { get; set; }
     public required DateTime UpdatedAt { get; set; }
     public required bool IsActive { get; set; } = true;
+    public required double AllocatedBudget { get; set; }
 }

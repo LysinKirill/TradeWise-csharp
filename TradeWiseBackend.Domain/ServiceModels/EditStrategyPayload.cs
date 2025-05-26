@@ -8,5 +8,6 @@ public record class EditStrategyPayload(
     string? Description,
     List<StrategyStage> StrategyStages,
     List<StrategyTransition> StrategyTransitions,
-    string UserId
+    string UserId,
+    double AllocatedBudget
 );

@@ -95,7 +95,8 @@ public class StrategyService(IStrategyRepository strategyRepository,
             createStrategyPayload.Description,
             createStrategyPayload.UserId,
             DateTime.Now.ToUniversalTime(),
-            DateTime.Now.ToUniversalTime()
+            DateTime.Now.ToUniversalTime(),
+            createStrategyPayload.AllocatedBudget
         );
 
         await unitOfWork.BeginTransactionAsync();
@@ -217,7 +218,8 @@ public class StrategyService(IStrategyRepository strategyRepository,
             {
                 Title = editStrategyPayload.Title,
                 Description = editStrategyPayload.Description,
-                UpdatedAt = DateTime.UtcNow
+                UpdatedAt = DateTime.UtcNow,
+                AllocatedBudget = editStrategyPayload.AllocatedBudget
             };
 
             await strategyRepository.UpdateStrategy(updatedStrategy);

@@ -18,6 +18,7 @@ using Grpc.Core;
 using Microsoft.AspNetCore.Http;
 using TradeWiseBackend.Domain.Interfaces.Services;
 using TradeWiseBackend.Domain.Models;
+using Microsoft.AspNetCore.Server.Kestrel.Core;
 
 public class StrategyStatusUpdateWorker(
     IServiceProvider serviceProvider,
@@ -51,7 +52,7 @@ public class StrategyStatusUpdateWorker(
                 var transitionsPrevStage = await strategyRepository.FetchTransitionByDestinationStage(strategyExecution.StrategyId, stageExecution.StageId);
                 if (transitionsPrevStage == null)
                 {
-                    var stageInfo = await strategyRepository.FetchStageWithUserByStageId(stageExecution.StageId, stageExecution.Id);
+                    var stageInfo = await strategyRepository.FetchStageWithUserByStageId(stageExecution.Id);
                     executableNodes.Add(stageInfo);
                     break;
                 }
@@ -59,7 +60,7 @@ public class StrategyStatusUpdateWorker(
                 var previousStageExecution = await strategyRepository.FetchStageExecutionByStageId(transitionsPrevStage.StageSourceId, strategyExecution.Id);
                 if (previousStageExecution.Status == StageExecutionStatus.Completed || previousStageExecution.Status == StageExecutionStatus.Failed)
                 {
-                    var stageInfo = await strategyRepository.FetchStageWithUserByStageId(stageExecution.StageId, stageExecution.Id);
+                    var stageInfo = await strategyRepository.FetchStageWithUserByStageId(stageExecution.Id);
                     executableNodes.Add(stageInfo);
                 }
             }
@@ -106,15 +107,18 @@ public class StrategyStatusUpdateWorker(
         logger.LogInformation("ProcessPendingNodes started.");
 
         var nextNodes = await GetExecutableNodes(strategyRepository, ct);
-        var nodesGroupedByUsers = nextNodes.GroupBy(s => s.UserId)
+        var nodesGroupedByStrategies = nextNodes.GroupBy(s => s.StrategyId)
             .ToDictionary(g => g.Key, g => g.ToList());
 
-        foreach (var nodesGroup in nodesGroupedByUsers)
+        foreach (var nodesGroup in nodesGroupedByStrategies)
         {
-            var userId = nodesGroup.Key;
-            var userNodes = nodesGroup.Value;
-            int countNodes = userNodes.Count;
-            logger.LogInformation($"User={userId}, countNodes={countNodes}, userNodes={string.Join(", ", userNodes.Select(info => $"{info.Id}"))}");
+            var strategyId = nodesGroup.Key;
+            var strategyNodes = nodesGroup.Value;
+            int countNodes = strategyNodes.Count;
+            var userId = strategyNodes[0].UserId;
+            var strategyAllocatedBudget = strategyNodes[0].AllocatedBudget;
+            var usedBudget = strategyNodes[0].UsedBudget;
+            logger.LogInformation($"strategyId={strategyId}, countNodes={countNodes}, userNodes={string.Join(", ", strategyNodes.Select(info => $"{info.Id}"))}");
 
             var user = await accountRepository.GetUserById(userId);
             var token = await tokenService.GenerateToken(new AccountEntityModel
@@ -126,11 +130,12 @@ public class StrategyStatusUpdateWorker(
             var meta = new Metadata { { "Authorization", $"Bearer {token}" } };
 
             var potfolioInfo = await userServiceClient.GetPortfolioAsync(new Empty(), headers: meta, cancellationToken: ct);
-            double initialBalance = potfolioInfo.RubleBalance / countNodes;
-            logger.LogInformation($"Balance from python {potfolioInfo.RubleBalance}, initialBalance = {initialBalance}");
+            double balance = potfolioInfo.RubleBalance;
+            var initialBalance = Math.Min(balance, strategyAllocatedBudget - usedBudget) / countNodes;
+            logger.LogInformation($"Balance from python {potfolioInfo.RubleBalance}, initialBalance = {initialBalance}, ");
             initialBalance = 1;
 
-            foreach (var node in userNodes)
+            foreach (var node in strategyNodes)
             {
                 var request = new StartExecutionRequest
                 {
@@ -158,7 +163,7 @@ public class StrategyStatusUpdateWorker(
                     await strategyRepository.SaveExternalExecutionId(node.StageExecutionId, startExecutionResponse.ExecutionId, ct);
                     await strategyRepository.UpdateStageExecutionStatus(node.StageExecutionId, StageExecutionStatus.Running, ct);
                     await strategyRepository.UpdateStrategyExecutionStatus(node.StrategyExecutionId, Domain.RepositoryModels.StrategyExecutionStatus.Running, ct);
-
+                    await strategyRepository.UpdateUsedBudget(node.StrategyExecutionId, initialBalance, ct);
                     await unitOfWork.CommitAsync();
                 }
                 catch
