@@ -6,7 +6,6 @@ using TradeWiseBackend.Domain.Interfaces.Repositories;
 using TradeWiseBackend.Domain.Models;
 
 using StrategyStage = TradeWiseBackend.Domain.RepositoryModels.StrategyStage;
-using StrategyTransition = TradeWiseBackend.Domain.RepositoryModels.StrategyTransition;
 using TradeWiseBackend.Domain.RepositoryModels;
 using TradeWiseBackend.Domain.ServiceModels;
 
@@ -22,7 +21,7 @@ public class StrategyRepository(DatabaseContext dbContext) : IStrategyRepository
         await dbContext.SaveChangesAsync();
     }
 
-    public async Task SaveStrategyTransitions(List<StrategyTransition> transitions)
+    public async Task SaveStrategyTransitions(List<Domain.RepositoryModels.StrategyTransition> transitions)
     {
         var entities = transitions.Select(t => new StrategyTransitionEntity
         {
@@ -68,10 +67,10 @@ public class StrategyRepository(DatabaseContext dbContext) : IStrategyRepository
                 .ToListAsync()).Adapt<List<StageExecutionInfo>>();
     }
 
-    public async Task<StrategyTransition?> FetchTransitionByDestinationStage(Guid strategyId, Guid stageId)
+    public async Task<Domain.RepositoryModels.StrategyTransition?> FetchTransitionByDestinationStage(Guid strategyId, Guid stageId)
     {
         return (await dbContext.StrategyTransitions
-                .SingleOrDefaultAsync(t => t.StageDestinationId == stageId && t.StrategyId == strategyId)).Adapt<StrategyTransition?>();
+                .SingleOrDefaultAsync(t => t.StageDestinationId == stageId && t.StrategyId == strategyId)).Adapt<Domain.RepositoryModels.StrategyTransition?>();
     }
 
     public async Task<StageExecutionInfo> FetchStageExecutionByStageId(Guid stageId, Guid strategyExecutionId)
@@ -193,11 +192,14 @@ public class StrategyRepository(DatabaseContext dbContext) : IStrategyRepository
             .SingleAsync(ct);
     }
 
-    public async Task<List<Guid>> FetchStagesByStrategyId(Guid strategyId, CancellationToken ct)
+    public async Task<List<StageInfoCut>> FetchStagesByStrategyId(Guid strategyId, CancellationToken ct)
     {
         return await dbContext.StrategyStages
             .Where(s => s.StrategyId == strategyId)
-            .Select(s => s.Id)
+            .Select(s => new StageInfoCut(
+                s.Id,
+                s.StageModel
+            ))
             .ToListAsync(ct);
     }
 
@@ -262,11 +264,11 @@ public class StrategyRepository(DatabaseContext dbContext) : IStrategyRepository
         return executions;
     }
 
-    public async Task<List<StrategyTransition>> FetchTransitionByStrategyId(Guid strategyId, CancellationToken ct)
+    public async Task<List<Domain.RepositoryModels.StrategyTransition>> FetchTransitionByStrategyId(Guid strategyId, CancellationToken ct)
     {
         return (await dbContext.StrategyTransitions
             .Where(t => t.StrategyId == strategyId)
-            .ToListAsync(ct)).Adapt<List<StrategyTransition>>();
+            .ToListAsync(ct)).Adapt<List<Domain.RepositoryModels.StrategyTransition>>();
     }
 
     public async Task FailStageExecutionsBulk(List<Guid> stageIds, Guid strategyExecutionId, CancellationToken ct)

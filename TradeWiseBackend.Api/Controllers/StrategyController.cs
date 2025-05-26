@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using TradeWiseBackend.Api.Requests.v1;
+using TradeWiseBackend.Api.Responses.v1;
 using TradeWiseBackend.Domain.Interfaces.Services;
 using TradeWiseBackend.Domain.RepositoryModels;
 using TradeWiseBackend.Domain.ServiceModels;
@@ -84,7 +85,7 @@ public class StrategyController(IStrategyService strategyService) : ControllerBa
     public async Task<IActionResult> EditStrategy(EditStrategyRequest request, CancellationToken ct)
     {
         var editStrategyPayload = request.Adapt<EditStrategyPayload>();
-        await strategyService.EditStrategyStrategy(editStrategyPayload, ct);
+        await strategyService.EditStrategy(editStrategyPayload, ct);
         return Ok();
     }
 
@@ -102,5 +103,14 @@ public class StrategyController(IStrategyService strategyService) : ControllerBa
             return Conflict(ex.Message);
         }
         return Ok();
+    }
+
+    [HttpGet("get")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    public async Task<GetStrategyResponse> GetStrategy([FromQuery] GetStrategyRequest request, CancellationToken ct)
+    {
+        var getStrategyPayload = request.Adapt<GetStrategyPayload>();
+        var strategy = await strategyService.GetStrategy(getStrategyPayload, ct);
+        return strategy.Adapt<GetStrategyResponse>();
     }
 }
