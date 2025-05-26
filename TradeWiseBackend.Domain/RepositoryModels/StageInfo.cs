@@ -7,5 +7,7 @@ public record class StageInfo(
     string UserId,
     long? ExternalExecutionId,
     Guid StageExecutionId,
-    Guid StrategyExecutionId
+    Guid StrategyExecutionId,
+    bool IsPaperTrade,
+    int MaxExecutionDurationSeconds
 );

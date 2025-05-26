@@ -132,12 +132,12 @@ public class StrategyStatusUpdateWorker(
 
             foreach (var node in userNodes)
             {
-                // TODO: поменять MaxExecutionDurationSeconds
                 var request = new StartExecutionRequest
                 {
                     ModelId = node.StageModel,
                     InitialBalance = initialBalance,
-                    MaxExecutionDurationSeconds = 4
+                    MaxExecutionDurationSeconds = node.MaxExecutionDurationSeconds,
+                    IsPaperTrade = node.IsPaperTrade
                 };
 
                 var startExecutionResponse = new StartExecutionResponse();

@@ -5,5 +5,5 @@ namespace TradeWiseBackend.Api.Requests.models;
 public record StrategyTransition(
     Guid? SourceStageId,
     Guid? DestinationStageId,
-    [property: Required(ErrorMessage = "TransitionConditions required")] List<TransitionCondition> TransitionConditions
+    List<TransitionCondition> TransitionConditions
 );

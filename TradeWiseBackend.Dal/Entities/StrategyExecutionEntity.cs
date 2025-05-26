@@ -18,4 +18,6 @@ public class StrategyExecutionEntity
     [ForeignKey(nameof(Strategy))]
     public Guid StrategyId { get; set; }
     public StrategyEntity? Strategy { get; set; }
+
+    public bool IsPaperTrade { get; set; }
 }
