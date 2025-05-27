@@ -20,6 +20,7 @@ public class DatabaseContext : IdentityDbContext<AccountEntity>
     public DbSet<StrategyExecutionEntity> StrategyExecutions { get; set; }
     public DbSet<StageExecutionEntity> StageExecutions { get; set; }
     public DbSet<BacktestExecutionEntity> BacktestExecutions { get; set; }
+    public DbSet<RefreshTokenEntity> RefreshTokens { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
