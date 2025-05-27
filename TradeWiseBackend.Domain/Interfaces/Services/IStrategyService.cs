@@ -13,4 +13,5 @@ public interface IStrategyService
     Task DeleteStrategy(DeleteStrategyPayload deleteStrategyPayload, CancellationToken ct);
     Task EditStrategy(EditStrategyPayload editStrategyPayload, CancellationToken ct);
     Task<FullStrategyInfo> GetStrategy(GetStrategyPayload payload, CancellationToken ct);
+    Task<ExecutionInfo> GetExecutionOverview(GetExecutionPayload payload, CancellationToken ct);
 }

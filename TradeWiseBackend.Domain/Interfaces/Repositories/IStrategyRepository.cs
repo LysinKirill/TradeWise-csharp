@@ -22,10 +22,8 @@ public interface IStrategyRepository
     Task<List<StageExecutionInfo>> FetchActiveStageExecutions(Guid strategyExecutionId, CancellationToken ct);
     Task SaveStageExecutions(List<StageExecutionModel> stageExecution, CancellationToken ct);
     Task SaveStrategyExecution(StrategyExecutionModel strategyExecution, CancellationToken ct);
-    Task<Guid> FetchStrategyByStage(Guid stageId, CancellationToken ct);
     Task<List<StageInfoCut>> FetchStagesByStrategyId(Guid strategyId, CancellationToken ct);
     Task<List<StrategyExecutionModel>> FetchStrategyExecutionsByUser(string userId, CancellationToken ct);
-    Task<List<StrategyExecutionModel>> FetchStrategyExecutionsByStrategyId(Guid strategyId, CancellationToken ct);
     Task<List<RepositoryModels.StrategyTransition>> FetchTransitionByStrategyId(Guid strategyId, CancellationToken ct);
     Task FailStageExecutionsBulk(List<Guid> stageIds, Guid strategyExecutionId, CancellationToken ct);
     Task CancelStageExecutionsBulk(List<Guid> stageIds, Guid strategyExecutionId, CancellationToken ct);
@@ -40,4 +38,5 @@ public interface IStrategyRepository
     Task BorrowMoneyFromAllocatedBudget(Guid strategyExecutionId, double borrowedMoney, CancellationToken ct);
     Task RefundMoneyIntoAllocatedBudget(Guid strategyExecutionId, double refund, CancellationToken ct);
     Task<List<StrategyExecutionModel>> FetchActiveStrategyExecutionsByUser(string userId, CancellationToken ct);
+    Task<StrategyExecutionModel?> FetchStrategyExecutionById(Guid strategyExecutionId, CancellationToken ct);
 }

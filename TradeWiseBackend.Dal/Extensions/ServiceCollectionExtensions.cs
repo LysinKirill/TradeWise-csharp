@@ -20,7 +20,6 @@ public static class ServiceCollectionExtensions
 
     public static IServiceCollection AddDalInfrastructure(this IServiceCollection services, DbSettings config)
     {
-        Console.WriteLine(config.ConnectionString);
         services.AddDbContext<DatabaseContext>(options =>
             options.UseNpgsql(config.ConnectionString));
         return services;

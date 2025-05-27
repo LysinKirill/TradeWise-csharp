@@ -127,6 +127,15 @@ public class StrategyController(IStrategyService strategyService) : ControllerBa
         var strategy = await strategyService.GetStrategy(getStrategyPayload, ct);
         return strategy.Adapt<GetStrategyResponse>();
     }
+    
+    [HttpGet("execution-overview")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    public async Task<GetExecutionOverviewResponse> GetExecutionOveview([FromQuery] GetExecutionOverviewRequest request, CancellationToken ct)
+    {
+        var getExecutionPayload = request.Adapt<GetExecutionPayload>();
+        var strategy = await strategyService.GetExecutionOverview(getExecutionPayload, ct);
+        return strategy.Adapt<GetExecutionOverviewResponse>();
+    }
 
     private CreateStrategyPayload MapCreateRequest(CreateStrategyRequest request, string userId,
         CancellationToken ct)
@@ -136,7 +145,7 @@ public class StrategyController(IStrategyService strategyService) : ControllerBa
                 s.ModelId!.Value,
                 s.MaxExecutionDurationSeconds!.Value
             )).ToList();
-        
+
         var convertedTransitions = request.StrategyTransitions.Select(s => new Domain.Models.StrategyTransition(
                 s.SourceStageId,
                 s.DestinationStageId,

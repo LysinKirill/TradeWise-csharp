@@ -348,6 +348,68 @@ public class StrategyService(IStrategyRepository strategyRepository,
         return strategyInfo;
     }
 
+    public async Task<Domain.ServiceModels.ExecutionInfo> GetExecutionOverview(GetExecutionPayload payload, CancellationToken ct)
+    {
+        var externalExecutionIds = await strategyRepository.FetchExternalExecutionId(payload.StrategyExecutionId, ct);
+        var execution = await strategyRepository.FetchStrategyExecutionById(payload.StrategyExecutionId, ct);
+
+        if (execution == null)
+        {
+            throw new KeyNotFoundException("Execution not found");
+        }
+
+        var executionStatus = execution.Status;
+        double totalInputAmount = 0;
+        var instruments = new List<string>();
+        int sharesOwned = 0;
+        DateTime? startedAt = null;
+        DateTime? finishedAt = null;
+
+        foreach (var id in externalExecutionIds)
+        {
+            var request = new GetExecutionInfoRequest
+            {
+                ExecutionId = id
+            };
+            var response = await modelServiceClient.GetExecutionInfoAsync(request, headers: AuthMetadata, cancellationToken: ct);
+
+            totalInputAmount += response.MaxBudget;
+            sharesOwned += response.SharesOwned;
+
+            var instrumentId = response.ModelInfo?.InstrumentId;
+            if (!string.IsNullOrEmpty(instrumentId))
+            {
+                instruments.Add(instrumentId);
+            }
+
+            if (response.StartedAt != null)
+            {
+                if (startedAt == null || response.StartedAt.ToDateTime() < startedAt)
+                {
+                    startedAt = response.StartedAt.ToDateTime();
+                }
+            }
+            if (executionStatus != StrategyExecutionStatus.Pending && executionStatus != StrategyExecutionStatus.Running && response.FinishedAt != null)
+            {
+                if (finishedAt == null || response.FinishedAt.ToDateTime() > finishedAt)
+                {
+                    finishedAt = response.FinishedAt.ToDateTime();
+                }
+            }
+        }
+
+        return new Domain.ServiceModels.ExecutionInfo(
+            execution.StrategyId,
+            totalInputAmount,
+            instruments.Distinct().ToList(),
+            startedAt,
+            finishedAt,
+            sharesOwned,
+            execution.IsPaperTrade,
+            (Domain.Models.StrategyExecutionStatus)executionStatus
+        );
+    }
+
     private async Task<bool> RunStrategyValidationPassed(RunStrategyPayload payload, string userId, CancellationToken ct)
     {
         var activeUserExecutions = await strategyRepository.FetchActiveStrategyExecutionsByUser(userId, ct);
