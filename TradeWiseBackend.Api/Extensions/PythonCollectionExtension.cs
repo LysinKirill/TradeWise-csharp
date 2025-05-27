@@ -1,4 +1,6 @@
 using Backtest;
+using Grpc.Core;
+using Grpc.Net.Client;
 using Invest;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -13,27 +15,19 @@ public static class PythonCollectionExtension
         IConfiguration configuration, HttpMessageHandler handler)
     {
         services.Configure<PythonBackend.PythonBackend>(configuration.GetSection(nameof(PythonBackend)));
-        var python_backend = configuration.GetRequiredSection("PythonBackend").Get<PythonBackend.PythonBackend>()!;
-        services.AddGrpcClient<UserService.UserServiceClient>(options =>
-            {
-                options.Address = new Uri(python_backend.Url);
-            })
-            .ConfigurePrimaryHttpMessageHandler(() => handler);
-        services.AddGrpcClient<InvestService.InvestServiceClient>(options =>
-            {
-                options.Address = new Uri(python_backend.Url);
-            })
-            .ConfigurePrimaryHttpMessageHandler(() => handler);
-        services.AddGrpcClient<ModelService.ModelServiceClient>(options =>
-            {
-                options.Address = new Uri(python_backend.Url);
-            })
-            .ConfigurePrimaryHttpMessageHandler(() => handler);
-        services.AddGrpcClient<BacktestService.BacktestServiceClient>(options =>
-            {
-                options.Address = new Uri(python_backend.Url);
-            })
-            .ConfigurePrimaryHttpMessageHandler(() => handler);
+        var pythonBackend = configuration.GetRequiredSection("PythonBackend").Get<PythonBackend.PythonBackend>()!;
+        var channel = GrpcChannel.ForAddress(pythonBackend.Url, new GrpcChannelOptions
+        {
+            HttpHandler = handler,
+            // Disable SSL/TLS
+            UnsafeUseInsecureChannelCallCredentials = true,
+            Credentials = ChannelCredentials.Insecure
+        });
+        
+        services.AddSingleton(new UserService.UserServiceClient(channel));
+        services.AddSingleton(new InvestService.InvestServiceClient(channel));
+        services.AddSingleton(new ModelService.ModelServiceClient(channel));
+        services.AddSingleton(new BacktestService.BacktestServiceClient(channel));
 
         return services;
     }
