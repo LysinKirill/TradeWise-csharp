@@ -127,7 +127,6 @@ app.UseExceptionHandler(new ExceptionHandlerOptions
     }
 });
 
-// TODO: прокинуть везде CancellationToken ct
 app.UseSwagger();
 app.UseSwaggerUI(options =>
 {

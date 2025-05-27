@@ -56,7 +56,7 @@ public class StrategyStatusUpdateWorker(
 
     private async Task<bool> TransitionConditionPassed(StageInfo info, IStrategyRepository strategyRepository, InvestService.InvestServiceClient investServiceClient, ITokenService tokenService, IAccountRepository accountRepository, CancellationToken ct)
     {
-        var transitions = await strategyRepository.FetchTransitionByDestinationStage(info.Id);
+        var transitions = await strategyRepository.FetchTransitionByDestinationStage(info.Id, ct);
         bool checkPassed = true;
         foreach (var transition in transitions)
         {
@@ -96,19 +96,19 @@ public class StrategyStatusUpdateWorker(
 
     private async Task<List<StageInfo>> GetExecutableNodes(IStrategyRepository strategyRepository, InvestService.InvestServiceClient investServiceClient, ITokenService tokenService, IAccountRepository accountRepository, CancellationToken ct)
     {
-        var activeStrategyExecutions = await strategyRepository.GetPendingAndRunningStrategies();
+        var activeStrategyExecutions = await strategyRepository.FetchPendingAndRunningStrategies(ct);
         var executableNodes = new List<StageInfo>();
 
         foreach (var strategyExecution in activeStrategyExecutions)
         {
-            var strategyStageExecutions = await strategyRepository.GetPendingStageExecutionsByStrategy(strategyExecution.StrategyId);
+            var strategyStageExecutions = await strategyRepository.FetchPendingStageExecutionsByStrategy(strategyExecution.StrategyId, ct);
 
             foreach (var stageExecution in strategyStageExecutions)
             {
-                var transitionsPrevStages = await strategyRepository.FetchTransitionByDestinationStage(stageExecution.StageId);
+                var transitionsPrevStages = await strategyRepository.FetchTransitionByDestinationStage(stageExecution.StageId, ct);
                 if (transitionsPrevStages == null || transitionsPrevStages.Count == 0)
                 {
-                    var stageInfo = await strategyRepository.FetchStageWithUserByStageId(stageExecution.Id);
+                    var stageInfo = await strategyRepository.FetchStageWithUserByStageId(stageExecution.Id, ct);
                     if (await TransitionConditionPassed(stageInfo, strategyRepository, investServiceClient, tokenService, accountRepository, ct))
                     {
                         executableNodes.Add(stageInfo);
@@ -120,10 +120,10 @@ public class StrategyStatusUpdateWorker(
                     break;
                 }
 
-                var previousStageExecution = await strategyRepository.FetchStageExecutionByStageId(transitionsPrevStages[0].StageSourceId, strategyExecution.Id);
+                var previousStageExecution = await strategyRepository.FetchStageExecutionByStageId(transitionsPrevStages[0].StageSourceId, strategyExecution.Id, ct);
                 if (previousStageExecution.Status == StageExecutionStatus.Completed || previousStageExecution.Status == StageExecutionStatus.Failed)
                 {
-                    var stageInfo = await strategyRepository.FetchStageWithUserByStageId(stageExecution.Id);
+                    var stageInfo = await strategyRepository.FetchStageWithUserByStageId(stageExecution.Id, ct);
                     if (await TransitionConditionPassed(stageInfo, strategyRepository, investServiceClient, tokenService, accountRepository, ct))
                     {
                         executableNodes.Add(stageInfo);
@@ -172,7 +172,7 @@ public class StrategyStatusUpdateWorker(
         }
     }
 
-        private async Task CancelStage(IStrategyRepository strategyRepository, Guid stageId, Guid strategyId, Guid strategyExecutionId, CancellationToken ct)
+    private async Task CancelStage(IStrategyRepository strategyRepository, Guid stageId, Guid strategyId, Guid strategyExecutionId, CancellationToken ct)
     {
         var strategyTransitions = await strategyRepository.FetchTransitionByStrategyId(strategyId, ct);
 

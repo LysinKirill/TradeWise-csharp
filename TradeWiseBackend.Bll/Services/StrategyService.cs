@@ -106,9 +106,9 @@ public class StrategyService(IStrategyRepository strategyRepository,
         await unitOfWork.BeginTransactionAsync();
         try
         {
-            await strategyRepository.SaveStrategy(strategy);
-            await strategyRepository.SaveStrategyStages(stages);
-            await strategyRepository.SaveStrategyTransitions(transitionEntities);
+            await strategyRepository.SaveStrategy(strategy, ct);
+            await strategyRepository.SaveStrategyStages(stages, ct);
+            await strategyRepository.SaveStrategyTransitions(transitionEntities, ct);
 
             await unitOfWork.CommitAsync();
         }
@@ -121,7 +121,7 @@ public class StrategyService(IStrategyRepository strategyRepository,
 
     public async Task<List<StrategyGeneralInfo>> GetUserStrategies(string userId, CancellationToken ct)
     {
-        var strategies = await strategyRepository.FetchUserStrategies(userId);
+        var strategies = await strategyRepository.FetchUserStrategies(userId, ct);
 
         return strategies.Adapt<List<StrategyGeneralInfo>>();
     }
@@ -230,10 +230,10 @@ public class StrategyService(IStrategyRepository strategyRepository,
                 UpdatedAt = DateTime.UtcNow
             };
 
-            await strategyRepository.UpdateStrategy(updatedStrategy);
+            await strategyRepository.UpdateStrategy(updatedStrategy, ct);
 
-            await strategyRepository.DeleteStrategyStagesByStrategyId(editStrategyPayload.StrategyId);
-            await strategyRepository.DeleteStrategyTransitionsByStrategyId(editStrategyPayload.StrategyId);
+            await strategyRepository.DeleteStrategyStagesByStrategyId(editStrategyPayload.StrategyId, ct);
+            await strategyRepository.DeleteStrategyTransitionsByStrategyId(editStrategyPayload.StrategyId, ct);
 
             var stageIdMap = new Dictionary<Guid, Guid>();
             foreach (var stage in editStrategyPayload.StrategyStages)
@@ -247,7 +247,7 @@ public class StrategyService(IStrategyRepository strategyRepository,
                 stage.ModelId,
                 stage.MaxExecutionDurationSeconds
             )).ToList();
-            await strategyRepository.SaveStrategyStages(newStages);
+            await strategyRepository.SaveStrategyStages(newStages, ct);
 
             var newTransitions = new List<StrategyTransition>();
             foreach (var transition in editStrategyPayload.StrategyTransitions)
@@ -270,7 +270,7 @@ public class StrategyService(IStrategyRepository strategyRepository,
                     newTransitions.Add(entity);
                 }
             }
-            await strategyRepository.SaveStrategyTransitions(newTransitions);
+            await strategyRepository.SaveStrategyTransitions(newTransitions, ct);
 
             await unitOfWork.CommitAsync();
         }

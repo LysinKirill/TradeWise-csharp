@@ -31,7 +31,7 @@ public class AccountService(IStrategyRepository strategyRepository,
 
     public async Task<AccountOverviewInfo> GetAccountOverview(string userId, CancellationToken ct)
     {
-        var strategiesCount = (await strategyRepository.FetchUserStrategies(userId)).Count;
+        var strategiesCount = (await strategyRepository.FetchUserStrategies(userId, ct)).Count;
 
         var potfolioInfo = await userServiceClient.GetPortfolioAsync(new Empty(), headers: AuthMetadata, cancellationToken: ct);
 
