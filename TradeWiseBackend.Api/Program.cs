@@ -14,6 +14,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using TradeWiseBackend.Api.Configuration;
 using TradeWiseBackend.Api.Extensions;
+using TradeWiseBackend.Api.Middlewares;
 using TradeWiseBackend.Api.PythonBackend;
 using TradeWiseBackend.Bll.Extensions;
 using TradeWiseBackend.Dal;
@@ -152,7 +153,7 @@ app.UseExceptionHandler(new ExceptionHandlerOptions
 });
 
 // TODO: прокинуть везде CancellationToken ct
-
+app.UseMiddleware<RequestLoggingMiddleware>();
 app.UseSwagger();
 app.UseSwaggerUI(options =>
 {
