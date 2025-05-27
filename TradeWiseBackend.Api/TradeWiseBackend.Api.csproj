@@ -56,9 +56,6 @@
         <None Update="appsettings.Development.json">
             <CopyToOutputDirectory>Always</CopyToOutputDirectory>
         </None>
-        <None Update="ssl\cert.pem">
-            <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-        </None>
     </ItemGroup>
 
 </Project>

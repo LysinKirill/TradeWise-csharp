@@ -56,21 +56,11 @@ TypeAdapterConfig<Timestamp, DateTime>.NewConfig()
 builder.Services.Configure<DbSettings>(builder.Configuration.GetSection(nameof(DbSettings)));
 var config = builder.Configuration.GetRequiredSection("DbSettings").Get<DbSettings>()!;
 builder.Services.AddDalRepositories().AddDalInfrastructure(config);
-builder.Configuration.AddUserSecrets<Program>();
 
-
-var certThumbprint = builder.Configuration["Grpc:CertThumbprint"]
-                     ?? Environment.GetEnvironmentVariable("Grpc__CertThumbprint");
-if (string.IsNullOrEmpty(certThumbprint))
-    throw new InvalidOperationException("gRPC certificate thumbprint not configured. Set it in User Secrets.");
-
-var cert = X509CertificateLoader.LoadCertificateFromFile("ssl/cert.pem");
 var handler = new HttpClientHandler();
-handler.ClientCertificates.Add(cert);
-handler.ServerCertificateCustomValidationCallback =
-    (_, actualCert, _, _) => actualCert?.Thumbprint == certThumbprint;
-builder.Services.AddPythonGrpcClients(builder.Configuration, handler);
+handler.ServerCertificateCustomValidationCallback = HttpClientHandler.DangerousAcceptAnyServerCertificateValidator;
 
+builder.Services.AddPythonGrpcClients(builder.Configuration, handler);
 
 var environment = builder.Environment;
 builder.Configuration.AddJsonFile("appsettings.json", false, true)
