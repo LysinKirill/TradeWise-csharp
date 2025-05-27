@@ -2,13 +2,14 @@ using Mapster;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using TradeWiseBackend.Api.Models;
 using TradeWiseBackend.Api.Requests.v1;
 using TradeWiseBackend.Api.Responses;
 using TradeWiseBackend.Api.Responses.models;
 using TradeWiseBackend.Api.Responses.v1;
 using TradeWiseBackend.Domain.Interfaces.Services;
+using TradeWiseBackend.Domain.Models;
 using TradeWiseBackend.Domain.ServiceModels;
+using InstrumentInfo = TradeWiseBackend.Api.Models.InstrumentInfo;
 
 namespace TradeWiseBackend.Api.Controllers;
 
@@ -42,10 +43,8 @@ public class InvestApiController(IInvestApiService investApiService) : Controlle
     [ProducesResponseType<GetInstrumentStatResponse>(StatusCodes.Status200OK)]
     public async Task<IActionResult> GetInstrumentStat(GetInstrumentStatRequest request, CancellationToken ct)
     {
-        if (!Enum.TryParse<Domain.Models.StatType>(request.StatType.ToString(), out var statType))
-        {
+        if (!Enum.TryParse<StatType>(request.StatType.ToString(), out var statType))
             return BadRequest($"Invalid value of StatType: {request.StatType}");
-        }
 
         var payload = new GetInstrumentStatPayload(
             request.InstrumentId,
@@ -60,7 +59,8 @@ public class InvestApiController(IInvestApiService investApiService) : Controlle
 
     [HttpPost("get-candles-by-instrument")]
     [ProducesResponseType<GetCandlesByInstrumentResponse>(StatusCodes.Status200OK)]
-    public async Task<GetCandlesByInstrumentResponse> GetCandlesByInstrument(GetCandlesByInstrumentRequest request, CancellationToken ct)
+    public async Task<GetCandlesByInstrumentResponse> GetCandlesByInstrument(GetCandlesByInstrumentRequest request,
+        CancellationToken ct)
     {
         var candles = await investApiService.GetCandlesByInstrument(request.Adapt<GetCandlesByInstrumentPayload>(), ct);
         var candlesProtoList = candles.Adapt<List<Candle>>();

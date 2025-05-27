@@ -2,8 +2,7 @@ using TradeWiseBackend.Domain.Models;
 
 namespace TradeWiseBackend.Domain.ServiceModels;
 
-public record StrategyExecutionInfo
-(
+public record StrategyExecutionInfo(
     Guid Id,
     DateTime CreatedAt,
     DateTime UpdatedAt,

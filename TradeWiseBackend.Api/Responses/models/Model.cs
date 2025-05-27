@@ -1,5 +1,3 @@
-using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
-
 namespace TradeWiseBackend.Api.Responses.models;
 
 public record class Model(

@@ -5,11 +5,9 @@ public record class InfoForExecution(
     Guid StrategyId,
     long StageModel,
     string UserId,
-
     long? ExternalExecutionId,
     Guid StageExecutionId,
     Guid StrategyExecutionId,
-
     bool IsPaperTrade,
     int MaxExecutionDurationSeconds,
     double AllocatedBudget

@@ -1,9 +1,6 @@
-using System;
-
 namespace TradeWiseBackend.Domain.RepositoryModels;
 
-public record StageExecutionModel
-(
+public record StageExecutionModel(
     Guid Id,
     Guid StageId,
     Guid StrategyExecutionId,

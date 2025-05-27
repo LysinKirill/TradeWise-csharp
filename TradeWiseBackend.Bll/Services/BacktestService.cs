@@ -1,17 +1,20 @@
-using System;
 using Backtest;
 using Google.Protobuf.WellKnownTypes;
 using Grpc.Core;
-using Mapster;
 using Microsoft.AspNetCore.Http;
 using TradeWiseBackend.Domain.Interfaces.Repositories;
 using TradeWiseBackend.Domain.Interfaces.Services;
 using TradeWiseBackend.Domain.RepositoryModels;
 using TradeWiseBackend.Domain.ServiceModels;
+using BacktestInfo = TradeWiseBackend.Domain.ServiceModels.BacktestInfo;
+using BacktestStatus = TradeWiseBackend.Domain.ServiceModels.BacktestStatus;
 
 namespace TradeWiseBackend.Bll.Services;
 
-public class BacktestService(Backtest.BacktestService.BacktestServiceClient backtestClient, IBacktestRepository backtestRepository, IHttpContextAccessor httpContextAccessor) : IBacktestService
+public class BacktestService(
+    Backtest.BacktestService.BacktestServiceClient backtestClient,
+    IBacktestRepository backtestRepository,
+    IHttpContextAccessor httpContextAccessor) : IBacktestService
 {
     private Metadata AuthMetadata
     {
@@ -26,22 +29,6 @@ public class BacktestService(Backtest.BacktestService.BacktestServiceClient back
             };
         }
     }
-    private Domain.ServiceModels.BacktestStatus? MapBacktestStatus(Backtest.BacktestStatus? status)
-    {
-        if (status == null)
-        {
-            return null;
-        }
-        return status switch
-        {
-            Backtest.BacktestStatus.Cancelled => Domain.ServiceModels.BacktestStatus.Cancelled,
-            Backtest.BacktestStatus.Completed => Domain.ServiceModels.BacktestStatus.Completed,
-            Backtest.BacktestStatus.Failed => Domain.ServiceModels.BacktestStatus.Failed,
-            Backtest.BacktestStatus.Pending => Domain.ServiceModels.BacktestStatus.Pending,
-            Backtest.BacktestStatus.Running => Domain.ServiceModels.BacktestStatus.Running,
-            _ => throw new InvalidCastException($"Unknown BacktestStatus {status}")
-        };
-    }
 
     public async Task RunBacktest(RunBacktestPayload payload, CancellationToken ct)
     {
@@ -52,7 +39,7 @@ public class BacktestService(Backtest.BacktestService.BacktestServiceClient back
             To = Timestamp.FromDateTime(payload.To.ToUniversalTime()),
             InitialBalance = payload.InitialBalance
         };
-        var response = await backtestClient.StartBacktestAsync(request, headers: AuthMetadata, cancellationToken: ct);
+        var response = await backtestClient.StartBacktestAsync(request, AuthMetadata, cancellationToken: ct);
 
         var entityToSave = new BacktestExecution(
             Guid.NewGuid(),
@@ -69,13 +56,13 @@ public class BacktestService(Backtest.BacktestService.BacktestServiceClient back
         {
             BacktestId = externalExecutionId
         };
-        await backtestClient.CancelBacktestAsync(request, headers: AuthMetadata, cancellationToken: ct);
+        await backtestClient.CancelBacktestAsync(request, AuthMetadata, cancellationToken: ct);
     }
 
-    public async Task<List<Domain.ServiceModels.BacktestInfo>> GetAllBacktests(CancellationToken ct)
+    public async Task<List<BacktestInfo>> GetAllBacktests(CancellationToken ct)
     {
-        var backtests = await backtestClient.GetAllUserBacktestsAsync(new Empty(), headers: AuthMetadata, cancellationToken: ct);
-        return backtests.Backtests.Select(b => new Domain.ServiceModels.BacktestInfo(
+        var backtests = await backtestClient.GetAllUserBacktestsAsync(new Empty(), AuthMetadata, cancellationToken: ct);
+        return backtests.Backtests.Select(b => new BacktestInfo(
             b.BacktestId,
             b.StartedAt?.ToDateTime(),
             b.FinishedAt?.ToDateTime(),
@@ -88,5 +75,19 @@ public class BacktestService(Backtest.BacktestService.BacktestServiceClient back
             b.FinalBalance,
             b.CreatedAt.ToDateTime()
         )).ToList();
+    }
+
+    private BacktestStatus? MapBacktestStatus(Backtest.BacktestStatus? status)
+    {
+        if (status == null) return null;
+        return status switch
+        {
+            Backtest.BacktestStatus.Cancelled => BacktestStatus.Cancelled,
+            Backtest.BacktestStatus.Completed => BacktestStatus.Completed,
+            Backtest.BacktestStatus.Failed => BacktestStatus.Failed,
+            Backtest.BacktestStatus.Pending => BacktestStatus.Pending,
+            Backtest.BacktestStatus.Running => BacktestStatus.Running,
+            _ => throw new InvalidCastException($"Unknown BacktestStatus {status}")
+        };
     }
 }

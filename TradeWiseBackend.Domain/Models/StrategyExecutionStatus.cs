@@ -1,4 +1,5 @@
 namespace TradeWiseBackend.Domain.Models;
+
 public enum StrategyExecutionStatus
 {
     Pending,

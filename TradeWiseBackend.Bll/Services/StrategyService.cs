@@ -3,18 +3,22 @@ using Google.Protobuf.WellKnownTypes;
 using Grpc.Core;
 using Mapster;
 using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Http.HttpResults;
-using Microsoft.AspNetCore.Mvc.TagHelpers;
 using Model;
 using TradeWiseBackend.Domain.Interfaces.Repositories;
 using TradeWiseBackend.Domain.Interfaces.Services;
+using TradeWiseBackend.Domain.Models;
 using TradeWiseBackend.Domain.RepositoryModels;
 using TradeWiseBackend.Domain.ServiceModels;
 using User;
+using ExecutionInfo = TradeWiseBackend.Domain.ServiceModels.ExecutionInfo;
+using StrategyExecutionStatus = TradeWiseBackend.Domain.RepositoryModels.StrategyExecutionStatus;
+using StrategyStage = TradeWiseBackend.Domain.RepositoryModels.StrategyStage;
+using StrategyTransition = TradeWiseBackend.Domain.RepositoryModels.StrategyTransition;
 
 namespace TradeWiseBackend.Bll.Services;
 
-public class StrategyService(IStrategyRepository strategyRepository,
+public class StrategyService(
+    IStrategyRepository strategyRepository,
     IAccountRepository accountRepository,
     StrategyValidationService validator,
     IUnitOfWork unitOfWork,
@@ -42,17 +46,12 @@ public class StrategyService(IStrategyRepository strategyRepository,
         // TODO: декомпозировать
         var user = await accountRepository.GetUserById(createStrategyPayload.UserId);
 
-        if (user == null)
-        {
-            throw new Exception("User not found");
-        }
+        if (user == null) throw new Exception("User not found");
 
-        var (isValid, error) = validator.Validate(createStrategyPayload.StrategyStages, createStrategyPayload.StrategyTransitions);
+        var (isValid, error) =
+            validator.Validate(createStrategyPayload.StrategyStages, createStrategyPayload.StrategyTransitions);
 
-        if (!isValid)
-        {
-            throw new ValidationException(error!);
-        }
+        if (!isValid) throw new ValidationException(error!);
 
         var stageIdMap = new Dictionary<Guid, Guid>();
         foreach (var stage in createStrategyPayload.StrategyStages) stageIdMap[stage.Id] = Guid.NewGuid();
@@ -71,10 +70,7 @@ public class StrategyService(IStrategyRepository strategyRepository,
 
         foreach (var transition in createStrategyPayload.StrategyTransitions)
         {
-            if (transition.SourceStageId == null || transition.DestinationStageId == null)
-            {
-                continue;
-            }
+            if (transition.SourceStageId == null || transition.DestinationStageId == null) continue;
 
             foreach (var condition in transition.TransitionConditions)
             {
@@ -128,12 +124,10 @@ public class StrategyService(IStrategyRepository strategyRepository,
 
     public Task ValidateStrategyStages(ValidateStrategyPayload validateStrategyPayload, CancellationToken ct)
     {
-        var (isValid, error) = validator.PreValidate(validateStrategyPayload.StrategyStages, validateStrategyPayload.StrategyTransitions);
+        var (isValid, error) = validator.PreValidate(validateStrategyPayload.StrategyStages,
+            validateStrategyPayload.StrategyTransitions);
 
-        if (!isValid)
-        {
-            throw new ValidationException(error!);
-        }
+        if (!isValid) throw new ValidationException(error!);
 
         return Task.CompletedTask;
     }
@@ -141,9 +135,7 @@ public class StrategyService(IStrategyRepository strategyRepository,
     public async Task RunStrategy(RunStrategyPayload runStrategyPayload, string userId, CancellationToken ct)
     {
         if (!await RunStrategyValidationPassed(runStrategyPayload, userId, ct))
-        {
             throw new InvalidOperationException($"Impossible to allocate {runStrategyPayload.AllocatedBudget}");
-        }
         var strategyStages = await strategyRepository.FetchStagesByStrategyId(runStrategyPayload.StrategyId, ct);
         var strategyExecution = new StrategyExecutionModel(
             Guid.NewGuid(),
@@ -181,7 +173,8 @@ public class StrategyService(IStrategyRepository strategyRepository,
 
     public async Task CancelStrategy(CancelStrategyPayload cancelStrategyPayload, CancellationToken ct)
     {
-        var externalExecutionIds = await strategyRepository.FetchExternalExecutionId(cancelStrategyPayload.StrategyExecutionId, ct);
+        var externalExecutionIds =
+            await strategyRepository.FetchExternalExecutionId(cancelStrategyPayload.StrategyExecutionId, ct);
         foreach (var execution in externalExecutionIds)
         {
             var request = new StopExecutionRequest
@@ -189,7 +182,7 @@ public class StrategyService(IStrategyRepository strategyRepository,
                 ExecutionId = execution
             };
 
-            await modelServiceClient.StopExecutionAsync(request, headers: AuthMetadata, cancellationToken: ct);
+            await modelServiceClient.StopExecutionAsync(request, AuthMetadata, cancellationToken: ct);
         }
 
         await strategyRepository.CancelActiveStagesAndStrategyExecution(cancelStrategyPayload.StrategyExecutionId, ct);
@@ -197,11 +190,11 @@ public class StrategyService(IStrategyRepository strategyRepository,
 
     public async Task DeleteStrategy(DeleteStrategyPayload deleteStrategyPayload, CancellationToken ct)
     {
-        var activeStrategyExecutions = await strategyRepository.FetchActiveStrategyExecutions(deleteStrategyPayload.StrategyId, ct);
+        var activeStrategyExecutions =
+            await strategyRepository.FetchActiveStrategyExecutions(deleteStrategyPayload.StrategyId, ct);
         if (activeStrategyExecutions.Count != 0)
-        {
-            throw new InvalidOperationException($"The strategy cannot be deleted: there are active executions ({activeStrategyExecutions.Count}).");
-        }
+            throw new InvalidOperationException(
+                $"The strategy cannot be deleted: there are active executions ({activeStrategyExecutions.Count}).");
 
         await strategyRepository.DeleteStrategy(deleteStrategyPayload.StrategyId, ct);
     }
@@ -209,16 +202,11 @@ public class StrategyService(IStrategyRepository strategyRepository,
     public async Task EditStrategy(EditStrategyPayload editStrategyPayload, CancellationToken ct)
     {
         var existingStrategy = await strategyRepository.FetchStrategyById(editStrategyPayload.StrategyId, ct);
-        if (existingStrategy == null)
-        {
-            throw new Exception("Strategy not found");
-        }
+        if (existingStrategy == null) throw new Exception("Strategy not found");
 
-        var (isValid, error) = validator.Validate(editStrategyPayload.StrategyStages, editStrategyPayload.StrategyTransitions);
-        if (!isValid)
-        {
-            throw new ValidationException(error!);
-        }
+        var (isValid, error) =
+            validator.Validate(editStrategyPayload.StrategyStages, editStrategyPayload.StrategyTransitions);
+        if (!isValid) throw new ValidationException(error!);
 
         await unitOfWork.BeginTransactionAsync();
         try
@@ -236,10 +224,7 @@ public class StrategyService(IStrategyRepository strategyRepository,
             await strategyRepository.DeleteStrategyTransitionsByStrategyId(editStrategyPayload.StrategyId, ct);
 
             var stageIdMap = new Dictionary<Guid, Guid>();
-            foreach (var stage in editStrategyPayload.StrategyStages)
-            {
-                stageIdMap[stage.Id] = Guid.NewGuid();
-            }
+            foreach (var stage in editStrategyPayload.StrategyStages) stageIdMap[stage.Id] = Guid.NewGuid();
 
             var newStages = editStrategyPayload.StrategyStages.Select(stage => new StrategyStage(
                 stageIdMap[stage.Id],
@@ -270,6 +255,7 @@ public class StrategyService(IStrategyRepository strategyRepository,
                     newTransitions.Add(entity);
                 }
             }
+
             await strategyRepository.SaveStrategyTransitions(newTransitions, ct);
 
             await unitOfWork.CommitAsync();
@@ -290,11 +276,11 @@ public class StrategyService(IStrategyRepository strategyRepository,
         var groupedTransitions = transitions
             .GroupBy(t => new { t.StageSourceId, t.StageDestinationId })
             .Select(g => new Domain.Models.StrategyTransition(
-                SourceStageId: g.Key.StageSourceId,
-                DestinationStageId: g.Key.StageDestinationId,
-                TransitionConditions: g.Select(t => new Domain.Models.TransitionCondition(
-                    (Domain.Models.TransitionConditionType)t.StatType,
-                    (Domain.Models.StatType)t.Operation,
+                g.Key.StageSourceId,
+                g.Key.StageDestinationId,
+                g.Select(t => new TransitionCondition(
+                    (TransitionConditionType)t.StatType,
+                    (StatType)t.Operation,
                     t.Value,
                     t.InstrumentId
                 )).ToList()
@@ -325,14 +311,12 @@ public class StrategyService(IStrategyRepository strategyRepository,
         ));
 
         foreach (var leaf in leafStages)
-        {
             groupedTransitions.Add(new Domain.Models.StrategyTransition
             (
                 leaf.Id,
                 null,
                 []
             ));
-        }
 
         var strategyInfo = new FullStrategyInfo
         (
@@ -348,20 +332,17 @@ public class StrategyService(IStrategyRepository strategyRepository,
         return strategyInfo;
     }
 
-    public async Task<Domain.ServiceModels.ExecutionInfo> GetExecutionOverview(GetExecutionPayload payload, CancellationToken ct)
+    public async Task<ExecutionInfo> GetExecutionOverview(GetExecutionPayload payload, CancellationToken ct)
     {
         var externalExecutionIds = await strategyRepository.FetchExternalExecutionId(payload.StrategyExecutionId, ct);
         var execution = await strategyRepository.FetchStrategyExecutionById(payload.StrategyExecutionId, ct);
 
-        if (execution == null)
-        {
-            throw new KeyNotFoundException("Execution not found");
-        }
+        if (execution == null) throw new KeyNotFoundException("Execution not found");
 
         var executionStatus = execution.Status;
         double totalInputAmount = 0;
         var instruments = new List<string>();
-        int sharesOwned = 0;
+        var sharesOwned = 0;
         DateTime? startedAt = null;
         DateTime? finishedAt = null;
 
@@ -371,34 +352,25 @@ public class StrategyService(IStrategyRepository strategyRepository,
             {
                 ExecutionId = id
             };
-            var response = await modelServiceClient.GetExecutionInfoAsync(request, headers: AuthMetadata, cancellationToken: ct);
+            var response = await modelServiceClient.GetExecutionInfoAsync(request, AuthMetadata, cancellationToken: ct);
 
             totalInputAmount += response.MaxBudget;
             sharesOwned += response.SharesOwned;
 
             var instrumentId = response.ModelInfo?.InstrumentId;
-            if (!string.IsNullOrEmpty(instrumentId))
-            {
-                instruments.Add(instrumentId);
-            }
+            if (!string.IsNullOrEmpty(instrumentId)) instruments.Add(instrumentId);
 
             if (response.StartedAt != null)
-            {
                 if (startedAt == null || response.StartedAt.ToDateTime() < startedAt)
-                {
                     startedAt = response.StartedAt.ToDateTime();
-                }
-            }
-            if (executionStatus != StrategyExecutionStatus.Pending && executionStatus != StrategyExecutionStatus.Running && response.FinishedAt != null)
-            {
+
+            if (executionStatus != StrategyExecutionStatus.Pending &&
+                executionStatus != StrategyExecutionStatus.Running && response.FinishedAt != null)
                 if (finishedAt == null || response.FinishedAt.ToDateTime() > finishedAt)
-                {
                     finishedAt = response.FinishedAt.ToDateTime();
-                }
-            }
         }
 
-        return new Domain.ServiceModels.ExecutionInfo(
+        return new ExecutionInfo(
             execution.StrategyId,
             totalInputAmount,
             instruments.Distinct().ToList(),
@@ -410,11 +382,12 @@ public class StrategyService(IStrategyRepository strategyRepository,
         );
     }
 
-    private async Task<bool> RunStrategyValidationPassed(RunStrategyPayload payload, string userId, CancellationToken ct)
+    private async Task<bool> RunStrategyValidationPassed(RunStrategyPayload payload, string userId,
+        CancellationToken ct)
     {
         var activeUserExecutions = await strategyRepository.FetchActiveStrategyExecutionsByUser(userId, ct);
         var alreadyAllocatedBudget = activeUserExecutions.Sum(se => se.AllocatedBudget);
-        var potfolioInfo = await userServiceClient.GetPortfolioAsync(new Empty(), headers: AuthMetadata, cancellationToken: ct);
+        var potfolioInfo = await userServiceClient.GetPortfolioAsync(new Empty(), AuthMetadata, cancellationToken: ct);
 
         return alreadyAllocatedBudget + payload.AllocatedBudget <= potfolioInfo.RubleBalance;
     }

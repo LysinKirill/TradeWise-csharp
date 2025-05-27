@@ -1,14 +1,16 @@
+using System.ComponentModel.DataAnnotations;
 using Grpc.Core;
+using Hellang.Middleware.ProblemDetails;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using TradeWiseBackend.Api.Middlewares;
-using Hellang.Middleware.ProblemDetails;
-using Microsoft.AspNetCore.Mvc;
-using System.ComponentModel.DataAnnotations;
+using ProblemDetailsOptions = Hellang.Middleware.ProblemDetails.ProblemDetailsOptions;
 
 namespace TradeWiseBackend.Api.Extensions;
-using HellangProblemDetails = Hellang.Middleware.ProblemDetails.ProblemDetailsExtensions;
+
+using HellangProblemDetails = ProblemDetailsExtensions;
 
 public static class ExceptionHandlingExtensions
 {
@@ -22,7 +24,7 @@ public static class ExceptionHandlingExtensions
         services.AddExceptionHandler<GlobalExceptionHandler>();
 
         HellangProblemDetails.AddProblemDetails(services);
-        services.Configure<Hellang.Middleware.ProblemDetails.ProblemDetailsOptions>(options =>
+        services.Configure<ProblemDetailsOptions>(options =>
         {
             options.Map<ValidationException>(ex =>
                 new ProblemDetails

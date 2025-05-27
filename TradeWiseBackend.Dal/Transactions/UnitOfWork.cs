@@ -1,4 +1,3 @@
-using System;
 using Microsoft.EntityFrameworkCore.Storage;
 using TradeWiseBackend.Domain.Interfaces.Repositories;
 
@@ -16,10 +15,7 @@ public class UnitOfWork : IUnitOfWork
 
     public async Task BeginTransactionAsync()
     {
-        if (_transaction == null)
-        {
-            _transaction = await _dbContext.Database.BeginTransactionAsync();
-        }
+        if (_transaction == null) _transaction = await _dbContext.Database.BeginTransactionAsync();
     }
 
     public async Task CommitAsync()
@@ -52,6 +48,12 @@ public class UnitOfWork : IUnitOfWork
         }
     }
 
+    public void Dispose()
+    {
+        _transaction?.Dispose();
+        _dbContext.Dispose();
+    }
+
     private async Task DisposeTransactionAsync()
     {
         if (_transaction != null)
@@ -60,11 +62,4 @@ public class UnitOfWork : IUnitOfWork
             _transaction = null;
         }
     }
-
-    public void Dispose()
-    {
-        _transaction?.Dispose();
-        _dbContext.Dispose();
-    }
 }
-

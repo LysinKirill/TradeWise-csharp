@@ -1,4 +1,3 @@
-using System;
 using Google.Protobuf.WellKnownTypes;
 using Grpc.Core;
 using Mapster;
@@ -11,7 +10,8 @@ using User;
 
 namespace TradeWiseBackend.Bll.Services;
 
-public class AccountService(IStrategyRepository strategyRepository,
+public class AccountService(
+    IStrategyRepository strategyRepository,
     UserService.UserServiceClient userServiceClient,
     IHttpContextAccessor httpContextAccessor) : IAccountService
 {
@@ -33,7 +33,7 @@ public class AccountService(IStrategyRepository strategyRepository,
     {
         var strategiesCount = (await strategyRepository.FetchUserStrategies(userId, ct)).Count;
 
-        var potfolioInfo = await userServiceClient.GetPortfolioAsync(new Empty(), headers: AuthMetadata, cancellationToken: ct);
+        var potfolioInfo = await userServiceClient.GetPortfolioAsync(new Empty(), AuthMetadata, cancellationToken: ct);
 
         double totalPnl = potfolioInfo.Positions.Sum(position => position.DailyYield);
 
@@ -71,5 +71,4 @@ public class AccountService(IStrategyRepository strategyRepository,
             _ => throw new ArgumentOutOfRangeException(nameof(status), status, null)
         };
     }
-
 }

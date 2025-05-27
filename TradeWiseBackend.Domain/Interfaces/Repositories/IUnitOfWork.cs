@@ -1,5 +1,3 @@
-using System;
-
 namespace TradeWiseBackend.Domain.Interfaces.Repositories;
 
 public interface IUnitOfWork : IDisposable

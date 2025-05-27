@@ -1,12 +1,16 @@
+using Backtest;
+using Invest;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Model;
 using User;
 
 namespace TradeWiseBackend.Api.Extensions;
 
 public static class PythonCollectionExtension
 {
-    public static IServiceCollection AddPythonGrpcClients(this IServiceCollection services, IConfiguration configuration, HttpMessageHandler handler)
+    public static IServiceCollection AddPythonGrpcClients(this IServiceCollection services,
+        IConfiguration configuration, HttpMessageHandler handler)
     {
         services.Configure<PythonBackend.PythonBackend>(configuration.GetSection(nameof(PythonBackend)));
         var python_backend = configuration.GetRequiredSection("PythonBackend").Get<PythonBackend.PythonBackend>()!;
@@ -15,17 +19,17 @@ public static class PythonCollectionExtension
                 options.Address = new Uri(python_backend.Url);
             })
             .ConfigurePrimaryHttpMessageHandler(() => handler);
-        services.AddGrpcClient<Invest.InvestService.InvestServiceClient>(options =>
+        services.AddGrpcClient<InvestService.InvestServiceClient>(options =>
             {
                 options.Address = new Uri(python_backend.Url);
             })
             .ConfigurePrimaryHttpMessageHandler(() => handler);
-        services.AddGrpcClient<Model.ModelService.ModelServiceClient>(options =>
+        services.AddGrpcClient<ModelService.ModelServiceClient>(options =>
             {
                 options.Address = new Uri(python_backend.Url);
             })
             .ConfigurePrimaryHttpMessageHandler(() => handler);
-        services.AddGrpcClient<Backtest.BacktestService.BacktestServiceClient>(options =>
+        services.AddGrpcClient<BacktestService.BacktestServiceClient>(options =>
             {
                 options.Address = new Uri(python_backend.Url);
             })

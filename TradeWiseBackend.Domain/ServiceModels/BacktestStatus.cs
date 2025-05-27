@@ -6,5 +6,5 @@ public enum BacktestStatus
     Running,
     Completed,
     Failed,
-    Cancelled,
+    Cancelled
 }
