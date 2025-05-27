@@ -1,4 +1,3 @@
-using System;
 using TradeWiseBackend.Domain.RepositoryModels;
 
 namespace TradeWiseBackend.Domain.Interfaces.Repositories;

@@ -161,6 +161,5 @@ public class DatabaseContext : IdentityDbContext<AccountEntity>
             entity.Property(e => e.CreatedAt)
                 .IsRequired();
         });
-
     }
 }

@@ -14,19 +14,21 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using TradeWiseBackend.Api.Configuration;
 using TradeWiseBackend.Api.Extensions;
-using TradeWiseBackend.Api.Middlewares;
-using TradeWiseBackend.Api.PythonBackend;
 using TradeWiseBackend.Bll.Extensions;
 using TradeWiseBackend.Dal;
 using TradeWiseBackend.Dal.DatabaseSettings;
 using TradeWiseBackend.Dal.Entities;
 using TradeWiseBackend.Dal.Extensions;
-using User;
 
 var builder = WebApplication.CreateBuilder(args);
 Env.Load();
 
+
 builder.Services.AddExceptionHandlingMiddleware(builder.Configuration);
+builder.Services.AddIdentityServices(builder.Configuration);
+builder.Services.AddBllServices();
+
+
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddControllers()
     .AddJsonOptions(options =>
@@ -36,8 +38,6 @@ builder.Services.AddControllers()
         options.JsonSerializerOptions.WriteIndented = true;
     });
 builder.Services.AddSwagger();
-builder.Services.AddIdentityServices(builder.Configuration);
-builder.Services.AddBllServices();
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddCors(options =>
 {
@@ -49,7 +49,6 @@ builder.Services.AddCors(options =>
                 .AllowAnyMethod();
         });
 });
-
 TypeAdapterConfig<Timestamp, DateTime>.NewConfig()
     .MapWith(src => src.ToDateTime());
 
@@ -57,9 +56,8 @@ TypeAdapterConfig<Timestamp, DateTime>.NewConfig()
 builder.Services.Configure<DbSettings>(builder.Configuration.GetSection(nameof(DbSettings)));
 var config = builder.Configuration.GetRequiredSection("DbSettings").Get<DbSettings>()!;
 builder.Services.AddDalRepositories().AddDalInfrastructure(config);
-
-//TODO: use another way of setting secrets
 builder.Configuration.AddUserSecrets<Program>();
+
 
 var certThumbprint = builder.Configuration["Grpc:CertThumbprint"]
                      ?? Environment.GetEnvironmentVariable("Grpc__CertThumbprint");
@@ -71,38 +69,14 @@ var handler = new HttpClientHandler();
 handler.ClientCertificates.Add(cert);
 handler.ServerCertificateCustomValidationCallback =
     (_, actualCert, _, _) => actualCert?.Thumbprint == certThumbprint;
+builder.Services.AddPythonGrpcClients(builder.Configuration, handler);
 
-
-//TODO: move into extensions
-builder.Services.Configure<PythonBackend>(builder.Configuration.GetSection(nameof(PythonBackend)));
-var python_backend = builder.Configuration.GetRequiredSection("PythonBackend").Get<PythonBackend>()!;
-builder.Services.AddGrpcClient<UserService.UserServiceClient>(options =>
-    {
-        options.Address = new Uri(python_backend.Url);
-    })
-    .ConfigurePrimaryHttpMessageHandler(() => handler);
-builder.Services.AddGrpcClient<Invest.InvestService.InvestServiceClient>(options =>
-    {
-        options.Address = new Uri(python_backend.Url);
-    })
-    .ConfigurePrimaryHttpMessageHandler(() => handler);
-builder.Services.AddGrpcClient<Model.ModelService.ModelServiceClient>(options =>
-    {
-        options.Address = new Uri(python_backend.Url);
-    })
-    .ConfigurePrimaryHttpMessageHandler(() => handler);
-builder.Services.AddGrpcClient<Backtest.BacktestService.BacktestServiceClient>(options =>
-    {
-        options.Address = new Uri(python_backend.Url);
-    })
-    .ConfigurePrimaryHttpMessageHandler(() => handler);
 
 var environment = builder.Environment;
 builder.Configuration.AddJsonFile("appsettings.json", false, true)
     .AddJsonFile($"appsettings.{environment.EnvironmentName}.json", true)
     .AddUserSecrets<Program>()
     .AddEnvironmentVariables();
-
 
 var jwtKey = builder.Configuration["Jwt:Key"] ??
              Environment.GetEnvironmentVariable("JWT_KEY")!;
@@ -114,6 +88,7 @@ builder.Services.Configure<JwtSettings>(options =>
     options.Audience = builder.Configuration["Jwt:Audience"] ?? "TradeWiseClient";
     options.ExpiryInMinutes = int.Parse(builder.Configuration["Jwt:ExpiryInMinutes"] ?? "60");
 });
+
 
 var app = builder.Build();
 
@@ -152,7 +127,6 @@ app.UseExceptionHandler(new ExceptionHandlerOptions
     }
 });
 
-// TODO: прокинуть везде CancellationToken ct
 app.UseSwagger();
 app.UseSwaggerUI(options =>
 {
@@ -173,11 +147,6 @@ app.UseAuthorization();
 using var scope = app.Services.CreateScope();
 var dbContext = scope.ServiceProvider.GetRequiredService<DatabaseContext>();
 var pendingMigrations = await dbContext.Database.GetPendingMigrationsAsync();
-if (pendingMigrations.Any())
-{
-    Console.WriteLine("Applying migrations...");
-    await dbContext.Database.MigrateAsync();
-    Console.WriteLine("Migrations applied.");
-}
+if (pendingMigrations.Any()) await dbContext.Database.MigrateAsync();
 
 app.Run();

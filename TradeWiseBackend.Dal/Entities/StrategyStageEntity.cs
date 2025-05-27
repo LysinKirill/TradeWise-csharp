@@ -1,5 +1,3 @@
-using System.ComponentModel.DataAnnotations;
-
 namespace TradeWiseBackend.Dal.Entities;
 
 public class StrategyStageEntity

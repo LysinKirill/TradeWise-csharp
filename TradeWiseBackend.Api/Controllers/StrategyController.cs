@@ -3,11 +3,13 @@ using Mapster;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using TradeWiseBackend.Api.Requests.models;
 using TradeWiseBackend.Api.Requests.v1;
 using TradeWiseBackend.Api.Responses.v1;
 using TradeWiseBackend.Domain.Interfaces.Services;
+using TradeWiseBackend.Domain.Models;
 using TradeWiseBackend.Domain.ServiceModels;
+using StatType = TradeWiseBackend.Api.Requests.models.StatType;
+using TransitionConditionType = TradeWiseBackend.Api.Requests.models.TransitionConditionType;
 
 namespace TradeWiseBackend.Api.Controllers;
 
@@ -36,7 +38,7 @@ public class StrategyController(IStrategyService strategyService) : ControllerBa
         {
             return BadRequest(ex.Message);
         }
-        
+
         await strategyService.CreateStrategy(
             createPayload, ct);
 
@@ -116,6 +118,7 @@ public class StrategyController(IStrategyService strategyService) : ControllerBa
         {
             return Conflict(ex.Message);
         }
+
         return Ok();
     }
 
@@ -127,10 +130,11 @@ public class StrategyController(IStrategyService strategyService) : ControllerBa
         var strategy = await strategyService.GetStrategy(getStrategyPayload, ct);
         return strategy.Adapt<GetStrategyResponse>();
     }
-    
+
     [HttpGet("execution-overview")]
     [ProducesResponseType(StatusCodes.Status200OK)]
-    public async Task<GetExecutionOverviewResponse> GetExecutionOveview([FromQuery] GetExecutionOverviewRequest request, CancellationToken ct)
+    public async Task<GetExecutionOverviewResponse> GetExecutionOveview([FromQuery] GetExecutionOverviewRequest request,
+        CancellationToken ct)
     {
         var getExecutionPayload = request.Adapt<GetExecutionPayload>();
         var strategy = await strategyService.GetExecutionOverview(getExecutionPayload, ct);
@@ -140,38 +144,39 @@ public class StrategyController(IStrategyService strategyService) : ControllerBa
     private CreateStrategyPayload MapCreateRequest(CreateStrategyRequest request, string userId,
         CancellationToken ct)
     {
-        var convertedStages = request.StrategyStages.Select(s => new Domain.Models.StrategyStage(
-                s.Id!.Value,
-                s.ModelId!.Value,
-                s.MaxExecutionDurationSeconds!.Value
-            )).ToList();
+        var convertedStages = request.StrategyStages.Select(s => new StrategyStage(
+            s.Id!.Value,
+            s.ModelId!.Value,
+            s.MaxExecutionDurationSeconds!.Value
+        )).ToList();
 
-        var convertedTransitions = request.StrategyTransitions.Select(s => new Domain.Models.StrategyTransition(
-                s.SourceStageId,
-                s.DestinationStageId,
-                s.TransitionConditions.Select(t => new Domain.Models.TransitionCondition(
-                    t.TransitionConditionType switch
-                    {
-                        TransitionConditionType.EqualTo => Domain.Models.TransitionConditionType.EqualTo,
-                        TransitionConditionType.GreaterThan => Domain.Models.TransitionConditionType.GreaterThan,
-                        TransitionConditionType.LessThan => Domain.Models.TransitionConditionType.LessThan,
-                        _ => throw new InvalidCastException($"Unknown operation type {t.TransitionConditionType}")
-                    },
-                    t.StatType switch
-                    {
-                        StatType.BollingerBandLower => Domain.Models.StatType.BollingerBandLower,
-                        StatType.BollingerBandMiddle => Domain.Models.StatType.BollingerBandMiddle,
-                        StatType.BollingerBandUpper => Domain.Models.StatType.BollingerBandUpper,
-                        StatType.ExponentialMovingAverage => Domain.Models.StatType.ExponentialMovingAverage,
-                        StatType.MovingAverage => Domain.Models.StatType.MovingAverage,
-                        StatType.MovingAverageConvergenceDivergence => Domain.Models.StatType.MovingAverageConvergenceDivergence,
-                        StatType.RelativeStrengthIndex => Domain.Models.StatType.RelativeStrengthIndex,
-                        _ => throw new InvalidCastException($"Unknown StatType {t.StatType}")
-                    },
-                    t.Value!.Value,
-                    t.InstrumentId!
-                )).ToList()
-            )).ToList();
+        var convertedTransitions = request.StrategyTransitions.Select(s => new StrategyTransition(
+            s.SourceStageId,
+            s.DestinationStageId,
+            s.TransitionConditions.Select(t => new TransitionCondition(
+                t.TransitionConditionType switch
+                {
+                    TransitionConditionType.EqualTo => Domain.Models.TransitionConditionType.EqualTo,
+                    TransitionConditionType.GreaterThan => Domain.Models.TransitionConditionType.GreaterThan,
+                    TransitionConditionType.LessThan => Domain.Models.TransitionConditionType.LessThan,
+                    _ => throw new InvalidCastException($"Unknown operation type {t.TransitionConditionType}")
+                },
+                t.StatType switch
+                {
+                    StatType.BollingerBandLower => Domain.Models.StatType.BollingerBandLower,
+                    StatType.BollingerBandMiddle => Domain.Models.StatType.BollingerBandMiddle,
+                    StatType.BollingerBandUpper => Domain.Models.StatType.BollingerBandUpper,
+                    StatType.ExponentialMovingAverage => Domain.Models.StatType.ExponentialMovingAverage,
+                    StatType.MovingAverage => Domain.Models.StatType.MovingAverage,
+                    StatType.MovingAverageConvergenceDivergence => Domain.Models.StatType
+                        .MovingAverageConvergenceDivergence,
+                    StatType.RelativeStrengthIndex => Domain.Models.StatType.RelativeStrengthIndex,
+                    _ => throw new InvalidCastException($"Unknown StatType {t.StatType}")
+                },
+                t.Value!.Value,
+                t.InstrumentId!
+            )).ToList()
+        )).ToList();
 
         return new CreateStrategyPayload(
             request.Title!,

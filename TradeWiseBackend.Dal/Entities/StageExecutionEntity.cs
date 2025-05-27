@@ -1,4 +1,3 @@
-using System;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
@@ -6,15 +5,15 @@ namespace TradeWiseBackend.Dal.Entities;
 
 public class StageExecutionEntity
 {
-    [Key]
-    public Guid Id { get; set; }
+    [Key] public Guid Id { get; set; }
 
-    [ForeignKey(nameof(Stage))]
-    public Guid StageId { get; set; }
+    [ForeignKey(nameof(Stage))] public Guid StageId { get; set; }
+
     public StrategyStageEntity? Stage { get; set; }
 
     [ForeignKey(nameof(StrategyExecution))]
     public Guid StrategyExecutionId { get; set; }
+
     public StrategyExecutionEntity? StrategyExecution { get; set; }
 
     public required StageExecutionStatus Status { get; set; }

@@ -1,5 +1,3 @@
-using System.ComponentModel.DataAnnotations;
-
 namespace TradeWiseBackend.Api.Requests.models;
 
 public record StrategyTransition(

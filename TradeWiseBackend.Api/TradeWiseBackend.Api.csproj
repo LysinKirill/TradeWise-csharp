@@ -19,34 +19,34 @@
     </ItemGroup>
 
     <ItemGroup>
-        <PackageReference Include="DotNetEnv" Version="3.1.1" />
-        <PackageReference Include="Grpc.AspNetCore" Version="2.70.0" />
-        <PackageReference Include="Grpc.Net.Client" Version="2.71.0" />
+        <PackageReference Include="DotNetEnv" Version="3.1.1"/>
+        <PackageReference Include="Grpc.AspNetCore" Version="2.70.0"/>
+        <PackageReference Include="Grpc.Net.Client" Version="2.71.0"/>
         <PackageReference Include="Grpc.Tools" Version="2.71.0">
             <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
             <PrivateAssets>all</PrivateAssets>
         </PackageReference>
-        <PackageReference Include="Hellang.Middleware.ProblemDetails" Version="6.5.1" />
-        <PackageReference Include="Mapster" Version="7.4.2-pre02" />
-        <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="9.0.3" />
-        <PackageReference Include="Microsoft.AspNetCore.Diagnostics" Version="2.3.0" />
-        <PackageReference Include="Microsoft.AspNetCore.Http" Version="2.3.0" />
-        <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="9.0.4" />
+        <PackageReference Include="Hellang.Middleware.ProblemDetails" Version="6.5.1"/>
+        <PackageReference Include="Mapster" Version="7.4.2-pre02"/>
+        <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="9.0.3"/>
+        <PackageReference Include="Microsoft.AspNetCore.Diagnostics" Version="2.3.0"/>
+        <PackageReference Include="Microsoft.AspNetCore.Http" Version="2.3.0"/>
+        <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="9.0.4"/>
         <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="9.0.4">
             <PrivateAssets>all</PrivateAssets>
             <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
         </PackageReference>
-        <PackageReference Include="Microsoft.Extensions.Configuration.EnvironmentVariables" Version="6.0.1" />
-        <PackageReference Include="Swashbuckle.AspNetCore.Filters" Version="8.0.2" />
-        <PackageReference Include="Swashbuckle.AspNetCore.Swagger" Version="7.2.0" />
-        <PackageReference Include="Swashbuckle.AspNetCore.SwaggerGen" Version="7.2.0" />
-        <PackageReference Include="Swashbuckle.AspNetCore.SwaggerUI" Version="7.2.0" />
+        <PackageReference Include="Microsoft.Extensions.Configuration.EnvironmentVariables" Version="6.0.1"/>
+        <PackageReference Include="Swashbuckle.AspNetCore.Filters" Version="8.0.2"/>
+        <PackageReference Include="Swashbuckle.AspNetCore.Swagger" Version="7.2.0"/>
+        <PackageReference Include="Swashbuckle.AspNetCore.SwaggerGen" Version="7.2.0"/>
+        <PackageReference Include="Swashbuckle.AspNetCore.SwaggerUI" Version="7.2.0"/>
     </ItemGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\TradeWiseBackend.Bll\TradeWiseBackend.Bll.csproj" />
-        <ProjectReference Include="..\TradeWiseBackend.Dal\TradeWiseBackend.Dal.csproj" />
-        <ProjectReference Include="..\TradeWiseBackend.Domain\TradeWiseBackend.Domain.csproj" />
+        <ProjectReference Include="..\TradeWiseBackend.Bll\TradeWiseBackend.Bll.csproj"/>
+        <ProjectReference Include="..\TradeWiseBackend.Dal\TradeWiseBackend.Dal.csproj"/>
+        <ProjectReference Include="..\TradeWiseBackend.Domain\TradeWiseBackend.Domain.csproj"/>
     </ItemGroup>
 
     <ItemGroup>

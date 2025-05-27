@@ -1,6 +1,6 @@
 namespace TradeWiseBackend.Domain.RepositoryModels;
 
-public record class StageInfo(
+public record class InfoForExecution(
     Guid Id,
     Guid StrategyId,
     long StageModel,

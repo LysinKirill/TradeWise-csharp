@@ -1,4 +1,3 @@
-using Microsoft.AspNetCore.Mvc;
 using TradeWiseBackend.Domain.ServiceModels;
 
 namespace TradeWiseBackend.Domain.Interfaces.Services;

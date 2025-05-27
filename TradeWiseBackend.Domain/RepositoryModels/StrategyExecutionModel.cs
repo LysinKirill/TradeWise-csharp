@@ -1,9 +1,6 @@
-using System;
-
 namespace TradeWiseBackend.Domain.RepositoryModels;
 
-public record StrategyExecutionModel
-(
+public record StrategyExecutionModel(
     Guid Id,
     DateTime CreatedAt,
     DateTime UpdatedAt,

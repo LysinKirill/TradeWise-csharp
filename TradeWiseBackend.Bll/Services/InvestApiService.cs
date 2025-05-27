@@ -1,5 +1,6 @@
 using Google.Protobuf.WellKnownTypes;
 using Grpc.Core;
+using Invest;
 using Mapster;
 using Microsoft.AspNetCore.Http;
 using Model;
@@ -7,12 +8,14 @@ using TradeWiseBackend.Domain.Interfaces.Services;
 using TradeWiseBackend.Domain.Models;
 using TradeWiseBackend.Domain.ServiceModels;
 using User;
+using InstrumentInfo = TradeWiseBackend.Domain.Models.InstrumentInfo;
+using StatType = TradeWiseBackend.Domain.Models.StatType;
 
 namespace TradeWiseBackend.Bll.Services;
 
 public class InvestApiService(
     UserService.UserServiceClient userServiceClient,
-    Invest.InvestService.InvestServiceClient investServiceClient,
+    InvestService.InvestServiceClient investServiceClient,
     ModelService.ModelServiceClient modelServiceClient,
     IHttpContextAccessor httpContextAccessor
 ) : IInvestApiService
@@ -37,13 +40,13 @@ public class InvestApiService(
     {
         var request = new AddInvestApiKeyRequest { ApiKey = linkInvestApiKeyWithAccountPayload.InvestApiKey };
 
-        await userServiceClient.AddInvestApiKeyAsync(request, headers: AuthMetadata, cancellationToken: ct);
+        await userServiceClient.AddInvestApiKeyAsync(request, AuthMetadata, cancellationToken: ct);
     }
 
     public async Task<List<InstrumentInfo>> GetSupportedInstruments(CancellationToken ct)
     {
         var instrumentsList =
-            await investServiceClient.GetSupportedInstrumentsAsync(new Empty(), headers: AuthMetadata,
+            await investServiceClient.GetSupportedInstrumentsAsync(new Empty(), AuthMetadata,
                 cancellationToken: ct);
 
         return instrumentsList.Instruments.Adapt<List<InstrumentInfo>>();
@@ -63,7 +66,7 @@ public class InvestApiService(
             _ => throw new InvalidCastException($"Unknown StatType {payload.StatType}")
         };
 
-        var request = new Invest.GetInstrumentStatRequest
+        var request = new GetInstrumentStatRequest
         {
             InstrumentId = payload.InstrumentId,
             StatType = statType,
@@ -71,13 +74,14 @@ public class InvestApiService(
             To = Timestamp.FromDateTime(payload.To.ToUniversalTime())
         };
         var instrumentStat =
-            await investServiceClient.GetInstrumentStatAsync(request, headers: AuthMetadata, cancellationToken: ct);
+            await investServiceClient.GetInstrumentStatAsync(request, AuthMetadata, cancellationToken: ct);
         return instrumentStat.Adapt<InstrumentStat>();
     }
 
-    public async Task<List<CandleInfo>> GetCandlesByInstrument(GetCandlesByInstrumentPayload payload, CancellationToken ct)
+    public async Task<List<CandleInfo>> GetCandlesByInstrument(GetCandlesByInstrumentPayload payload,
+        CancellationToken ct)
     {
-        var request = new Invest.GetCandlesRequest
+        var request = new GetCandlesRequest
         {
             InstrumentId = payload.InstrumentId,
             From = Timestamp.FromDateTime(payload.From.ToUniversalTime()),
@@ -85,7 +89,7 @@ public class InvestApiService(
         };
 
         var candles =
-            await investServiceClient.GetCandlesAsync(request, headers: AuthMetadata, cancellationToken: ct);
+            await investServiceClient.GetCandlesAsync(request, AuthMetadata, cancellationToken: ct);
 
         return candles.Candles.Adapt<List<CandleInfo>>();
     }
@@ -93,7 +97,7 @@ public class InvestApiService(
     public async Task<List<SupportedModel>> GetSupportedModels(CancellationToken ct)
     {
         var models =
-            await modelServiceClient.GetAllModelsAsync(new Empty(), headers: AuthMetadata, cancellationToken: ct);
+            await modelServiceClient.GetAllModelsAsync(new Empty(), AuthMetadata, cancellationToken: ct);
 
         return models.Models.Adapt<List<SupportedModel>>();
     }

@@ -1,32 +1,25 @@
-using System;
-
-namespace TradeWiseBackend.Bll.Services;
-
-using System;
-using System.Threading;
-using System.Threading.Tasks;
-using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.DependencyInjection;
-using Model;
-using TradeWiseBackend.Domain.Interfaces.Repositories;
-using TradeWiseBackend.Domain.RepositoryModels;
-using System.Linq;
-using User;
 using Google.Protobuf.WellKnownTypes;
 using Grpc.Core;
-using Microsoft.AspNetCore.Http;
+using Invest;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
+using Model;
+using TradeWiseBackend.Domain.Interfaces.Repositories;
 using TradeWiseBackend.Domain.Interfaces.Services;
 using TradeWiseBackend.Domain.Models;
-using Microsoft.AspNetCore.Server.Kestrel.Core;
-using Invest;
+using TradeWiseBackend.Domain.RepositoryModels;
+using User;
+using StatType = Invest.StatType;
+using StrategyExecutionStatus = TradeWiseBackend.Domain.RepositoryModels.StrategyExecutionStatus;
+
+namespace TradeWiseBackend.Bll.Services;
 
 public class StrategyStatusUpdateWorker(
     IServiceProvider serviceProvider,
     ILogger<StrategyStatusUpdateWorker> logger
-    ) : BackgroundService
+) : BackgroundService
 {
-
     private StageExecutionStatus MapExecutionStatus(ExecutionStatus status)
     {
         return status switch
@@ -35,29 +28,44 @@ public class StrategyStatusUpdateWorker(
             ExecutionStatus.Failed => StageExecutionStatus.Failed,
             ExecutionStatus.Running => StageExecutionStatus.Running,
             ExecutionStatus.Pending => StageExecutionStatus.Pending,
-            _ => throw new NotImplementedException(),
+            _ => throw new InvalidCastException()
         };
     }
 
-    private Invest.StatType MapStatType(Domain.Models.StatType stat)
+    private StatType MapStatType(Domain.Models.StatType stat)
     {
         return stat switch
         {
-            Domain.Models.StatType.BollingerBandLower => Invest.StatType.BollingerBandLower,
-            Domain.Models.StatType.BollingerBandMiddle => Invest.StatType.BollingerBandMiddle,
-            Domain.Models.StatType.BollingerBandUpper => Invest.StatType.BollingerBandUpper,
-            Domain.Models.StatType.ExponentialMovingAverage => Invest.StatType.ExponentialMovingAverage,
-            Domain.Models.StatType.MovingAverage => Invest.StatType.MovingAverage,
-            Domain.Models.StatType.MovingAverageConvergenceDivergence => Invest.StatType.MovingAverageConvergenceDivergence,
-            Domain.Models.StatType.RelativeStrengthIndex => Invest.StatType.RelativeStrengthIndex,
+            Domain.Models.StatType.BollingerBandLower => StatType.BollingerBandLower,
+            Domain.Models.StatType.BollingerBandMiddle => StatType.BollingerBandMiddle,
+            Domain.Models.StatType.BollingerBandUpper => StatType.BollingerBandUpper,
+            Domain.Models.StatType.ExponentialMovingAverage => StatType.ExponentialMovingAverage,
+            Domain.Models.StatType.MovingAverage => StatType.MovingAverage,
+            Domain.Models.StatType.MovingAverageConvergenceDivergence => StatType.MovingAverageConvergenceDivergence,
+            Domain.Models.StatType.RelativeStrengthIndex => StatType.RelativeStrengthIndex,
             _ => throw new InvalidCastException($"Unknown StatType {stat}")
         };
     }
 
-    private async Task<bool> TransitionConditionPassed(StageInfo info, IStrategyRepository strategyRepository, InvestService.InvestServiceClient investServiceClient, ITokenService tokenService, IAccountRepository accountRepository, CancellationToken ct)
+    private async Task<Metadata> GetMetaByUserId(IAccountRepository accountRepository, ITokenService tokenService,
+        string userId)
     {
-        var transitions = await strategyRepository.FetchTransitionByDestinationStage(info.Id);
-        bool checkPassed = true;
+        var user = await accountRepository.GetUserById(userId);
+        var token = await tokenService.GenerateToken(new AccountEntityModel
+        {
+            Id = userId,
+            Email = user!.Email
+        });
+        var meta = new Metadata { { "Authorization", $"Bearer {token}" } };
+        return meta;
+    }
+
+    private async Task<bool> TransitionConditionPassed(InfoForExecution info, IStrategyRepository strategyRepository,
+        InvestService.InvestServiceClient investServiceClient, ITokenService tokenService,
+        IAccountRepository accountRepository, CancellationToken ct)
+    {
+        var transitions = await strategyRepository.FetchTransitionByDestinationStage(info.Id, ct);
+        var checkPassed = true;
         foreach (var transition in transitions)
         {
             var request = new GetInstrumentStatRequest
@@ -67,16 +75,10 @@ public class StrategyStatusUpdateWorker(
                 From = Timestamp.FromDateTime(DateTime.Now.AddMinutes(-600).ToUniversalTime()),
                 To = Timestamp.FromDateTime(DateTime.Now.ToUniversalTime())
             };
-
-            var user = await accountRepository.GetUserById(info.UserId);
-            var token = await tokenService.GenerateToken(new AccountEntityModel
-            {
-                Id = info.UserId,
-                Email = user!.Email
-            });
-            var meta = new Metadata { { "Authorization", $"Bearer {token}" } };
+            var meta = await GetMetaByUserId(accountRepository, tokenService, info.UserId);
             var instrumentStat =
-                await investServiceClient.GetInstrumentStatAsync(request, headers: meta, cancellationToken: ct);
+                await investServiceClient.GetInstrumentStatAsync(request, meta, cancellationToken: ct);
+
             switch (transition.Operation)
             {
                 case TransitionConditionType.EqualTo:
@@ -89,49 +91,56 @@ public class StrategyStatusUpdateWorker(
                     checkPassed = instrumentStat.StatValue < transition.Value;
                     break;
             }
+
             if (!checkPassed) return false;
         }
+
         return true;
     }
 
-    private async Task<List<StageInfo>> GetExecutableNodes(IStrategyRepository strategyRepository, InvestService.InvestServiceClient investServiceClient, ITokenService tokenService, IAccountRepository accountRepository, CancellationToken ct)
+    private async Task<List<InfoForExecution>> GetExecutableNodes(IStrategyRepository strategyRepository,
+        InvestService.InvestServiceClient investServiceClient, ITokenService tokenService,
+        IAccountRepository accountRepository, CancellationToken ct)
     {
-        var activeStrategyExecutions = await strategyRepository.GetPendingAndRunningStrategies();
-        var executableNodes = new List<StageInfo>();
+        var activeStrategyExecutions = await strategyRepository.FetchPendingAndRunningStrategies(ct);
+        var executableNodes = new List<InfoForExecution>();
 
         foreach (var strategyExecution in activeStrategyExecutions)
         {
-            var strategyStageExecutions = await strategyRepository.GetPendingStageExecutionsByStrategy(strategyExecution.StrategyId);
+            var strategyStageExecutions =
+                await strategyRepository.FetchPendingStageExecutionsByStrategyExecutionId(strategyExecution.Id, ct);
 
             foreach (var stageExecution in strategyStageExecutions)
             {
-                var transitionsPrevStages = await strategyRepository.FetchTransitionByDestinationStage(stageExecution.StageId);
-                if (transitionsPrevStages == null || transitionsPrevStages.Count == 0)
+                var transitionsToPrevStage =
+                    await strategyRepository.FetchTransitionByDestinationStage(stageExecution.StageId, ct);
+                if (transitionsToPrevStage == null || transitionsToPrevStage.Count == 0)
                 {
-                    var stageInfo = await strategyRepository.FetchStageWithUserByStageId(stageExecution.Id);
-                    if (await TransitionConditionPassed(stageInfo, strategyRepository, investServiceClient, tokenService, accountRepository, ct))
-                    {
+                    var stageInfo =
+                        await strategyRepository.FetchStageWithUserIdByStageExecutionId(stageExecution.Id, ct);
+                    if (await TransitionConditionPassed(stageInfo, strategyRepository, investServiceClient,
+                            tokenService, accountRepository, ct))
                         executableNodes.Add(stageInfo);
-                    }
                     else
-                    {
-                        await CancelStage(strategyRepository, stageInfo.Id, stageInfo.StrategyId, stageInfo.StrategyExecutionId, ct);
-                    }
+                        await CancelStage(strategyRepository, stageInfo.Id, stageInfo.StrategyId,
+                            stageInfo.StrategyExecutionId, ct);
                     break;
                 }
 
-                var previousStageExecution = await strategyRepository.FetchStageExecutionByStageId(transitionsPrevStages[0].StageSourceId, strategyExecution.Id);
-                if (previousStageExecution.Status == StageExecutionStatus.Completed || previousStageExecution.Status == StageExecutionStatus.Failed)
+                var previousStageExecution =
+                    await strategyRepository.FetchStageExecutionByStageIdAndStrategyExecution(
+                        transitionsToPrevStage[0].StageSourceId, strategyExecution.Id, ct);
+                if (previousStageExecution.Status == StageExecutionStatus.Completed ||
+                    previousStageExecution.Status == StageExecutionStatus.Failed)
                 {
-                    var stageInfo = await strategyRepository.FetchStageWithUserByStageId(stageExecution.Id);
-                    if (await TransitionConditionPassed(stageInfo, strategyRepository, investServiceClient, tokenService, accountRepository, ct))
-                    {
+                    var stageInfo =
+                        await strategyRepository.FetchStageWithUserIdByStageExecutionId(stageExecution.Id, ct);
+                    if (await TransitionConditionPassed(stageInfo, strategyRepository, investServiceClient,
+                            tokenService, accountRepository, ct))
                         executableNodes.Add(stageInfo);
-                    }
                     else
-                    {
-                        await CancelStage(strategyRepository, stageInfo.Id, stageInfo.StrategyId, stageInfo.StrategyExecutionId, ct);
-                    }
+                        await CancelStage(strategyRepository, stageInfo.Id, stageInfo.StrategyId,
+                            stageInfo.StrategyExecutionId, ct);
                 }
             }
         }
@@ -139,7 +148,8 @@ public class StrategyStatusUpdateWorker(
         return executableNodes;
     }
 
-    private async Task FailStage(IStrategyRepository strategyRepository, Guid stageId, Guid strategyId, Guid strategyExecutionId, CancellationToken ct)
+    private async Task FailStage(IStrategyRepository strategyRepository, Guid stageId, Guid strategyId,
+        Guid strategyExecutionId, CancellationToken ct)
     {
         var strategyTransitions = await strategyRepository.FetchTransitionByStrategyId(strategyId, ct);
 
@@ -153,12 +163,8 @@ public class StrategyStatusUpdateWorker(
                 return;
 
             foreach (var childStageId in transitionsLookup[currentStageId])
-            {
                 if (descendants.Add(childStageId))
-                {
                     TraverseDescendants(childStageId);
-                }
-            }
         }
 
         TraverseDescendants(stageId);
@@ -167,12 +173,12 @@ public class StrategyStatusUpdateWorker(
         await strategyRepository.FailStageExecutionsBulk(descendants.ToList(), strategyExecutionId, ct);
         var activeExecutions = await strategyRepository.FetchActiveStageExecutions(strategyExecutionId, ct);
         if (activeExecutions.Count == 0)
-        {
-            await strategyRepository.UpdateStrategyExecutionStatus(strategyExecutionId, Domain.RepositoryModels.StrategyExecutionStatus.Failed, ct);
-        }
+            await strategyRepository.UpdateStrategyExecutionStatusByStrategyExecution(strategyExecutionId,
+                StrategyExecutionStatus.Failed, ct);
     }
 
-        private async Task CancelStage(IStrategyRepository strategyRepository, Guid stageId, Guid strategyId, Guid strategyExecutionId, CancellationToken ct)
+    private async Task CancelStage(IStrategyRepository strategyRepository, Guid stageId, Guid strategyId,
+        Guid strategyExecutionId, CancellationToken ct)
     {
         var strategyTransitions = await strategyRepository.FetchTransitionByStrategyId(strategyId, ct);
 
@@ -186,12 +192,8 @@ public class StrategyStatusUpdateWorker(
                 return;
 
             foreach (var childStageId in transitionsLookup[currentStageId])
-            {
                 if (descendants.Add(childStageId))
-                {
                     TraverseDescendants(childStageId);
-                }
-            }
         }
 
         TraverseDescendants(stageId);
@@ -200,9 +202,8 @@ public class StrategyStatusUpdateWorker(
         await strategyRepository.CancelStageExecutionsBulk(descendants.ToList(), strategyExecutionId, ct);
         var activeExecutions = await strategyRepository.FetchActiveStageExecutions(strategyExecutionId, ct);
         if (activeExecutions.Count == 0)
-        {
-            await strategyRepository.UpdateStrategyExecutionStatus(strategyExecutionId, Domain.RepositoryModels.StrategyExecutionStatus.Cancelled, ct);
-        }
+            await strategyRepository.UpdateStrategyExecutionStatusByStrategyExecution(strategyExecutionId,
+                StrategyExecutionStatus.Cancelled, ct);
     }
 
     private async Task ProcessPendingNodes(IStrategyRepository strategyRepository,
@@ -216,31 +217,28 @@ public class StrategyStatusUpdateWorker(
     {
         logger.LogInformation("ProcessPendingNodes started.");
 
-        var nextNodes = await GetExecutableNodes(strategyRepository, investServiceClient, tokenService, accountRepository, ct);
+        var nextNodes =
+            await GetExecutableNodes(strategyRepository, investServiceClient, tokenService, accountRepository, ct);
         var nodesGroupedByStrategies = nextNodes.GroupBy(s => s.StrategyId)
             .ToDictionary(g => g.Key, g => g.ToList());
 
         foreach (var nodesGroup in nodesGroupedByStrategies)
         {
-            var strategyId = nodesGroup.Key;
             var strategyNodes = nodesGroup.Value;
-            int countNodes = strategyNodes.Count;
+            var countNodes = strategyNodes.Count;
+
+            var strategyId = nodesGroup.Key;
             var userId = strategyNodes[0].UserId;
+
             var allocatedBudget = strategyNodes[0].AllocatedBudget;
-            var user = await accountRepository.GetUserById(userId);
-            var token = await tokenService.GenerateToken(new AccountEntityModel
-            {
-                Id = userId,
-                Email = user!.Email
-            });
 
-            var meta = new Metadata { { "Authorization", $"Bearer {token}" } };
+            var meta = await GetMetaByUserId(accountRepository, tokenService, userId);
+            var potfolioInfo = await userServiceClient.GetPortfolioAsync(new Empty(), meta, cancellationToken: ct);
 
-            var potfolioInfo = await userServiceClient.GetPortfolioAsync(new Empty(), headers: meta, cancellationToken: ct);
-            double balance = potfolioInfo.RubleBalance;
+            var balance = potfolioInfo.RubleBalance;
             var initialBalance = Math.Min(balance, allocatedBudget) / countNodes;
-            logger.LogInformation($"Balance from python {potfolioInfo.RubleBalance}, initialBalance = {initialBalance}, count = {countNodes}");
-            initialBalance = 1;
+            logger.LogInformation(
+                $"Balance from python {potfolioInfo.RubleBalance}, initialBalance = {initialBalance}, count = {countNodes}");
 
             foreach (var node in strategyNodes)
             {
@@ -251,11 +249,11 @@ public class StrategyStatusUpdateWorker(
                     MaxExecutionDurationSeconds = node.MaxExecutionDurationSeconds,
                     IsPaperTrade = node.IsPaperTrade
                 };
-
                 var startExecutionResponse = new StartExecutionResponse();
                 try
                 {
-                    startExecutionResponse = await modelServiceClient.StartExecutionAsync(request, headers: meta, cancellationToken: ct);
+                    startExecutionResponse =
+                        await modelServiceClient.StartExecutionAsync(request, meta, cancellationToken: ct);
                 }
                 catch (RpcException ex)
                 {
@@ -267,10 +265,14 @@ public class StrategyStatusUpdateWorker(
                 await unitOfWork.BeginTransactionAsync();
                 try
                 {
-                    await strategyRepository.SaveExternalExecutionId(node.StageExecutionId, startExecutionResponse.ExecutionId, ct);
-                    await strategyRepository.UpdateStageExecutionStatus(node.StageExecutionId, StageExecutionStatus.Running, ct);
-                    await strategyRepository.UpdateStrategyExecutionStatus(node.StrategyExecutionId, Domain.RepositoryModels.StrategyExecutionStatus.Running, ct);
-                    await strategyRepository.BorrowMoneyFromAllocatedBudget(node.StrategyExecutionId, initialBalance, ct);
+                    await strategyRepository.SaveExternalExecutionId(node.StageExecutionId,
+                        startExecutionResponse.ExecutionId, ct);
+                    await strategyRepository.UpdateStageExecutionStatusByStageExecutionId(node.StageExecutionId,
+                        StageExecutionStatus.Running, ct);
+                    await strategyRepository.UpdateStrategyExecutionStatusByStrategyExecution(node.StrategyExecutionId,
+                        StrategyExecutionStatus.Running, ct);
+                    await strategyRepository.BorrowMoneyFromAllocatedBudget(node.StrategyExecutionId, initialBalance,
+                        ct);
                     await unitOfWork.CommitAsync();
                 }
                 catch
@@ -282,32 +284,26 @@ public class StrategyStatusUpdateWorker(
         }
     }
 
-    private async Task ProcessRunningNodes(IStrategyRepository strategyRepository, ModelService.ModelServiceClient modelServiceClient, IUnitOfWork unitOfWork, ITokenService tokenService, CancellationToken ct)
+    private async Task ProcessRunningNodes(IStrategyRepository strategyRepository,
+        ModelService.ModelServiceClient modelServiceClient, IAccountRepository accountRepository,
+        IUnitOfWork unitOfWork, ITokenService tokenService, CancellationToken ct)
     {
         logger.LogInformation("ProcessRunningNodes started.");
-
         var runningStageExecutions = await strategyRepository.FetchRunningStageExecutionsWithUserInfo(ct);
         logger.LogInformation($"{runningStageExecutions.Count} running stages");
+
         foreach (var execution in runningStageExecutions)
         {
             if (!execution.ExternalExecutionId.HasValue)
-            {
-                throw new Exception($"Running stage {execution.StageId}, execution id {execution.Id} without ExternalExecutionId");
-            }
+                throw new Exception(
+                    $"Running stage {execution.StageId}, execution id {execution.Id} without ExternalExecutionId");
 
             var request = new GetExecutionInfoRequest
             {
                 ExecutionId = execution.ExternalExecutionId.Value
             };
-
-            var token = await tokenService.GenerateToken(new AccountEntityModel
-            {
-                Id = execution.UserId,
-                Email = execution.Email
-            });
-
-            var meta = new Metadata { { "Authorization", $"Bearer {token}" } };
-            var response = await modelServiceClient.GetExecutionInfoAsync(request, headers: meta, cancellationToken: ct);
+            var meta = await GetMetaByUserId(accountRepository, tokenService, execution.UserId);
+            var response = await modelServiceClient.GetExecutionInfoAsync(request, meta, cancellationToken: ct);
 
             if (MapExecutionStatus(response.Status) != execution.Status)
             {
@@ -315,19 +311,21 @@ public class StrategyStatusUpdateWorker(
                 try
                 {
                     if (response.Status == ExecutionStatus.Failed)
-                    {
-                        await FailStage(strategyRepository, execution.StageId, execution.StrategyId, execution.StrategyExecutionId, ct);
-                    }
+                        await FailStage(strategyRepository, execution.StageId, execution.StrategyId,
+                            execution.StrategyExecutionId, ct);
                     if (response.Status == ExecutionStatus.Completed)
                     {
-                        var activeExecutions = await strategyRepository.FetchActiveStageExecutions(execution.StrategyExecutionId, ct);
+                        var activeExecutions =
+                            await strategyRepository.FetchActiveStageExecutions(execution.StrategyExecutionId, ct);
                         if (activeExecutions.Count == 1)
-                        {
-                            await strategyRepository.UpdateStrategyExecutionStatus(execution.StrategyExecutionId, Domain.RepositoryModels.StrategyExecutionStatus.Completed, ct);
-                        }
-                        await strategyRepository.RefundMoneyIntoAllocatedBudget(execution.StrategyExecutionId, response.MaxBudget, ct);
-                        await strategyRepository.UpdateStageExecutionStatus(execution.Id, MapExecutionStatus(response.Status), ct);
+                            await strategyRepository.UpdateStrategyExecutionStatusByStrategyExecution(
+                                execution.StrategyExecutionId, StrategyExecutionStatus.Completed, ct);
+                        await strategyRepository.RefundMoneyIntoAllocatedBudget(execution.StrategyExecutionId,
+                            response.MaxBudget, ct);
+                        await strategyRepository.UpdateStageExecutionStatusByStageExecutionId(execution.Id,
+                            MapExecutionStatus(response.Status), ct);
                     }
+
                     await unitOfWork.CommitAsync();
                 }
                 catch
@@ -341,11 +339,9 @@ public class StrategyStatusUpdateWorker(
 
     protected override async Task ExecuteAsync(CancellationToken ct)
     {
-        // TODO: проверять переходы по статусам на корректность
         logger.LogInformation("StrategyExecutionScheduler started.");
 
         while (!ct.IsCancellationRequested)
-        {
             try
             {
                 using var scope = serviceProvider.CreateScope();
@@ -358,8 +354,10 @@ public class StrategyStatusUpdateWorker(
                 var unitOfWork = scope.ServiceProvider.GetRequiredService<IUnitOfWork>();
                 var tokenService = scope.ServiceProvider.GetRequiredService<ITokenService>();
 
-                await ProcessRunningNodes(strategyRepository, modelServiceClient, unitOfWork, tokenService, ct);
-                await ProcessPendingNodes(strategyRepository, modelServiceClient, userServiceClient, unitOfWork, tokenService, accountRepository, investServiceClient, ct);
+                await ProcessRunningNodes(strategyRepository, modelServiceClient, accountRepository, unitOfWork,
+                    tokenService, ct);
+                await ProcessPendingNodes(strategyRepository, modelServiceClient, userServiceClient, unitOfWork,
+                    tokenService, accountRepository, investServiceClient, ct);
 
                 await Task.Delay(TimeSpan.FromSeconds(10), ct);
             }
@@ -368,9 +366,7 @@ public class StrategyStatusUpdateWorker(
                 logger.LogError(ex, "Error occurred while scheduling strategy executions.");
                 await Task.Delay(TimeSpan.FromSeconds(10), ct);
             }
-        }
 
         logger.LogInformation("StrategyExecutionScheduler stopping.");
     }
 }
-
