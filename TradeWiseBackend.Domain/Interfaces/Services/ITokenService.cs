@@ -4,5 +4,9 @@ namespace TradeWiseBackend.Domain.Interfaces.Services;
 
 public interface ITokenService
 {
-    Task<string> GenerateToken(AccountEntityModel user);
+    string GenerateToken(AccountEntityModel user);
+    string GenerateRefreshToken();
+    Task SaveRefreshTokenAsync(string userId, string refreshToken);
+    Task<(bool IsValid, string? UserId)> ValidateRefreshTokenAsync(string refreshToken);
+    Task RevokeRefreshTokenAsync(string refreshToken);
 }

@@ -51,7 +51,7 @@ public class StrategyStatusUpdateWorker(
         string userId)
     {
         var user = await accountRepository.GetUserById(userId);
-        var token = await tokenService.GenerateToken(new AccountEntityModel
+        var token = tokenService.GenerateToken(new AccountEntityModel
         {
             Id = userId,
             Email = user!.Email

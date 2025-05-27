@@ -1,5 +1,7 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using TradeWiseBackend.Api.Models;
+using TradeWiseBackend.Api.Responses.v1;
 using TradeWiseBackend.Dal.Entities;
 using TradeWiseBackend.Domain.Interfaces.Services;
 using TradeWiseBackend.Domain.Models;
@@ -33,17 +35,52 @@ public class AuthController : ControllerBase
         var result = await _signInManager.CheckPasswordSignInAsync(user, model.Password, false);
         if (!result.Succeeded) return Unauthorized();
 
-        var token = await _tokenService.GenerateToken(new AccountEntityModel
+        var userModel = new AccountEntityModel
         {
             Id = user.Id,
             Email = user.Email!
-        });
-        return Ok(new { Token = token });
-    }
-}
+        };
 
-public class LoginModel
-{
-    public string Email { get; set; } = null!;
-    public string Password { get; set; } = null!;
+        var accessToken = _tokenService.GenerateToken(userModel);
+        var refreshToken = _tokenService.GenerateRefreshToken();
+
+        await _tokenService.SaveRefreshTokenAsync(user.Id, refreshToken);
+
+        return Ok(new
+        {
+            AccessToken = accessToken,
+            RefreshToken = refreshToken,
+        });
+    }
+
+    [HttpPost("refresh")]
+    public async Task<IActionResult> Refresh(RefreshTokenRequest request)
+    {
+        var validation = await _tokenService.ValidateRefreshTokenAsync(request.RefreshToken);
+        if (!validation.IsValid || validation.UserId == null)
+        {
+            return Unauthorized();
+        }
+
+        var user = await _userManager.FindByIdAsync(validation.UserId);
+        if (user == null) return Unauthorized();
+
+        var userModel = new AccountEntityModel
+        {
+            Id = user.Id,
+            Email = user.Email!
+        };
+
+        var newAccessToken = _tokenService.GenerateToken(userModel);
+        var newRefreshToken = _tokenService.GenerateRefreshToken();
+
+        await _tokenService.RevokeRefreshTokenAsync(request.RefreshToken);
+        await _tokenService.SaveRefreshTokenAsync(user.Id, newRefreshToken);
+
+        return Ok(new RefreshTokenResponse
+        (
+            newAccessToken,
+            newRefreshToken
+        ));
+    }
 }
