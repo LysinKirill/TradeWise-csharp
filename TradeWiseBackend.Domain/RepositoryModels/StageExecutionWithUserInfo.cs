@@ -1,12 +1,11 @@
 namespace TradeWiseBackend.Domain.RepositoryModels;
 
-public record StageExecutionWithUserInfo(
+public record StageExecutionWithUserId(
     Guid Id,
     Guid StageId,
     StageExecutionStatus Status,
     long? ExternalExecutionId,
     string UserId,
-    string Email,
     Guid StrategyExecutionId,
     Guid StrategyId
 );

@@ -302,7 +302,7 @@ public class StrategyService(IStrategyRepository strategyRepository,
             .ToList();
 
         if (strategy == null)
-            throw new Exception("Strategy not found");
+            throw new KeyNotFoundException("Strategy not found");
 
         var convertedStages = stages.Select(se => new Domain.Models.StrategyStage
         (

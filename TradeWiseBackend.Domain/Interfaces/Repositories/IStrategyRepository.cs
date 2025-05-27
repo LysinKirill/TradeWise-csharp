@@ -21,8 +21,8 @@ public interface IStrategyRepository
     Task CancelActiveStagesAndStrategyExecution(Guid strategyExecutionId, CancellationToken ct);
 
     Task UpdateStrategy(Strategy strategy, CancellationToken ct);
-    Task UpdateStageExecutionStatus(Guid stageId, StageExecutionStatus status, CancellationToken ct);
-    Task UpdateStrategyExecutionStatus(Guid strategyExecutionId, RepositoryModels.StrategyExecutionStatus status, CancellationToken ct);
+    Task UpdateStageExecutionStatusByStageExecutionId(Guid stageExecutionId, StageExecutionStatus status, CancellationToken ct);
+    Task UpdateStrategyExecutionStatusByStrategyExecution(Guid strategyExecutionId, RepositoryModels.StrategyExecutionStatus status, CancellationToken ct);
 
     Task DeleteStrategy(Guid strategyId, CancellationToken ct);
     Task DeleteStrategyStagesByStrategyId(Guid strategyId, CancellationToken ct);
@@ -37,11 +37,11 @@ public interface IStrategyRepository
     Task<List<StrategyExecutionModel>> FetchActiveStrategyExecutionsByUser(string userId, CancellationToken ct);
 
     Task<List<RepositoryModels.StrategyExecutionInfo>> FetchPendingAndRunningStrategies(CancellationToken ct);
-    Task<List<StageExecutionInfo>> FetchPendingStageExecutionsByStrategy(Guid strategyId, CancellationToken ct);
+    Task<List<StageExecutionInfo>> FetchPendingStageExecutionsByStrategyExecutionId(Guid strategyExecutionId, CancellationToken ct);
     Task<List<RepositoryModels.StrategyTransition>> FetchTransitionByDestinationStage(Guid stageId, CancellationToken ct);
-    Task<StageExecutionInfo> FetchStageExecutionByStageId(Guid stageId, Guid strategyExecutionId, CancellationToken ct);
-    Task<StageInfo> FetchStageWithUserByStageId(Guid stageExecution, CancellationToken ct);
-    Task<List<StageExecutionWithUserInfo>> FetchRunningStageExecutionsWithUserInfo(CancellationToken ct);
+    Task<StageExecutionInfo> FetchStageExecutionByStageIdAndStrategyExecution(Guid stageId, Guid strategyExecutionId, CancellationToken ct);
+    Task<InfoForExecution> FetchStageWithUserIdByStageExecutionId(Guid stageExecutionId, CancellationToken ct);
+    Task<List<StageExecutionWithUserId>> FetchRunningStageExecutionsWithUserInfo(CancellationToken ct);
     Task<List<StageExecutionInfo>> FetchActiveStageExecutions(Guid strategyExecutionId, CancellationToken ct);
     Task<List<StageInfoCut>> FetchStagesByStrategyId(Guid strategyId, CancellationToken ct);
     Task<List<RepositoryModels.StrategyTransition>> FetchTransitionByStrategyId(Guid strategyId, CancellationToken ct);

@@ -61,10 +61,10 @@ public class StrategyRepository(DatabaseContext dbContext) : IStrategyRepository
             .ToListAsync(ct)).Adapt<List<Domain.RepositoryModels.StrategyExecutionInfo>>();
     }
 
-    public async Task<List<StageExecutionInfo>> FetchPendingStageExecutionsByStrategy(Guid strategyId, CancellationToken ct)
+    public async Task<List<StageExecutionInfo>> FetchPendingStageExecutionsByStrategyExecutionId(Guid strategyExecutionId, CancellationToken ct)
     {
         return (await dbContext.StageExecutions
-                .Where(n => n.StrategyExecution != null && n.StrategyExecution.StrategyId == strategyId && (n.Status == Entities.StageExecutionStatus.Pending))
+                .Where(n => n.StrategyExecutionId == strategyExecutionId && (n.Status == Entities.StageExecutionStatus.Pending))
                 .ToListAsync(ct)).Adapt<List<StageExecutionInfo>>();
     }
 
@@ -75,13 +75,13 @@ public class StrategyRepository(DatabaseContext dbContext) : IStrategyRepository
                 .ToListAsync(ct)).Adapt<List<Domain.RepositoryModels.StrategyTransition>>();
     }
 
-    public async Task<StageExecutionInfo> FetchStageExecutionByStageId(Guid stageId, Guid strategyExecutionId, CancellationToken ct)
+    public async Task<StageExecutionInfo> FetchStageExecutionByStageIdAndStrategyExecution(Guid stageId, Guid strategyExecutionId, CancellationToken ct)
     {
         return (await dbContext.StageExecutions
             .SingleAsync(se => se.StageId == stageId && se.StrategyExecutionId == strategyExecutionId), ct).Adapt<StageExecutionInfo>();
     }
 
-    public async Task<StageInfo> FetchStageWithUserByStageId(Guid stageExecutionId, CancellationToken ct)
+    public async Task<InfoForExecution> FetchStageWithUserIdByStageExecutionId(Guid stageExecutionId, CancellationToken ct)
     {
         var query = await (
             from stage in dbContext.StrategyStages
@@ -90,7 +90,7 @@ public class StrategyRepository(DatabaseContext dbContext) : IStrategyRepository
             join se in dbContext.StrategyExecutions
                 on exec.StrategyExecutionId equals se.Id
             where exec.Id == stageExecutionId
-            select new StageInfo(
+            select new InfoForExecution(
                 stage.Id,
                 stage.StrategyId,
                 stage.StageModel,
@@ -104,10 +104,10 @@ public class StrategyRepository(DatabaseContext dbContext) : IStrategyRepository
             )
         ).SingleOrDefaultAsync(ct);
 
-        return query.Adapt<StageInfo>();
+        return query.Adapt<InfoForExecution>();
     }
 
-    public async Task UpdateStageExecutionStatus(Guid stageExecutionId, Domain.RepositoryModels.StageExecutionStatus status, CancellationToken ct)
+    public async Task UpdateStageExecutionStatusByStageExecutionId(Guid stageExecutionId, Domain.RepositoryModels.StageExecutionStatus status, CancellationToken ct)
     {
         var convertedStatus = status switch
         {
@@ -127,7 +127,7 @@ public class StrategyRepository(DatabaseContext dbContext) : IStrategyRepository
 
     }
 
-    public async Task UpdateStrategyExecutionStatus(Guid strategyExecutionId, Domain.RepositoryModels.StrategyExecutionStatus status, CancellationToken ct)
+    public async Task UpdateStrategyExecutionStatusByStrategyExecution(Guid strategyExecutionId, Domain.RepositoryModels.StrategyExecutionStatus status, CancellationToken ct)
     {
         var convertedStatus = status switch
         {
@@ -140,12 +140,12 @@ public class StrategyRepository(DatabaseContext dbContext) : IStrategyRepository
         };
 
         await dbContext.StrategyExecutions
-       .Where(ex => ex.Id == strategyExecutionId)
-       .Where(ex => ex.Status != convertedStatus)
-       .ExecuteUpdateAsync(setters => setters
-           .SetProperty(e => e.Status, convertedStatus)
-           .SetProperty(e => e.UpdatedAt, DateTime.UtcNow),
-           ct);
+        .Where(ex => ex.Id == strategyExecutionId)
+        .Where(ex => ex.Status != convertedStatus)
+        .ExecuteUpdateAsync(setters => setters
+            .SetProperty(e => e.Status, convertedStatus)
+            .SetProperty(e => e.UpdatedAt, DateTime.UtcNow),
+            ct);
     }
 
     public async Task SaveExternalExecutionId(Guid stageExecutionId, long externalExecutionId, CancellationToken ct)
@@ -160,20 +160,19 @@ public class StrategyRepository(DatabaseContext dbContext) : IStrategyRepository
         await dbContext.SaveChangesAsync(ct);
     }
 
-    public async Task<List<StageExecutionWithUserInfo>> FetchRunningStageExecutionsWithUserInfo(CancellationToken ct)
+    public async Task<List<StageExecutionWithUserId>> FetchRunningStageExecutionsWithUserInfo(CancellationToken ct)
     {
         var query = from se in dbContext.StageExecutions
                     join st in dbContext.StrategyStages on se.StageId equals st.Id
                     join s in dbContext.Strategies on st.StrategyId equals s.Id
                     join u in dbContext.Users on s.UserId equals u.Id
                     where se.Status == Entities.StageExecutionStatus.Running
-                    select new StageExecutionWithUserInfo(
+                    select new StageExecutionWithUserId(
                         se.Id,
                         se.StageId,
                         MapStageExecutionStatus(se.Status),
                         se.ExternalExecutionId,
                         s.UserId,
-                        u.Email!,
                         se.StrategyExecutionId,
                         s.Id
                     );
@@ -402,7 +401,7 @@ public class StrategyRepository(DatabaseContext dbContext) : IStrategyRepository
     public async Task<List<StrategyExecutionModel>> FetchActiveStrategyExecutionsByUser(string userId, CancellationToken ct)
     {
         return await dbContext.StrategyExecutions
-            .Where(se => se.Strategy!.UserId == userId
+            .Where(se => se.Strategy != null && se.Strategy.UserId == userId
                 && (se.Status == Entities.StrategyExecutionStatus.Pending || se.Status == Entities.StrategyExecutionStatus.Running))
             .Select(se => new StrategyExecutionModel(
                 se.Id,
