@@ -24,9 +24,10 @@ public class RequestLoggingMiddleware
         context.Request.EnableBuffering();
 
         var buffer = new byte[Convert.ToInt32(context.Request.ContentLength ?? 0)];
-        await context.Request.Body.ReadExactlyAsync(buffer.AsMemory(0, buffer.Length));
+        await context.Request.Body.ReadAsync(buffer.AsMemory(0, buffer.Length));
 
         var bodyAsText = Encoding.UTF8.GetString(buffer);
+        context.Request.Body.Seek(0, SeekOrigin.Begin);
 
         _logger.LogInformation("Request Body: {Body}", bodyAsText);
 
