@@ -12,7 +12,7 @@ public interface IStrategyRepository
     Task SaveStrategy(Strategy strategy);
     Task<List<RepositoryModels.StrategyExecutionInfo>> GetPendingAndRunningStrategies();
     Task<List<StageExecutionInfo>> GetPendingStageExecutionsByStrategy(Guid strategyId);
-    Task<RepositoryModels.StrategyTransition?> FetchTransitionByDestinationStage(Guid strategyId, Guid stageId);
+    Task<List<RepositoryModels.StrategyTransition>> FetchTransitionByDestinationStage(Guid stageId);
     Task<StageExecutionInfo> FetchStageExecutionByStageId(Guid stageId, Guid strategyExecutionId);
     Task<StageInfo> FetchStageWithUserByStageId(Guid stageExecution);
     Task UpdateStageExecutionStatus(Guid stageId, StageExecutionStatus status, CancellationToken ct);
@@ -28,6 +28,7 @@ public interface IStrategyRepository
     Task<List<StrategyExecutionModel>> FetchStrategyExecutionsByStrategyId(Guid strategyId, CancellationToken ct);
     Task<List<RepositoryModels.StrategyTransition>> FetchTransitionByStrategyId(Guid strategyId, CancellationToken ct);
     Task FailStageExecutionsBulk(List<Guid> stageIds, Guid strategyExecutionId, CancellationToken ct);
+    Task CancelStageExecutionsBulk(List<Guid> stageIds, Guid strategyExecutionId, CancellationToken ct);
     Task CancelActiveStagesAndStrategyExecution(Guid strategyExecutionId, CancellationToken ct);
     Task DeleteStrategy(Guid strategyId, CancellationToken ct);
     Task<List<long>> FetchExternalExecutionId(Guid strategyExecutionId, CancellationToken ct);

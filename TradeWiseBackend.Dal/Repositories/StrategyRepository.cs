@@ -8,6 +8,7 @@ using TradeWiseBackend.Domain.Models;
 using StrategyStage = TradeWiseBackend.Domain.RepositoryModels.StrategyStage;
 using TradeWiseBackend.Domain.RepositoryModels;
 using TradeWiseBackend.Domain.ServiceModels;
+using Microsoft.AspNetCore.Http.HttpResults;
 
 namespace TradeWiseBackend.Dal.Repositories;
 
@@ -31,7 +32,8 @@ public class StrategyRepository(DatabaseContext dbContext) : IStrategyRepository
             StrategyId = t.StrategyId,
             StatType = MapStatTypeEntity(t.StatType),
             Operation = MapOperationTypeEntity(t.Operation),
-            Value = t.Value
+            Value = t.Value,
+            InstrumentId = t.InstrumentId
         }).ToList();
 
         await dbContext.StrategyTransitions.AddRangeAsync(entities);
@@ -49,7 +51,7 @@ public class StrategyRepository(DatabaseContext dbContext) : IStrategyRepository
     public async Task<List<StrategyInfo>> FetchUserStrategies(string userId)
     {
         return (await dbContext.Strategies
-            .Where(s => s.UserId == userId)
+            .Where(s => s.UserId == userId && s.IsActive)
             .ToListAsync()).Adapt<List<StrategyInfo>>();
     }
 
@@ -67,10 +69,11 @@ public class StrategyRepository(DatabaseContext dbContext) : IStrategyRepository
                 .ToListAsync()).Adapt<List<StageExecutionInfo>>();
     }
 
-    public async Task<Domain.RepositoryModels.StrategyTransition?> FetchTransitionByDestinationStage(Guid strategyId, Guid stageId)
+    public async Task<List<Domain.RepositoryModels.StrategyTransition>> FetchTransitionByDestinationStage(Guid stageId)
     {
         return (await dbContext.StrategyTransitions
-                .SingleOrDefaultAsync(t => t.StageDestinationId == stageId && t.StrategyId == strategyId)).Adapt<Domain.RepositoryModels.StrategyTransition?>();
+                .Where(t => t.StageDestinationId == stageId)
+                .ToListAsync()).Adapt<List<Domain.RepositoryModels.StrategyTransition>>();
     }
 
     public async Task<StageExecutionInfo> FetchStageExecutionByStageId(Guid stageId, Guid strategyExecutionId)
@@ -297,6 +300,21 @@ public class StrategyRepository(DatabaseContext dbContext) : IStrategyRepository
         await dbContext.SaveChangesAsync(ct);
     }
 
+    public async Task CancelStageExecutionsBulk(List<Guid> stageIds, Guid strategyExecutionId, CancellationToken ct)
+    {
+        var executions = await dbContext.StageExecutions
+            .Where(se => se.StrategyExecutionId == strategyExecutionId && stageIds.Contains(se.StageId))
+            .ToListAsync(ct);
+
+        foreach (var se in executions)
+        {
+            se.Status = Entities.StageExecutionStatus.Cancelled;
+            se.UpdatedAt = DateTime.UtcNow;
+        }
+
+        await dbContext.SaveChangesAsync(ct);
+    }
+
     public async Task CancelActiveStagesAndStrategyExecution(Guid strategyExecutionId, CancellationToken ct)
     {
         await dbContext.StrategyExecutions
@@ -324,7 +342,12 @@ public class StrategyRepository(DatabaseContext dbContext) : IStrategyRepository
     public async Task DeleteStrategy(Guid strategyId, CancellationToken ct)
     {
         var strategy = await dbContext.Strategies
-            .SingleAsync(s => s.Id == strategyId && s.IsActive, ct);
+            .FirstAsync(s => s.Id == strategyId && s.IsActive, ct);
+
+        if (strategy == null)
+        {
+            throw new KeyNotFoundException("Strategy not found");
+        }
 
         strategy.IsActive = false;
         strategy.UpdatedAt = DateTime.UtcNow;

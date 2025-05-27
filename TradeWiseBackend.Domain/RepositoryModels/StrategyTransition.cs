@@ -9,5 +9,6 @@ public record StrategyTransition(
     Guid StrategyId,
     StatType StatType,
     TransitionConditionType Operation,
-    double Value
+    double Value,
+    string InstrumentId
 );

@@ -3,5 +3,6 @@ namespace TradeWiseBackend.Domain.Models;
 public record TransitionCondition(
     TransitionConditionType TransitionConditionType,
     StatType StatType,
-    double Value
+    double Value,
+    string InstrumentId
 );

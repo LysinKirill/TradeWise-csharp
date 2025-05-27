@@ -7,5 +7,6 @@ public enum StageExecutionStatus
     Running,
     Completed,
     Failed,
-    Cancelled
+    Cancelled,
+    Aborted
 }
