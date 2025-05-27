@@ -183,20 +183,11 @@ public class StrategyRepository(DatabaseContext dbContext) : IStrategyRepository
         return await query.ToListAsync(ct);
     }
 
-
     public async Task<List<StageExecutionInfo>> FetchActiveStageExecutions(Guid strategyExecutionId, CancellationToken ct)
     {
         return (await dbContext.StageExecutions
             .Where(se => se.StrategyExecutionId == strategyExecutionId && (se.Status == Entities.StageExecutionStatus.Running || se.Status == Entities.StageExecutionStatus.Pending))
             .ToListAsync(ct)).Adapt<List<StageExecutionInfo>>();
-    }
-
-    public async Task<Guid> FetchStrategyByStage(Guid stageId, CancellationToken ct)
-    {
-        return await dbContext.StrategyStages
-            .Where(stage => stage.Id == stageId)
-            .Select(stage => stage.StrategyId)
-            .SingleAsync(ct);
     }
 
     public async Task<List<StageInfoCut>> FetchStagesByStrategyId(Guid strategyId, CancellationToken ct)
@@ -259,23 +250,6 @@ public class StrategyRepository(DatabaseContext dbContext) : IStrategyRepository
             .ToListAsync(ct);
 
         return strategyExecutions;
-    }
-
-    public async Task<List<StrategyExecutionModel>> FetchStrategyExecutionsByStrategyId(Guid strategyId, CancellationToken ct)
-    {
-        var executions = await dbContext.StrategyExecutions
-            .Where(se => se.StrategyId == strategyId)
-            .Select(se => new StrategyExecutionModel(
-                se.Id,
-                se.CreatedAt,
-                se.UpdatedAt,
-                MapStrategyExecutionStatus(se.Status),
-                se.StrategyId,
-                se.IsPaperTrade,
-                se.AllocatedBudget))
-            .ToListAsync(ct);
-
-        return executions;
     }
 
     public async Task<List<Domain.RepositoryModels.StrategyTransition>> FetchTransitionByStrategyId(Guid strategyId, CancellationToken ct)
@@ -441,6 +415,12 @@ public class StrategyRepository(DatabaseContext dbContext) : IStrategyRepository
                 se.AllocatedBudget
             ))
             .ToListAsync(ct);
+    }
+
+    public async Task<StrategyExecutionModel?> FetchStrategyExecutionById(Guid strategyExecutionId, CancellationToken ct)
+    {
+        return (await dbContext.StrategyExecutions
+            .FirstOrDefaultAsync(se => se.Id == strategyExecutionId, ct)).Adapt<StrategyExecutionModel?>();
     }
 
     private static StatTypeEntity MapStatTypeEntity(StatType dtoValue)
