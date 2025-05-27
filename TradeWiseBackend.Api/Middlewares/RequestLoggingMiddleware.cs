@@ -1,4 +1,5 @@
 using System;
+using System.Text;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 
@@ -19,6 +20,15 @@ public class RequestLoggingMiddleware
     {
         var request = context.Request;
         _logger.LogInformation("Handling request: {Method} {Path}", request.Method, request.Path);
+
+        context.Request.EnableBuffering();
+
+        var buffer = new byte[Convert.ToInt32(context.Request.ContentLength ?? 0)];
+        await context.Request.Body.ReadExactlyAsync(buffer.AsMemory(0, buffer.Length));
+
+        var bodyAsText = Encoding.UTF8.GetString(buffer);
+
+        _logger.LogInformation("Request Body: {Body}", bodyAsText);
 
         await _next(context);
 
