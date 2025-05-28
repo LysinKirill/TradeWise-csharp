@@ -44,9 +44,22 @@ public class AccountController(IAccountService accountService) : ControllerBase
             info.Id,
             info.CreatedAt,
             info.UpdatedAt,
-            (StrategyExecutionStatus)info.Status,
+            MapStatus(info.Status),
             info.StrategyId)).ToList();
 
         return Ok(new GetUserExecutionsResponse(converted_executions));
+    }
+
+    private StrategyExecutionStatus MapStatus(Domain.Models.StrategyExecutionStatus? status)
+    {
+        return status switch
+        {
+            Domain.Models.StrategyExecutionStatus.Cancelled => StrategyExecutionStatus.Cancelled,
+            Domain.Models.StrategyExecutionStatus.Completed => StrategyExecutionStatus.Completed,
+            Domain.Models.StrategyExecutionStatus.Failed => StrategyExecutionStatus.Failed,
+            Domain.Models.StrategyExecutionStatus.Pending => StrategyExecutionStatus.Pending,
+            Domain.Models.StrategyExecutionStatus.Running => StrategyExecutionStatus.Running,
+            _ => throw new InvalidCastException($"Unknown BacktestStatus {status}")
+        };
     }
 }

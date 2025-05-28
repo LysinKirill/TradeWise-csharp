@@ -44,6 +44,40 @@ public class BacktestController(IBacktestService backtestService) : ControllerBa
     public async Task<GetAllBacktestsResponse> GetAllBacktestsBacktest(CancellationToken ct)
     {
         var backtests = await backtestService.GetAllBacktests(ct);
-        return new GetAllBacktestsResponse(backtests.Adapt<List<BacktestInfo>>());
+        return new GetAllBacktestsResponse(backtests.Select(
+            backtest => new BacktestInfo(
+                backtest.BacktestId,
+                backtest.StartedAt,
+                backtest.FinishedAt,
+                backtest.TestPeriodStart,
+                backtest.TestPeriodEnd,
+                MapBacktestStatus(backtest.Status),
+                backtest.Profit,
+                backtest.TradesCount,
+                backtest.InitialBalance,
+                backtest.FinalBalance,
+                backtest.CreatedAt,
+                new Responses.models.ShortModelInfo(
+                    backtest.ModelInfo.Id,
+                    backtest.ModelInfo.InstrumentId,
+                    backtest.ModelInfo.Name,
+                    backtest.ModelInfo.Type,
+                    backtest.ModelInfo.CreatedAt
+            )
+        )).ToList());
+    }
+
+    private Responses.models.BacktestStatus? MapBacktestStatus(Domain.ServiceModels.BacktestStatus? status)
+    {
+        if (status == null) return null;
+        return status switch
+        {
+            BacktestStatus.Cancelled => Api.Responses.models.BacktestStatus.Cancelled,
+            BacktestStatus.Completed => Api.Responses.models.BacktestStatus.Completed,
+            BacktestStatus.Failed => Api.Responses.models.BacktestStatus.Failed,
+            BacktestStatus.Pending => Api.Responses.models.BacktestStatus.Pending,
+            BacktestStatus.Running => Api.Responses.models.BacktestStatus.Running,
+            _ => throw new InvalidCastException($"Unknown BacktestStatus {status}")
+        };
     }
 }
