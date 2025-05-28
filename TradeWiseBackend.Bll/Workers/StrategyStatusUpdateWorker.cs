@@ -68,10 +68,11 @@ public class StrategyStatusUpdateWorker(
         var checkPassed = true;
         foreach (var transition in transitions)
         {
+            if(transition.StatType == null || transition.Operation == null || transition.Operation == null || transition.InstrumentId == null) continue;
             var request = new GetInstrumentStatRequest
             {
                 InstrumentId = transition.InstrumentId,
-                StatType = MapStatType(transition.StatType),
+                StatType = MapStatType(transition.StatType!.Value),
                 From = Timestamp.FromDateTime(DateTime.Now.AddMinutes(-600).ToUniversalTime()),
                 To = Timestamp.FromDateTime(DateTime.Now.ToUniversalTime())
             };

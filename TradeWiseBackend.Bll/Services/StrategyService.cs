@@ -239,6 +239,20 @@ public class StrategyService(
             {
                 if (transition.SourceStageId == null || transition.DestinationStageId == null)
                     continue;
+                if (transition.TransitionConditions.Count == 0)
+                {
+                    var entity = new StrategyTransition(
+                        Guid.NewGuid(),
+                        stageIdMap[transition.SourceStageId.Value],
+                        stageIdMap[transition.DestinationStageId.Value],
+                        editStrategyPayload.StrategyId,
+                        null,
+                        null,
+                        null,
+                        null
+                    );
+                    continue;
+                }
 
                 foreach (var condition in transition.TransitionConditions)
                 {
@@ -279,8 +293,8 @@ public class StrategyService(
                 g.Key.StageSourceId,
                 g.Key.StageDestinationId,
                 g.Select(t => new TransitionCondition(
-                    (TransitionConditionType)t.StatType,
-                    (StatType)t.Operation,
+                    (TransitionConditionType?)t.StatType,
+                    (StatType?)t.Operation,
                     t.Value,
                     t.InstrumentId
                 )).ToList()

@@ -21,7 +21,6 @@ public class StrategyRepository(DatabaseContext dbContext) : IStrategyRepository
         var strategyStageEntities = strategyStages.Adapt<List<StrategyStageEntity>>();
 
         await dbContext.StrategyStages.AddRangeAsync(strategyStageEntities);
-        await dbContext.SaveChangesAsync(ct);
     }
 
     public async Task SaveStrategyTransitions(List<StrategyTransition> transitions, CancellationToken ct)
@@ -39,7 +38,6 @@ public class StrategyRepository(DatabaseContext dbContext) : IStrategyRepository
         }).ToList();
 
         await dbContext.StrategyTransitions.AddRangeAsync(entities);
-        await dbContext.SaveChangesAsync(ct);
     }
 
     public async Task SaveStrategy(Strategy strategy, CancellationToken ct)
@@ -47,7 +45,6 @@ public class StrategyRepository(DatabaseContext dbContext) : IStrategyRepository
         var strategyEntity = strategy.Adapt<StrategyEntity>();
 
         await dbContext.Strategies.AddAsync(strategyEntity);
-        await dbContext.SaveChangesAsync(ct);
     }
 
     public async Task<List<StrategyInfo>> FetchUserStrategies(string userId, CancellationToken ct)
@@ -440,9 +437,9 @@ public class StrategyRepository(DatabaseContext dbContext) : IStrategyRepository
             .FirstOrDefaultAsync(se => se.Id == strategyExecutionId, ct)).Adapt<StrategyExecutionModel?>();
     }
 
-    private static StatTypeEntity MapStatTypeEntity(StatType dtoValue)
+    private static StatTypeEntity? MapStatTypeEntity(StatType? dtoValue)
     {
-        return (StatTypeEntity)dtoValue;
+        return (StatTypeEntity?)dtoValue;
     }
 
     private static Entities.StageExecutionStatus MapStageExecutionStatus(StageExecutionStatus status)
@@ -465,8 +462,8 @@ public class StrategyRepository(DatabaseContext dbContext) : IStrategyRepository
         return (StrategyExecutionStatus)status;
     }
 
-    private static OperationTypeEntity MapOperationTypeEntity(TransitionConditionType dtoValue)
+    private static OperationTypeEntity? MapOperationTypeEntity(TransitionConditionType? dtoValue)
     {
-        return (OperationTypeEntity)dtoValue;
+        return (OperationTypeEntity?)dtoValue;
     }
 }
