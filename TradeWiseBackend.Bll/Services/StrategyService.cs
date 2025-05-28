@@ -82,6 +82,7 @@ public class StrategyService(
                     null,
                     null
                 );
+                transitionEntities.Add(entity);
                 continue;
             }
 
@@ -264,6 +265,7 @@ public class StrategyService(
                         null,
                         null
                     );
+                    newTransitions.Add(entity);
                     continue;
                 }
 
