@@ -16,8 +16,8 @@ public class StrategyTransitionEntity
     [ForeignKey(nameof(StageDestinationId))]
     public StrategyStageEntity? StageDestination { get; set; }
 
-    public StatTypeEntity StatType { get; set; }
-    public OperationTypeEntity Operation { get; set; }
-    public double Value { get; set; }
-    public required string InstrumentId { get; set; }
+    public StatTypeEntity? StatType { get; set; }
+    public OperationTypeEntity? Operation { get; set; }
+    public double? Value { get; set; }
+    public string? InstrumentId { get; set; }
 }

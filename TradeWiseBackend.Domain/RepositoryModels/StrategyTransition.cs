@@ -7,8 +7,8 @@ public record StrategyTransition(
     Guid StageSourceId,
     Guid StageDestinationId,
     Guid StrategyId,
-    StatType StatType,
-    TransitionConditionType Operation,
-    double Value,
-    string InstrumentId
+    StatType? StatType,
+    TransitionConditionType? Operation,
+    double? Value,
+    string? InstrumentId
 );

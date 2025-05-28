@@ -62,19 +62,34 @@ public class BacktestService(
     public async Task<List<BacktestInfo>> GetAllBacktests(CancellationToken ct)
     {
         var backtests = await backtestClient.GetAllUserBacktestsAsync(new Empty(), AuthMetadata, cancellationToken: ct);
-        return backtests.Backtests.Select(b => new BacktestInfo(
-            b.BacktestId,
-            b.StartedAt?.ToDateTime(),
-            b.FinishedAt?.ToDateTime(),
-            b.TestPeriodStart?.ToDateTime(),
-            b.TestPeriodEnd?.ToDateTime(),
-            MapBacktestStatus(b.Status),
-            b.Profit,
-            b.TradesCount,
-            b.InitialBalance,
-            b.FinalBalance,
-            b.CreatedAt.ToDateTime()
-        )).ToList();
+
+        var convertedBacktests = new List<BacktestInfo>();
+        foreach (var backtest in backtests.Backtests)
+        {
+            var internalId = await backtestRepository.GetInternalId(backtest.BacktestId, ct);
+            convertedBacktests.Add(new BacktestInfo(
+                internalId,
+                backtest.StartedAt?.ToDateTime(),
+                backtest.FinishedAt?.ToDateTime(),
+                backtest.TestPeriodStart?.ToDateTime(),
+                backtest.TestPeriodEnd?.ToDateTime(),
+                MapBacktestStatus(backtest.Status),
+                backtest.Profit,
+                backtest.TradesCount,
+                backtest.InitialBalance,
+                backtest.FinalBalance,
+                backtest.CreatedAt.ToDateTime(),
+                new Domain.ServiceModels.ShortModelInfo(
+                    backtest.ModelInfo.Id,
+                    backtest.ModelInfo.InstrumentId,
+                    backtest.ModelInfo.Name,
+                    backtest.ModelInfo.Type,
+                    backtest.ModelInfo.CreatedAt.ToDateTime()
+                )
+            ));
+        }
+
+        return convertedBacktests;
     }
 
     private BacktestStatus? MapBacktestStatus(Backtest.BacktestStatus? status)

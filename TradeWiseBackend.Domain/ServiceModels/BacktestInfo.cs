@@ -1,7 +1,7 @@
 namespace TradeWiseBackend.Domain.ServiceModels;
 
 public record class BacktestInfo(
-    long? BacktestId,
+    Guid? BacktestId,
     DateTime? StartedAt,
     DateTime? FinishedAt,
     DateTime? TestPeriodStart,
@@ -11,5 +11,6 @@ public record class BacktestInfo(
     int? TradesCount,
     double? InitialBalance,
     double? FinalBalance,
-    DateTime? CreatedAt
+    DateTime? CreatedAt,
+    ShortModelInfo ModelInfo
 );

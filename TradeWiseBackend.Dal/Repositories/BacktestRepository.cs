@@ -27,4 +27,12 @@ public class BacktestRepository(DatabaseContext dbContext) : IBacktestRepository
             .Select(se => se.ExternalExecutionId)
             .SingleAsync(ct);
     }
+
+    public async Task<Guid> GetInternalId(long externalId, CancellationToken ct)
+    {
+        return await dbContext.BacktestExecutions
+            .Where(se => se.ExternalExecutionId == externalId)
+            .Select(se => se.Id)
+            .SingleAsync(ct);
+    }
 }

@@ -6,4 +6,5 @@ public interface IBacktestRepository
 {
     Task Save(BacktestExecution execution, CancellationToken ct);
     Task<long> GetExternalExecutionId(Guid executionId, CancellationToken ct);
+    Task<Guid> GetInternalId(long externalId, CancellationToken ct);
 }

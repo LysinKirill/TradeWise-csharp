@@ -23,7 +23,7 @@ public static class PythonCollectionExtension
             UnsafeUseInsecureChannelCallCredentials = true,
             Credentials = ChannelCredentials.Insecure
         });
-        
+
         services.AddSingleton(new UserService.UserServiceClient(channel));
         services.AddSingleton(new InvestService.InvestServiceClient(channel));
         services.AddSingleton(new ModelService.ModelServiceClient(channel));

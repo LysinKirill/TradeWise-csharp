@@ -43,7 +43,6 @@ public class StrategyService(
 
     public async Task CreateStrategy(CreateStrategyPayload createStrategyPayload, CancellationToken ct)
     {
-        // TODO: декомпозировать
         var user = await accountRepository.GetUserById(createStrategyPayload.UserId);
 
         if (user == null) throw new Exception("User not found");
@@ -71,6 +70,21 @@ public class StrategyService(
         foreach (var transition in createStrategyPayload.StrategyTransitions)
         {
             if (transition.SourceStageId == null || transition.DestinationStageId == null) continue;
+            if (transition.TransitionConditions.Count == 0)
+            {
+                var entity = new StrategyTransition(
+                    Guid.NewGuid(),
+                    stageIdMap[transition.SourceStageId.Value],
+                    stageIdMap[transition.DestinationStageId.Value],
+                    strategyId,
+                    null,
+                    null,
+                    null,
+                    null
+                );
+                transitionEntities.Add(entity);
+                continue;
+            }
 
             foreach (var condition in transition.TransitionConditions)
             {
@@ -239,6 +253,21 @@ public class StrategyService(
             {
                 if (transition.SourceStageId == null || transition.DestinationStageId == null)
                     continue;
+                if (transition.TransitionConditions.Count == 0)
+                {
+                    var entity = new StrategyTransition(
+                        Guid.NewGuid(),
+                        stageIdMap[transition.SourceStageId.Value],
+                        stageIdMap[transition.DestinationStageId.Value],
+                        editStrategyPayload.StrategyId,
+                        null,
+                        null,
+                        null,
+                        null
+                    );
+                    newTransitions.Add(entity);
+                    continue;
+                }
 
                 foreach (var condition in transition.TransitionConditions)
                 {
@@ -279,8 +308,8 @@ public class StrategyService(
                 g.Key.StageSourceId,
                 g.Key.StageDestinationId,
                 g.Select(t => new TransitionCondition(
-                    (TransitionConditionType)t.StatType,
-                    (StatType)t.Operation,
+                    (TransitionConditionType?)t.StatType,
+                    (StatType?)t.Operation,
                     t.Value,
                     t.InstrumentId
                 )).ToList()

@@ -21,23 +21,20 @@ public class AccountRepository(DatabaseContext dbContext) : IAccountRepository
         await dbContext.RefreshTokens.AddAsync(entity);
         await dbContext.SaveChangesAsync();
     }
+
     public async Task<RefreshTokenModel?> GetByTokenAsync(string token)
     {
         return (await dbContext.RefreshTokens.FirstOrDefaultAsync(t => t.Token == token)).Adapt<RefreshTokenModel?>();
     }
 
     public async Task UpdateAsync(RefreshTokenModel model)
-{
-    var entity = await dbContext.RefreshTokens.FindAsync(model.Id);
-
-    if (entity == null)
     {
-        throw new InvalidOperationException("Token not found");
+        var entity = await dbContext.RefreshTokens.FindAsync(model.Id);
+
+        if (entity == null) throw new InvalidOperationException("Token not found");
+
+        model.Adapt(entity);
+
+        await dbContext.SaveChangesAsync();
     }
-
-    model.Adapt(entity); 
-
-    await dbContext.SaveChangesAsync();
-}
-
 }
