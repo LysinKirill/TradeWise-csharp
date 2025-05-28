@@ -70,6 +70,20 @@ public class StrategyService(
         foreach (var transition in createStrategyPayload.StrategyTransitions)
         {
             if (transition.SourceStageId == null || transition.DestinationStageId == null) continue;
+            if (transition.TransitionConditions.Count == 0)
+            {
+                var entity = new StrategyTransition(
+                    Guid.NewGuid(),
+                    stageIdMap[transition.SourceStageId.Value],
+                    stageIdMap[transition.DestinationStageId.Value],
+                    strategyId,
+                    null,
+                    null,
+                    null,
+                    null
+                );
+                continue;
+            }
 
             foreach (var condition in transition.TransitionConditions)
             {
