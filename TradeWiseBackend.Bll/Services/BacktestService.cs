@@ -79,7 +79,7 @@ public class BacktestService(
                 backtest.InitialBalance,
                 backtest.FinalBalance,
                 backtest.CreatedAt.ToDateTime(),
-                new Domain.ServiceModels.ShortModelInfo(
+                new ShortModelInfo(
                     backtest.ModelInfo.Id,
                     backtest.ModelInfo.InstrumentId,
                     backtest.ModelInfo.Name,
@@ -88,6 +88,7 @@ public class BacktestService(
                 )
             ));
         }
+
         return convertedBacktests;
     }
 

@@ -1,5 +1,3 @@
-using System;
-
 namespace TradeWiseBackend.Api.Models;
 
 public class LoginModel

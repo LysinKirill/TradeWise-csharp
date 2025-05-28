@@ -49,7 +49,7 @@ public class AuthController : ControllerBase
         return Ok(new
         {
             AccessToken = accessToken,
-            RefreshToken = refreshToken,
+            RefreshToken = refreshToken
         });
     }
 
@@ -57,10 +57,7 @@ public class AuthController : ControllerBase
     public async Task<IActionResult> Refresh(RefreshTokenRequest request)
     {
         var validation = await _tokenService.ValidateRefreshTokenAsync(request.RefreshToken);
-        if (!validation.IsValid || validation.UserId == null)
-        {
-            return Unauthorized();
-        }
+        if (!validation.IsValid || validation.UserId == null) return Unauthorized();
 
         var user = await _userManager.FindByIdAsync(validation.UserId);
         if (user == null) return Unauthorized();

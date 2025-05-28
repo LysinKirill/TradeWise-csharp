@@ -68,7 +68,8 @@ public class StrategyStatusUpdateWorker(
         var checkPassed = true;
         foreach (var transition in transitions)
         {
-            if(transition.StatType == null || transition.Operation == null || transition.Operation == null || transition.InstrumentId == null) continue;
+            if (transition.StatType == null || transition.Operation == null || transition.Operation == null ||
+                transition.InstrumentId == null) continue;
             var request = new GetInstrumentStatRequest
             {
                 InstrumentId = transition.InstrumentId,

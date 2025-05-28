@@ -14,8 +14,8 @@ namespace TradeWiseBackend.Bll.Services;
 
 public class TokenService : ITokenService
 {
-    private readonly JwtSettings _jwtSettings;
     private readonly IAccountRepository _accountRepository;
+    private readonly JwtSettings _jwtSettings;
 
     public TokenService(
         IOptions<JwtSettings> jwtSettings,
@@ -77,7 +77,7 @@ public class TokenService : ITokenService
     public async Task RevokeRefreshTokenAsync(string refreshToken)
     {
         var tokenEntity = await _accountRepository.GetByTokenAsync(refreshToken);
-      
+
         if (tokenEntity != null)
         {
             tokenEntity.IsRevoked = true;

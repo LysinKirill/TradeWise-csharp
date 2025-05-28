@@ -43,7 +43,6 @@ public class StrategyService(
 
     public async Task CreateStrategy(CreateStrategyPayload createStrategyPayload, CancellationToken ct)
     {
-        // TODO: декомпозировать
         var user = await accountRepository.GetUserById(createStrategyPayload.UserId);
 
         if (user == null) throw new Exception("User not found");
